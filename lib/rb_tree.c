@@ -16,6 +16,135 @@
 #endif // LOCKPICK_DEBUG
 
 
+inline enum __rb_colors __rb_color(const struct rb_node *node)
+{
+    return node ? (enum __rb_colors)(node->__parent_color & 1) : __rb_black;
+}
+
+
+inline void __rb_set_color(struct rb_node *node, enum __rb_colors color)
+{
+    #ifdef LOCKPICK_DEBUG
+    assert(node && "__rb_set_color: Node must be non-null");
+    #endif // LOCKPICK_DEBUG
+    node->__parent_color = (node->__parent_color & ~1) | color;
+}
+
+
+inline struct rb_node *rb_parent(const struct rb_node *node)
+{
+    return node ? (struct rb_node*)(node->__parent_color & ~1) : (struct rb_node *)NULL;
+}
+
+
+inline struct rb_node *rb_grandparent(const struct rb_node *node)
+{
+    struct rb_node *parent = rb_parent(node);
+    if(parent)
+        return rb_parent(parent);
+    return (struct rb_node*)NULL;
+}
+
+
+struct rb_node *rb_uncle(const struct rb_node *node)
+{
+    struct rb_node *parent = rb_parent(node);
+    if(parent)
+    {
+        struct rb_node *grandparent = rb_parent(parent);
+        if(grandparent)
+        {
+            #ifdef LOCKPICK_DEBUG
+            assert(parent == grandparent->left || parent == grandparent->right && "rb_uncle: Parent must be grandparent's child.");
+            #endif // LOCKPICK_DEBUG
+
+            if(parent == grandparent->left)
+                return grandparent->right;
+            else
+                return grandparent->left;
+        }
+    }
+
+    return (struct rb_node*)NULL;
+}
+
+
+void __rb_grandparent_uncle(const struct rb_node *node, struct rb_node **grandparent, struct rb_node **uncle)
+{
+    *grandparent = NULL;
+    *uncle = NULL;
+    struct rb_node *parent = rb_parent(node);
+    if(parent)
+    {
+        *grandparent = rb_parent(parent);
+        if(*grandparent)
+        {
+            #ifdef LOCKPICK_DEBUG
+            assert(parent == (*grandparent)->left || parent == (*grandparent)->right && "rb_uncle: Parent must be grandparent's child.");
+            #endif // LOCKPICK_DEBUG
+
+            if(parent == (*grandparent)->left)
+                *uncle = (*grandparent)->right;
+            else
+                *uncle = (*grandparent)->left;
+        }
+    }
+}
+
+
+struct rb_node *rb_sibling(const struct rb_node *node)
+{
+    const struct rb_node *parent = rb_parent(node);
+    if(!parent)
+        return (struct rb_node*)NULL;
+    if(parent->left == node)
+        return parent->right;
+    else
+        return parent->left;
+}
+
+
+void rb_set_parent(struct rb_node *node, const struct rb_node *parent_ptr)
+{
+    #ifdef LOCKPICK_DEBUG
+    assert(!((unsigned long)parent_ptr & 1) && "rb_set_parent: parent_ptr must be aligned at least to 2 bytes boundary.");
+    #endif // LOCKPICK_DEBUG
+    node->__parent_color = (unsigned long)parent_ptr | __rb_color(node);
+}
+
+
+bool rb_is_left(const struct rb_node *node)
+{
+    struct rb_node *parent = rb_parent(node);
+    if(!parent)
+        return false;
+    return parent->left == node;
+}
+
+bool rb_is_left_p(const struct rb_node *node, const struct rb_node *parent)
+{
+    if(!parent)
+        return false;
+    return rb_parent(node)->left == node;
+}
+
+
+
+bool rb_is_right(const struct rb_node *node)
+{
+    struct rb_node *parent = rb_parent(node);
+    if(!parent)
+        return false;
+    return parent->right == node;
+}
+
+bool rb_is_right_p(const struct rb_node *node, const struct rb_node *parent)
+{
+    if(!parent)
+        return false;
+    return parent->right == node;
+}
+
 /**
  * __rb_rotate_left - performs rotation of the tree around specified node
  * @node:	pointer to the node around which rotation would be performed.
