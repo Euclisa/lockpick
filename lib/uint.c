@@ -122,7 +122,7 @@ uint8_t __uint_i2ch(uint16_t value, char *dest, bool truncate_zeros)
 
 
 /**
- * __uint_from_hex - converts hex string corrsponding to uint object
+ * __uint_to_hex - converts uint object to hex string
  * @value:      pointer on uint buffer
  * @value_size: size of uint buffer
  * 
