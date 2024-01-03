@@ -4,7 +4,7 @@ project(lockpick LANGUAGES C)
 
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wall")
 
 include_directories(include)  
 
