@@ -49,27 +49,27 @@ bool __hexcmp(const char *a, const char *b)
     return true;
 }
 
-#define TEST_UINT_FROM_TO_HEX(N)                                                                \
-bool test_uint##N##_from_to_hex()                                                               \
-{                                                                                               \
-    srand(0);                                                                                   \
-    const uint32_t tests_num = 1000;                                                            \
-    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                      \
-    {                                                                                           \
-        uint(N) val;                                                                            \
-        size_t hexes_num = N*HEXES_PER_WORD/BITS_PER_WORD;                                      \
-        char *original_hex_str = __rand_hex_str(hexes_num);                                     \
-        uint_from_hex(&val,original_hex_str);                                                   \
-        char *converted_hex_str = uint_to_hex(&val);                                            \
-        if(!__hexcmp(converted_hex_str,original_hex_str))                                       \
-        {                                                                                       \
-            printf("Expected: %s, got: %s\n",original_hex_str,converted_hex_str);               \
-            return false;                                                                       \
-        }                                                                                       \
-        free(original_hex_str);                                                                 \
-        free(converted_hex_str);                                                                \
-    }                                                                                           \
-    return true;                                                                                \
+#define TEST_UINT_FROM_TO_HEX(N)                                                                                            \
+bool test_uint##N##_from_to_hex()                                                                                           \
+{                                                                                                                           \
+    srand(0);                                                                                                               \
+    const uint32_t tests_num = 1000;                                                                                        \
+    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                  \
+    {                                                                                                                       \
+        uint(N) val;                                                                                                        \
+        size_t hexes_num = N*HEXES_PER_WORD/BITS_PER_WORD;                                                                  \
+        char *original_hex_str = __rand_hex_str(hexes_num);                                                                 \
+        uint_from_hex(val,original_hex_str);                                                                                \
+        char *converted_hex_str = uint_to_hex(val);                                                                         \
+        if(!__hexcmp(converted_hex_str,original_hex_str))                                                                   \
+        {                                                                                                                   \
+            printf("Expected: %s, got: %s\n",original_hex_str,converted_hex_str);                                           \
+            return false;                                                                                                   \
+        }                                                                                                                   \
+        free(original_hex_str);                                                                                             \
+        free(converted_hex_str);                                                                                            \
+    }                                                                                                                       \
+    return true;                                                                                                            \
 }
 
 
@@ -84,8 +84,8 @@ bool test_uint##N##_from_to_hex_overflow()                                      
         size_t hexes_num = N*HEXES_PER_WORD/BITS_PER_WORD;                                                                  \
         size_t hexes_num_overflowed = hexes_num + rand()%(N/BITS_PER_WORD*4);                                               \
         char *original_hex_str = __rand_hex_str(hexes_num_overflowed);                                                      \
-        uint_from_hex(&val,original_hex_str);                                                                               \
-        char *converted_hex_str = uint_to_hex(&val);                                                                        \
+        uint_from_hex(val,original_hex_str);                                                                                \
+        char *converted_hex_str = uint_to_hex(val);                                                                         \
         if(!__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)))                                  \
         {                                                                                                                   \
             printf("Expected: %s, got: %s\n",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);          \
@@ -111,10 +111,10 @@ TEST_UINT_FROM_TO_HEX_OVERFLOW(1024)
 #define TEST_UINT_ADDITION(N_a, N_b, N_result)                                                                              \
 bool test_uint_##N_a##_##N_b##_##N_result##_addition()                                                                      \
 {                                                                                                                           \
-    FILE *f_add = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt","r");                        \
+    FILE *f_add = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt","r");       \
     if(!f_add)                                                                                                              \
         return false;                                                                                                       \
-    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");                                \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
     if(!f_samp)                                                                                                             \
         return false;                                                                                                       \
     char *hex_str_a = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_a));                                                \
@@ -124,19 +124,19 @@ bool test_uint_##N_a##_##N_b##_##N_result##_addition()                          
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         uint(N_a) a;                                                                                                        \
-        uint_from_hex(&a,hex_str_a);                                                                                        \
+        uint_from_hex(a,hex_str_a);                                                                                         \
         uint(N_b) b;                                                                                                        \
-        uint_from_hex(&b,hex_str_b);                                                                                        \
+        uint_from_hex(b,hex_str_b);                                                                                         \
         uint(N_result) res_obt, res_true;                                                                                   \
-        if(!uint_add(&a,&b,&res_obt))                                                                                       \
+        if(!uint_add(a,b,res_obt))                                                                                          \
             return false;                                                                                                   \
         if(fscanf(f_add,"%s\n",hex_str_result_true) == EOF)                                                                 \
             return false;                                                                                                   \
-        if(!uint_from_hex(&res_true,hex_str_result_true))                                                                   \
+        if(!uint_from_hex(res_true,hex_str_result_true))                                                                    \
             return false;                                                                                                   \
-        if(!uint_eq(&res_obt,&res_true))                                                                                    \
+        if(!uint_eq(res_obt,res_true))                                                                                      \
         {                                                                                                                   \
-            char *hex_str_result_obt = uint_to_hex(&res_obt);                                                               \
+            char *hex_str_result_obt = uint_to_hex(res_obt);                                                                \
             printf("Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);                                       \
             return false;                                                                                                   \
         }                                                                                                                   \

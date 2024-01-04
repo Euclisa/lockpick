@@ -32,16 +32,16 @@ struct                                                                          
 #define __array_size(arr) (sizeof(arr) / sizeof(arr[0]))
 
 bool __uint_from_hex(const char *hex_str, uint16_t *value, size_t value_size);
-#define uint_from_hex(value,hex_str) __uint_from_hex(hex_str, (value)->__buffer, __array_size((value)->__buffer))
+#define uint_from_hex(value,hex_str) __uint_from_hex(hex_str, (value).__buffer, __array_size((value).__buffer))
 
 char *__uint_to_hex(uint16_t *value, size_t value_size);
-#define uint_to_hex(value) __uint_to_hex((value)->__buffer, __array_size((value)->__buffer))
+#define uint_to_hex(value) __uint_to_hex((value).__buffer, __array_size((value).__buffer))
 
 bool __uint_add(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size);
-#define uint_add(a,b,result) __uint_add((a)->__buffer, __array_size((a)->__buffer), (b)->__buffer, __array_size((b)->__buffer), (result)->__buffer, __array_size((result)->__buffer))
+#define uint_add(a,b,result) __uint_add((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
 bool __uint_eq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size);
-#define uint_eq(a,b) __uint_eq((a)->__buffer, __array_size((a)->__buffer), (b)->__buffer, __array_size((b)->__buffer))
+#define uint_eq(a,b) __uint_eq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
 
 
 #endif  // _LOCKPICK_INCLUDE_UINT_H
