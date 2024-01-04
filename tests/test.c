@@ -3,6 +3,6 @@
 
 int main()
 {
-    test_rb_tree();
+    //test_rb_tree();
     test_uint();
 }

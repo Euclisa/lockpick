@@ -49,69 +49,181 @@ bool __hexcmp(const char *a, const char *b)
     return true;
 }
 
-
-bool __test_uint_from_to_hex(uint16_t *value, size_t value_size)
-{
-    srand(0);
-    const uint32_t tests_num = 1000;
-    
-    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
-    {
-        size_t hexes_num = (value_size*HEXES_PER_WORD);
-        char *original_hex_str = __rand_hex_str(hexes_num);
-        __uint_from_hex(original_hex_str,value,value_size);
-        char *converted_hex_str = __uint_to_hex(value,value_size);
-        if(!__hexcmp(converted_hex_str,original_hex_str))
-        {
-            printf("Expected: %s, got: %s\n",original_hex_str,converted_hex_str);
-            return false;
-        }
-        free(original_hex_str);
-        free(converted_hex_str);
-    }
-
-    return true;
+#define TEST_UINT_FROM_TO_HEX(N)                                                                \
+bool test_uint##N##_from_to_hex()                                                               \
+{                                                                                               \
+    srand(0);                                                                                   \
+    const uint32_t tests_num = 1000;                                                            \
+    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                      \
+    {                                                                                           \
+        uint(N) val;                                                                            \
+        size_t hexes_num = N*HEXES_PER_WORD/BITS_PER_WORD;                                      \
+        char *original_hex_str = __rand_hex_str(hexes_num);                                     \
+        uint_from_hex(&val,original_hex_str);                                                   \
+        char *converted_hex_str = uint_to_hex(&val);                                            \
+        if(!__hexcmp(converted_hex_str,original_hex_str))                                       \
+        {                                                                                       \
+            printf("Expected: %s, got: %s\n",original_hex_str,converted_hex_str);               \
+            return false;                                                                       \
+        }                                                                                       \
+        free(original_hex_str);                                                                 \
+        free(converted_hex_str);                                                                \
+    }                                                                                           \
+    return true;                                                                                \
 }
 
-#define test_uint_from_to_hex(value) __test_uint_from_to_hex((value)->__buffer, __array_size((value)->__buffer))
 
-
-bool __test_uint_from_to_hex_overflow(uint16_t *value, size_t value_size)
-{
-    srand(0);
-    const uint32_t tests_num = 1000;
-    
-    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
-    {
-        size_t hexes_num = (value_size*HEXES_PER_WORD);
-        size_t hexes_num_overflowed = hexes_num + rand()%value_size;
-        const char *original_hex_str = __rand_hex_str(hexes_num_overflowed);
-        __uint_from_hex(original_hex_str,value,value_size);
-        const char *converted_hex_str = __uint_to_hex(value,value_size);
-        if(!__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)))
-        {
-            printf("Expected: %s, got: %s\n",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);
-            return false;
-        }
-        free(original_hex_str);
-        free(converted_hex_str);
-    }
-
-    return true;
+#define TEST_UINT_FROM_TO_HEX_OVERFLOW(N)                                                                                   \
+bool test_uint##N##_from_to_hex_overflow()                                                                                  \
+{                                                                                                                           \
+    srand(0);                                                                                                               \
+    const uint32_t tests_num = 1000;                                                                                        \
+    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                  \
+    {                                                                                                                       \
+        uint(N) val;                                                                                                        \
+        size_t hexes_num = N*HEXES_PER_WORD/BITS_PER_WORD;                                                                  \
+        size_t hexes_num_overflowed = hexes_num + rand()%(N/BITS_PER_WORD*4);                                               \
+        char *original_hex_str = __rand_hex_str(hexes_num_overflowed);                                                      \
+        uint_from_hex(&val,original_hex_str);                                                                               \
+        char *converted_hex_str = uint_to_hex(&val);                                                                        \
+        if(!__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)))                                  \
+        {                                                                                                                   \
+            printf("Expected: %s, got: %s\n",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);          \
+            return false;                                                                                                   \
+        }                                                                                                                   \
+        free(original_hex_str);                                                                                             \
+        free(converted_hex_str);                                                                                            \
+    }                                                                                                                       \
+    return true;                                                                                                            \
 }
 
-#define test_uint_from_to_hex_overflow(value) __test_uint_from_to_hex_overflow((value)->__buffer, __array_size((value)->__buffer))
+
+TEST_UINT_FROM_TO_HEX(16)
+TEST_UINT_FROM_TO_HEX_OVERFLOW(16)
+
+TEST_UINT_FROM_TO_HEX(64)
+TEST_UINT_FROM_TO_HEX_OVERFLOW(64)
+
+TEST_UINT_FROM_TO_HEX(1024)
+TEST_UINT_FROM_TO_HEX_OVERFLOW(1024)
+
+
+#define TEST_UINT_ADDITION(N_a, N_b, N_result)                                                                              \
+bool test_uint_##N_a##_##N_b##_##N_result##_addition()                                                                      \
+{                                                                                                                           \
+    FILE *f_add = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt","r");                        \
+    if(!f_add)                                                                                                              \
+        return false;                                                                                                       \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");                                \
+    if(!f_samp)                                                                                                             \
+        return false;                                                                                                       \
+    char *hex_str_a = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_a));                                                \
+    char *hex_str_b = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_b));                                                \
+    char *hex_str_result_true = (char*)malloc(                                                                              \
+        __UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                                   \
+    while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
+    {                                                                                                                       \
+        uint(N_a) a;                                                                                                        \
+        uint_from_hex(&a,hex_str_a);                                                                                        \
+        uint(N_b) b;                                                                                                        \
+        uint_from_hex(&b,hex_str_b);                                                                                        \
+        uint(N_result) res;                                                                                                 \
+        if(!uint_add(&a,&b,&res))                                                                                           \
+            return false;                                                                                                   \
+        char *hex_str_result_obt = uint_to_hex(&res);                                                                       \
+        if(fscanf(f_add,"%s\n",hex_str_result_true) == EOF)                                                                 \
+            return false;                                                                                                   \
+        size_t hex_str_result_true_len = strlen(hex_str_result_true);                                                       \
+        size_t begin_offset = hex_str_result_true_len > __UINT_MAX_HEX_STR_REPRESENTATION(N_result) ?                       \
+                hex_str_result_true_len - __UINT_MAX_HEX_STR_REPRESENTATION(N_result) :                                     \
+                0;                                                                                                          \
+        if(!__hexcmp(hex_str_result_obt,hex_str_result_true+begin_offset))                                                  \
+        {                                                                                                                   \
+            printf("Expected: %s, got: %s\n",hex_str_result_true+begin_offset,hex_str_result_obt);                          \
+            return false;                                                                                                   \
+        }                                                                                                                   \
+    }                                                                                                                       \
+    fclose(f_samp);                                                                                                          \
+    fclose(f_add);                                                                                                           \
+    return true;                                                                                                            \
+}
+
+TEST_UINT_ADDITION(16,16,256)
+TEST_UINT_ADDITION(16,16,16)
+
+TEST_UINT_ADDITION(16,32,256)
+TEST_UINT_ADDITION(16,32,32)
+TEST_UINT_ADDITION(16,32,16)
+
+TEST_UINT_ADDITION(16,128,256)
+TEST_UINT_ADDITION(16,128,128)
+TEST_UINT_ADDITION(16,128,16)
+
+TEST_UINT_ADDITION(16,256,256)
+TEST_UINT_ADDITION(16,256,16)
+TEST_UINT_ADDITION(16,256,1024)
+
+TEST_UINT_ADDITION(16,1024,256)
+TEST_UINT_ADDITION(16,1024,16)
+TEST_UINT_ADDITION(16,1024,1024)
+
+TEST_UINT_ADDITION(128,128,256)
+TEST_UINT_ADDITION(128,128,128)
+TEST_UINT_ADDITION(128,128,16)
+
+TEST_UINT_ADDITION(128,256,1024)
+TEST_UINT_ADDITION(128,256,128)
+TEST_UINT_ADDITION(128,256,16)
+
+TEST_UINT_ADDITION(256,256,1024)
+TEST_UINT_ADDITION(256,256,256)
+TEST_UINT_ADDITION(256,256,16)
+
+TEST_UINT_ADDITION(256,1024,1024)
+TEST_UINT_ADDITION(256,1024,256)
+TEST_UINT_ADDITION(256,1024,16)
 
 
 void test_uint()
 {
-    uint(16) u16;
-    assert(test_uint_from_to_hex(&u16));
-    assert(test_uint_from_to_hex_overflow(&u16));
-    uint(64) u64;
-    assert(test_uint_from_to_hex(&u64));
-    assert(test_uint_from_to_hex_overflow(&u64));
-    uint(1024) u1024;
-    assert(test_uint_from_to_hex(&u1024));
-    assert(test_uint_from_to_hex_overflow(&u1024));
+    assert(test_uint16_from_to_hex());
+    assert(test_uint16_from_to_hex_overflow());
+
+    assert(test_uint64_from_to_hex());
+    assert(test_uint64_from_to_hex_overflow());
+
+    assert(test_uint1024_from_to_hex());
+    assert(test_uint1024_from_to_hex_overflow());
+
+
+    assert(test_uint_16_16_256_addition());
+    assert(test_uint_16_16_16_addition());
+
+    assert(test_uint_16_32_256_addition());
+    assert(test_uint_16_32_32_addition());
+    assert(test_uint_16_32_16_addition());
+
+    assert(test_uint_16_128_256_addition());
+    assert(test_uint_16_128_128_addition());
+    assert(test_uint_16_128_16_addition());
+
+    assert(test_uint_16_256_1024_addition());
+    assert(test_uint_16_256_256_addition());
+    assert(test_uint_16_256_16_addition());
+
+    assert(test_uint_16_1024_1024_addition());
+    assert(test_uint_16_1024_256_addition());
+    assert(test_uint_16_1024_16_addition());
+
+    assert(test_uint_128_128_256_addition());
+    assert(test_uint_128_128_128_addition());
+    assert(test_uint_128_128_16_addition());
+
+    assert(test_uint_256_256_1024_addition());
+    assert(test_uint_256_256_256_addition());
+    assert(test_uint_256_256_16_addition());
+
+    assert(test_uint_256_1024_1024_addition());
+    assert(test_uint_256_1024_256_addition());
+    assert(test_uint_256_1024_16_addition());
 }
