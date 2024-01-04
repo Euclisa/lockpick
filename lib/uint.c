@@ -217,3 +217,240 @@ bool __uint_add(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t
     return true;
 }
 
+
+bool __uint_sub(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    uint16_t *min_term, *max_term;
+    size_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term = a;
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term = b;
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    uint32_t carry = 0;
+    size_t min_term_upper_bound = MIN(min_term_size,result_size);
+    for(size_t word_i = 0; word_i < min_term_upper_bound; ++word_i)
+    {
+        uint32_t curr_sum = min_term[word_i] + max_term[word_i] + carry;
+        result[word_i] = curr_sum & __max_word;
+        carry = curr_sum >> BITS_PER_WORD;
+    }
+
+    size_t max_term_upper_bound = MIN(max_term_size,result_size);
+    for(size_t word_i = min_term_upper_bound; word_i < max_term_upper_bound; ++word_i)
+    {
+        uint32_t curr_sum = max_term[word_i] + carry;
+        result[word_i] = curr_sum & __max_word;
+        carry = curr_sum >> BITS_PER_WORD;
+    }
+    
+    if(result_size != max_term_upper_bound)
+    {
+        result[max_term_upper_bound] = carry;
+        for(size_t word_i = max_term_upper_bound+1; word_i < result_size; ++word_i)
+            result[word_i] = 0;
+    }
+
+    return true;
+}
+
+
+bool __uint_eq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+{
+    if(!a || !b)
+        return false;
+    
+    uint16_t *min_term, *max_term;
+    size_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term = a;
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term = b;
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    for(size_t word_i = 0; word_i < min_term_size; ++word_i)
+    {
+        if(min_term[word_i] != max_term[word_i])
+            return false;
+    }
+
+    for(size_t word_i = min_term_size; word_i < max_term_size; ++word_i)
+    {
+        if(max_term[word_i] != 0)
+            return false;
+    }
+
+    return true;
+}
+
+
+bool __uint_ls(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+{
+    if(!a || !b)
+        return false;
+    
+    uint16_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
+    {
+        if(max_term[word_i] != 0)
+            return a != max_term;
+    }
+
+    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
+    {
+        if(a[word_i] == b[word_i])
+            continue;
+        return a[word_i] < b[word_i];
+    }
+
+    return false;
+}
+
+
+bool __uint_gt(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+{
+    if(!a || !b)
+        return false;
+    
+    uint16_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
+    {
+        if(max_term[word_i] != 0)
+            return a == max_term;
+    }
+
+    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
+    {
+        if(a[word_i] == b[word_i])
+            continue;
+        return a[word_i] > b[word_i];
+    }
+
+    return false;
+}
+
+
+bool __uint_leq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+{
+    if(!a || !b)
+        return false;
+    
+    uint16_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
+    {
+        if(max_term[word_i] != 0)
+            return a != max_term;
+    }
+
+    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
+    {
+        if(a[word_i] == b[word_i])
+            continue;
+        return a[word_i] < b[word_i];
+    }
+
+    return true;
+}
+
+
+bool __uint_geq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+{
+    if(!a || !b)
+        return false;
+    
+    uint16_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
+    {
+        if(max_term[word_i] != 0)
+            return a == max_term;
+    }
+
+    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
+    {
+        if(a[word_i] == b[word_i])
+            continue;
+        return a[word_i] > b[word_i];
+    }
+
+    return true;
+}

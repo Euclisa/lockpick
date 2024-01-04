@@ -40,5 +40,8 @@ char *__uint_to_hex(uint16_t *value, size_t value_size);
 bool __uint_add(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size);
 #define uint_add(a,b,result) __uint_add((a)->__buffer, __array_size((a)->__buffer), (b)->__buffer, __array_size((b)->__buffer), (result)->__buffer, __array_size((result)->__buffer))
 
+bool __uint_eq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size);
+#define uint_eq(a,b) __uint_eq((a)->__buffer, __array_size((a)->__buffer), (b)->__buffer, __array_size((b)->__buffer))
+
 
 #endif  // _LOCKPICK_INCLUDE_UINT_H

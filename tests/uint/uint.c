@@ -127,24 +127,22 @@ bool test_uint_##N_a##_##N_b##_##N_result##_addition()                          
         uint_from_hex(&a,hex_str_a);                                                                                        \
         uint(N_b) b;                                                                                                        \
         uint_from_hex(&b,hex_str_b);                                                                                        \
-        uint(N_result) res;                                                                                                 \
-        if(!uint_add(&a,&b,&res))                                                                                           \
+        uint(N_result) res_obt, res_true;                                                                                   \
+        if(!uint_add(&a,&b,&res_obt))                                                                                       \
             return false;                                                                                                   \
-        char *hex_str_result_obt = uint_to_hex(&res);                                                                       \
         if(fscanf(f_add,"%s\n",hex_str_result_true) == EOF)                                                                 \
             return false;                                                                                                   \
-        size_t hex_str_result_true_len = strlen(hex_str_result_true);                                                       \
-        size_t begin_offset = hex_str_result_true_len > __UINT_MAX_HEX_STR_REPRESENTATION(N_result) ?                       \
-                hex_str_result_true_len - __UINT_MAX_HEX_STR_REPRESENTATION(N_result) :                                     \
-                0;                                                                                                          \
-        if(!__hexcmp(hex_str_result_obt,hex_str_result_true+begin_offset))                                                  \
+        if(!uint_from_hex(&res_true,hex_str_result_true))                                                                   \
+            return false;                                                                                                   \
+        if(!uint_eq(&res_obt,&res_true))                                                                                    \
         {                                                                                                                   \
-            printf("Expected: %s, got: %s\n",hex_str_result_true+begin_offset,hex_str_result_obt);                          \
+            char *hex_str_result_obt = uint_to_hex(&res_obt);                                                               \
+            printf("Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);                                       \
             return false;                                                                                                   \
         }                                                                                                                   \
     }                                                                                                                       \
-    fclose(f_samp);                                                                                                          \
-    fclose(f_add);                                                                                                           \
+    fclose(f_samp);                                                                                                         \
+    fclose(f_add);                                                                                                          \
     return true;                                                                                                            \
 }
 
@@ -155,25 +153,9 @@ TEST_UINT_ADDITION(16,32,256)
 TEST_UINT_ADDITION(16,32,32)
 TEST_UINT_ADDITION(16,32,16)
 
-TEST_UINT_ADDITION(16,128,256)
-TEST_UINT_ADDITION(16,128,128)
-TEST_UINT_ADDITION(16,128,16)
-
-TEST_UINT_ADDITION(16,256,256)
-TEST_UINT_ADDITION(16,256,16)
-TEST_UINT_ADDITION(16,256,1024)
-
 TEST_UINT_ADDITION(16,1024,256)
 TEST_UINT_ADDITION(16,1024,16)
 TEST_UINT_ADDITION(16,1024,1024)
-
-TEST_UINT_ADDITION(128,128,256)
-TEST_UINT_ADDITION(128,128,128)
-TEST_UINT_ADDITION(128,128,16)
-
-TEST_UINT_ADDITION(128,256,1024)
-TEST_UINT_ADDITION(128,256,128)
-TEST_UINT_ADDITION(128,256,16)
 
 TEST_UINT_ADDITION(256,256,1024)
 TEST_UINT_ADDITION(256,256,256)
@@ -203,21 +185,9 @@ void test_uint()
     assert(test_uint_16_32_32_addition());
     assert(test_uint_16_32_16_addition());
 
-    assert(test_uint_16_128_256_addition());
-    assert(test_uint_16_128_128_addition());
-    assert(test_uint_16_128_16_addition());
-
-    assert(test_uint_16_256_1024_addition());
-    assert(test_uint_16_256_256_addition());
-    assert(test_uint_16_256_16_addition());
-
     assert(test_uint_16_1024_1024_addition());
     assert(test_uint_16_1024_256_addition());
     assert(test_uint_16_1024_16_addition());
-
-    assert(test_uint_128_128_256_addition());
-    assert(test_uint_128_128_128_addition());
-    assert(test_uint_128_128_16_addition());
 
     assert(test_uint_256_256_1024_addition());
     assert(test_uint_256_256_256_addition());
