@@ -70,10 +70,7 @@ bool test_uint##N##_from_to_hex()                                               
         free(converted_hex_str);                                                                                            \
     }                                                                                                                       \
     return true;                                                                                                            \
-}
-
-
-#define TEST_UINT_FROM_TO_HEX_OVERFLOW(N)                                                                                   \
+}                                                                                                                           \
 bool test_uint##N##_from_to_hex_overflow()                                                                                  \
 {                                                                                                                           \
     srand(0);                                                                                                               \
@@ -99,16 +96,11 @@ bool test_uint##N##_from_to_hex_overflow()                                      
 
 
 TEST_UINT_FROM_TO_HEX(16)
-TEST_UINT_FROM_TO_HEX_OVERFLOW(16)
-
 TEST_UINT_FROM_TO_HEX(64)
-TEST_UINT_FROM_TO_HEX_OVERFLOW(64)
-
 TEST_UINT_FROM_TO_HEX(1024)
-TEST_UINT_FROM_TO_HEX_OVERFLOW(1024)
 
 
-#define TEST_UINT_ADDITION(N_a, N_b, N_result)                                                                              \
+#define TEST_UINT_OPS(N_a, N_b, N_result)                                                                                   \
 bool test_uint_##N_a##_##N_b##_##N_result##_addition()                                                                      \
 {                                                                                                                           \
     FILE *f_add = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt","r");       \
@@ -117,8 +109,8 @@ bool test_uint_##N_a##_##N_b##_##N_result##_addition()                          
     FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
     if(!f_samp)                                                                                                             \
         return false;                                                                                                       \
-    char *hex_str_a = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_a));                                                \
-    char *hex_str_b = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_b));                                                \
+    char *hex_str_a = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                              \
+    char *hex_str_b = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                              \
     char *hex_str_result_true = (char*)malloc(                                                                              \
         __UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                                   \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
@@ -138,32 +130,133 @@ bool test_uint_##N_a##_##N_b##_##N_result##_addition()                          
         {                                                                                                                   \
             char *hex_str_result_obt = uint_to_hex(res_obt);                                                                \
             printf("Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);                                       \
+            free(hex_str_result_obt);                                                                                       \
             return false;                                                                                                   \
         }                                                                                                                   \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_add);                                                                                                          \
+    free(hex_str_a);                                                                                                        \
+    free(hex_str_b);                                                                                                        \
+    free(hex_str_result_true);                                                                                              \
+    return true;                                                                                                            \
+}                                                                                                                           \
+bool test_uint_##N_a##_##N_b##_##N_result##_subtraction()                                                                   \
+{                                                                                                                           \
+    FILE *f_sub = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_subtraction.txt","r");    \
+    if(!f_sub)                                                                                                              \
+        return false;                                                                                                       \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
+    if(!f_samp)                                                                                                             \
+        return false;                                                                                                       \
+    char *hex_str_a = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                              \
+    char *hex_str_b = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                              \
+    char *hex_str_result_true = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(1024)+1);                                   \
+    while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
+    {                                                                                                                       \
+        uint(N_a) a;                                                                                                        \
+        uint_from_hex(a,hex_str_a);                                                                                         \
+        uint(N_b) b;                                                                                                        \
+        uint_from_hex(b,hex_str_b);                                                                                         \
+        uint(N_result) res_obt, res_true;                                                                                   \
+        if(!uint_sub(a,b,res_obt))                                                                                          \
+            return false;                                                                                                   \
+        if(fscanf(f_sub,"%s\n",hex_str_result_true) == EOF)                                                                 \
+            return false;                                                                                                   \
+        if(!uint_from_hex(res_true,hex_str_result_true))                                                                    \
+            return false;                                                                                                   \
+        if(!uint_eq(res_obt,res_true))                                                                                      \
+        {                                                                                                                   \
+            char *hex_str_result_obt = uint_to_hex(res_obt);                                                                \
+            printf("Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);                                       \
+            free(hex_str_result_obt);                                                                                       \
+            return false;                                                                                                   \
+        }                                                                                                                   \
+    }                                                                                                                       \
+    fclose(f_samp);                                                                                                         \
+    fclose(f_sub);                                                                                                          \
+    free(hex_str_a);                                                                                                        \
+    free(hex_str_b);                                                                                                        \
+    free(hex_str_result_true);                                                                                              \
+    return true;                                                                                                            \
+}                                                                                                                           \
+bool test_uint_##N_a##_##N_b##_##N_result##_multiplication()                                                                \
+{                                                                                                                           \
+    FILE *f_mul = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_multiplication.txt","r"); \
+    if(!f_mul)                                                                                                              \
+        return false;                                                                                                       \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
+    if(!f_samp)                                                                                                             \
+        return false;                                                                                                       \
+    char *hex_str_a = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                              \
+    char *hex_str_b = (char*)malloc(__UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                              \
+    char *hex_str_result_true = (char*)malloc(                                                                              \
+        __UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                                   \
+    while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
+    {                                                                                                                       \
+        uint(N_a) a;                                                                                                        \
+        uint_from_hex(a,hex_str_a);                                                                                         \
+        uint(N_b) b;                                                                                                        \
+        uint_from_hex(b,hex_str_b);                                                                                         \
+        uint(N_result) res_obt, res_true;                                                                                   \
+        if(!uint_mul(a,b,res_obt))                                                                                          \
+            return false;                                                                                                   \
+        if(fscanf(f_mul,"%s\n",hex_str_result_true) == EOF)                                                                 \
+            return false;                                                                                                   \
+        if(!uint_from_hex(res_true,hex_str_result_true))                                                                    \
+            return false;                                                                                                   \
+        if(!uint_eq(res_obt,res_true))                                                                                      \
+        {                                                                                                                   \
+            char *hex_str_result_obt = uint_to_hex(res_obt);                                                                \
+            printf("Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);                                       \
+            free(hex_str_result_obt);                                                                                       \
+            return false;                                                                                                   \
+        }                                                                                                                   \
+    }                                                                                                                       \
+    fclose(f_samp);                                                                                                         \
+    fclose(f_mul);                                                                                                          \
+    free(hex_str_a);                                                                                                        \
+    free(hex_str_b);                                                                                                        \
+    free(hex_str_result_true);                                                                                              \
+    return true;                                                                                                            \
+}                                                                                                                           \
+bool test_uint_##N_a##_##N_b##_##N_result##_ops()                                                                           \
+{                                                                                                                           \
+    if(!test_uint_##N_a##_##N_b##_##N_result##_addition())                                                                  \
+        return false;                                                                                                       \
+    if(!test_uint_##N_a##_##N_b##_##N_result##_subtraction())                                                               \
+        return false;                                                                                                       \
+    if(!test_uint_##N_a##_##N_b##_##N_result##_multiplication())                                                            \
+        return false;                                                                                                       \
     return true;                                                                                                            \
 }
 
-TEST_UINT_ADDITION(16,16,256)
-TEST_UINT_ADDITION(16,16,16)
+TEST_UINT_OPS(16,16,256)
+TEST_UINT_OPS(16,16,16)
 
-TEST_UINT_ADDITION(16,32,256)
-TEST_UINT_ADDITION(16,32,32)
-TEST_UINT_ADDITION(16,32,16)
+TEST_UINT_OPS(16,32,256)
+TEST_UINT_OPS(16,32,32)
+TEST_UINT_OPS(16,32,16)
 
-TEST_UINT_ADDITION(16,1024,256)
-TEST_UINT_ADDITION(16,1024,16)
-TEST_UINT_ADDITION(16,1024,1024)
+TEST_UINT_OPS(16,1024,256)
+TEST_UINT_OPS(16,1024,16)
+TEST_UINT_OPS(16,1024,1024)
 
-TEST_UINT_ADDITION(256,256,1024)
-TEST_UINT_ADDITION(256,256,256)
-TEST_UINT_ADDITION(256,256,16)
+TEST_UINT_OPS(256,256,1024)
+TEST_UINT_OPS(256,256,256)
+TEST_UINT_OPS(256,256,16)
 
-TEST_UINT_ADDITION(256,1024,1024)
-TEST_UINT_ADDITION(256,1024,256)
-TEST_UINT_ADDITION(256,1024,16)
+TEST_UINT_OPS(256,1024,1024)
+TEST_UINT_OPS(256,1024,256)
+TEST_UINT_OPS(256,1024,16)
+
+TEST_UINT_OPS(1024,32,1024)
+TEST_UINT_OPS(1024,32,32)
+TEST_UINT_OPS(1024,32,16)
+
+TEST_UINT_OPS(1024,256,1024)
+TEST_UINT_OPS(1024,256,256)
+TEST_UINT_OPS(1024,256,16)
 
 
 void test_uint()
@@ -178,22 +271,30 @@ void test_uint()
     assert(test_uint1024_from_to_hex_overflow());
 
 
-    assert(test_uint_16_16_256_addition());
-    assert(test_uint_16_16_16_addition());
+    assert(test_uint_16_16_256_ops());
+    assert(test_uint_16_16_16_ops());
 
-    assert(test_uint_16_32_256_addition());
-    assert(test_uint_16_32_32_addition());
-    assert(test_uint_16_32_16_addition());
+    assert(test_uint_16_32_256_ops());
+    assert(test_uint_16_32_32_ops());
+    assert(test_uint_16_32_16_ops());
 
-    assert(test_uint_16_1024_1024_addition());
-    assert(test_uint_16_1024_256_addition());
-    assert(test_uint_16_1024_16_addition());
+    assert(test_uint_16_1024_1024_ops());
+    assert(test_uint_16_1024_256_ops());
+    assert(test_uint_16_1024_16_ops());
 
-    assert(test_uint_256_256_1024_addition());
-    assert(test_uint_256_256_256_addition());
-    assert(test_uint_256_256_16_addition());
+    assert(test_uint_256_256_1024_ops());
+    assert(test_uint_256_256_256_ops());
+    assert(test_uint_256_256_16_ops());
 
-    assert(test_uint_256_1024_1024_addition());
-    assert(test_uint_256_1024_256_addition());
-    assert(test_uint_256_1024_16_addition());
+    assert(test_uint_256_1024_1024_ops());
+    assert(test_uint_256_1024_256_ops());
+    assert(test_uint_256_1024_16_ops());
+
+    assert(test_uint_1024_32_1024_ops());
+    assert(test_uint_1024_32_32_ops());
+    assert(test_uint_1024_32_16_ops());
+
+    assert(test_uint_1024_256_1024_ops());
+    assert(test_uint_1024_256_256_ops());
+    assert(test_uint_1024_256_16_ops());
 }

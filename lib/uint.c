@@ -224,46 +224,129 @@ bool __uint_sub(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t
         return false;
     if(a == result || b == result)
         return false;
-    
-    uint16_t *min_term, *max_term;
-    size_t min_term_size, max_term_size;
+
+    uint32_t carry = 0;
+    size_t common_upper_bound = MIN(MIN(a_size,b_size),result_size);
+    size_t word_i = 0;
+    /*
+        Subtract common part normally saving carry for future:
+        a0 a1 a2 a3 ... -> carry
+        b0 b1 b2 b3 ...
+                  ^
+    */
+    for(; word_i < common_upper_bound; ++word_i)
+    {
+        result[word_i] = a[word_i];
+        uint32_t total_neg = b[word_i] + carry;
+        if(a[word_i] < total_neg)
+        {
+            result[word_i] += __base - total_neg;
+            carry = 1;
+        }
+        else
+        {
+            result[word_i] -= total_neg;
+            carry = 0;
+        }
+    }
+
     if(a_size < b_size)
     {
-        min_term = a;
-        min_term_size = a_size;
-        max_term = b;
-        max_term_size = b_size;
+        size_t b_upper_bound = MIN(b_size,result_size);
+        /*
+            If b is of greater width than a, then if carry is 1 then it always will be 1.
+            That is why we first skip all zero b words if carry is zero.
+
+            a0 a1 a2 a3 0 0 ... 0   0    ...
+            b0 b1 b2 b3 0 0 ... bk  bk+1 ...
+                      ^         ^
+                  begin         end (bk != 0)
+        */
+        for(; (word_i < b_upper_bound) && (b[word_i] + carry == 0); ++word_i)
+            result[word_i] = 0;
+
+        if(word_i < b_upper_bound)
+        {
+            /*
+                If not all excess words of b were zero then we perform subtraction of bk from corresponding zero ak word.
+                After this carry is always one.
+            */
+            result[word_i] = __base - (b[word_i] + carry);  // Either carry (then first part was skipped) or bk is not zero now
+            carry = 1;
+            ++word_i;
+            for(; word_i < b_upper_bound; ++word_i)
+                result[word_i] = __base - (b[word_i] + carry); // carry and __base are optimized
+        }
     }
     else
     {
-        min_term = b;
-        min_term_size = b_size;
-        max_term = a;
-        max_term_size = a_size;
-    }
+        size_t a_upper_bound = MIN(a_size,result_size);
+        /*
+            If a is of greater width than b, then if carry is 0 then it always will be 0.
+            That is why we first skip all zero a words if carry is not zero (ai < carry is sufficient for that).
 
-    uint32_t carry = 0;
-    size_t min_term_upper_bound = MIN(min_term_size,result_size);
-    for(size_t word_i = 0; word_i < min_term_upper_bound; ++word_i)
-    {
-        uint32_t curr_sum = min_term[word_i] + max_term[word_i] + carry;
-        result[word_i] = curr_sum & __max_word;
-        carry = curr_sum >> BITS_PER_WORD;
-    }
-
-    size_t max_term_upper_bound = MIN(max_term_size,result_size);
-    for(size_t word_i = min_term_upper_bound; word_i < max_term_upper_bound; ++word_i)
-    {
-        uint32_t curr_sum = max_term[word_i] + carry;
-        result[word_i] = curr_sum & __max_word;
-        carry = curr_sum >> BITS_PER_WORD;
+            a0 a1 a2 a3 0 0 ... ak  ak+1 ...
+            b0 b1 b2 b3 0 0 ... 0   0    ...
+                      ^         ^
+                  begin         end (bk != 0)
+        */
+        for(; (word_i < a_upper_bound) && (a[word_i] < carry); ++word_i)
+            result[word_i] = __base - 1;
+        
+        if(word_i < a_upper_bound)
+        {
+            /*
+                If not all excess words of a were zero then we perform subtraction of carry from ak.
+                From now on carry is zero.
+            */
+            result[word_i] = a[word_i] - carry;
+            carry = 0;
+            ++word_i;
+            for(; word_i < a_upper_bound; ++word_i)
+                result[word_i] = a[word_i];
+        }
     }
     
-    if(result_size != max_term_upper_bound)
+    /*
+        If result width is greater than either a and b then excess words are either 0xffff or 0 depending on carry only.
+    */
+    for(; word_i < result_size; ++word_i)
+        result[word_i] = __base - carry;
+
+    return true;
+}
+
+
+bool __uint_mul(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    uint64_t carry = 0;
+    size_t a_last_i = a_size - 1;
+    size_t b_last_i = b_size - 1;
+    size_t result_upper_bound = MIN(a_last_i+b_last_i,result_size-1);
+    size_t res_i = 0;
+    for(; res_i <= result_upper_bound; ++res_i)
     {
-        result[max_term_upper_bound] = carry;
-        for(size_t word_i = max_term_upper_bound+1; word_i < result_size; ++word_i)
-            result[word_i] = 0;
+        size_t a_lower_bound = res_i > b_last_i ? res_i - b_last_i : 0;
+        size_t a_upper_bound = MIN(a_last_i,res_i);
+        uint64_t res_conv = carry;
+        for(size_t a_i = a_lower_bound; a_i <= a_upper_bound; ++a_i)
+        {
+            size_t b_i = res_i-a_i;
+            res_conv += (uint64_t)a[a_i]*(uint64_t)b[b_i];
+        }
+        carry = res_conv >> __UINT_BITS_PER_WORD;
+        result[res_i] = res_conv & __max_word;
+    }
+
+    for(; res_i < result_size; ++res_i)
+    {
+        result[res_i] = carry & __max_word;
+        carry >>= __UINT_BITS_PER_WORD;
     }
 
     return true;

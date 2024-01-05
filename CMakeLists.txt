@@ -4,7 +4,7 @@ project(lockpick LANGUAGES C)
 
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wall -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wall")
 
 set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 add_definitions(-DPROJECT_DIR="${PROJECT_DIR}")
@@ -28,7 +28,7 @@ target_include_directories(lockpick_tests PRIVATE ${LOCKPICK_INCLUDE_DIR})
 
 
 set(UINT_CASES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/uint/cases")
-set(RUN_UINT_CASES_TASK /usr/bin/python ${UINT_CASES_DIR}/generate.py --path ${UINT_CASES_DIR} 16_16 16_32 16_1024 256_256 256_1024)
+set(RUN_UINT_CASES_TASK /usr/bin/python ${UINT_CASES_DIR}/generate.py --path ${UINT_CASES_DIR} 16_16 16_32 16_1024 256_256 256_1024 1024_32 1024_256)
 
 add_custom_target(gen_tests COMMAND ${RUN_UINT_CASES_TASK})
 add_dependencies(lockpick_tests gen_tests)

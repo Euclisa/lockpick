@@ -5,6 +5,7 @@ import os
 CASES_PER_SET_DEFAULT = 10000
 
 DRY_FILE_NAME = "uint_test_files.txt"
+BASE = 1 << (1 << 10)
 
 def gen_single(size):
     uint_mode = random.randint(0,100)
@@ -28,16 +29,30 @@ def get_pair_addition_fn(first_size, second_size):
 def gen_pairs(first_size, second_size, path, cases_per_test):
     f_samp = open(f"{path}/uint_{first_size}_{second_size}.txt", 'w')
     f_add = open(f"{path}/uint_{first_size}_{second_size}_addition.txt", 'w')
+    f_sub = open(f"{path}/uint_{first_size}_{second_size}_subtraction.txt", 'w')
+    f_mul = open(f"{path}/uint_{first_size}_{second_size}_multiplication.txt", 'w')
     for test_i in range(cases_per_test):
         first_uint = gen_single(first_size)
         second_uint = gen_single(second_size)
-        res_uint = first_uint + second_uint
+        res_add = first_uint + second_uint
+        res_sub = first_uint - second_uint
+        res_mul = first_uint * second_uint
 
-        f_samp.write(f"{hex(first_uint)[2:]} {hex(second_uint)[2:]}\n")
-        f_add.write(f"{hex(res_uint)[2:]}\n")
+        first_hex = hex(first_uint)[2:]
+        second_hex = hex(second_uint)[2:]
+        add_hex = hex(res_add)[2:]
+        sub_hex = hex(res_sub if res_sub > 0 else BASE + res_sub)[2:]
+        mul_hex = hex(res_mul)[2:]
+        f_samp.write(f"{first_hex} {second_hex}\n")
+        f_add.write(f"{add_hex}\n")
+        f_sub.write(f"{sub_hex}\n")
+        f_mul.write(f"{mul_hex}\n")
+        
     
     f_samp.close()
     f_add.close()
+    f_sub.close()
+    f_mul.close()
 
 if __name__ == "__main__":
 
