@@ -31,11 +31,11 @@ def get_pair_addition_fn(first_size, second_size):
     return f"uint_{first_size}_{second_size}_addition.txt"
 
 def gen_pairs(first_size, second_size, path, cases_per_test):
-    f_samp = open(f"{path}/uint_{first_size}_{second_size}.txt", 'w')
-    f_add = open(f"{path}/uint_{first_size}_{second_size}_addition.txt", 'w')
-    f_sub = open(f"{path}/uint_{first_size}_{second_size}_subtraction.txt", 'w')
-    f_mul = open(f"{path}/uint_{first_size}_{second_size}_multiplication.txt", 'w')
-    f_comp = open(f"{path}/uint_{first_size}_{second_size}_comparison.txt", 'w')
+    f_samp = open(f"{path}/lp_uint_{first_size}_{second_size}.txt", 'w')
+    f_add = open(f"{path}/lp_uint_{first_size}_{second_size}_addition.txt", 'w')
+    f_sub = open(f"{path}/lp_uint_{first_size}_{second_size}_subtraction.txt", 'w')
+    f_mul = open(f"{path}/lp_uint_{first_size}_{second_size}_multiplication.txt", 'w')
+    f_comp = open(f"{path}/lp_uint_{first_size}_{second_size}_comparison.txt", 'w')
     for test_i in range(cases_per_test):
         first_uint = gen_single(first_size)
         if(random.randint(1,10) > 8):

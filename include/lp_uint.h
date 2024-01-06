@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_UINT_H
-#define _LOCKPICK_INCLUDE_UINT_H
+#ifndef _LOCKPICK_INCLUDE_LP_UINT_H
+#define _LOCKPICK_INCLUDE_LP_UINT_H
 
 #include <stdint.h>
 #include <assert.h>
@@ -76,4 +76,4 @@ bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
 #define lp_uint_geq(a,b) __lp_uint_geq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
 
 
-#endif  // _LOCKPICK_INCLUDE_UINT_H
+#endif  // _LOCKPICK_INCLUDE_LP_UINT_H

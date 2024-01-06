@@ -3,4 +3,4 @@
 
 void test_uint();
 
-#endif  // _LOCKPICK_TESTS_UINT_H
+#endif  // _LOCKPICK_TESTS_LP_UINT_H

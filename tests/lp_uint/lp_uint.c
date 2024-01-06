@@ -1,4 +1,4 @@
-#include <uint.h>
+#include <lp_uint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -103,10 +103,10 @@ TEST_UINT_FROM_TO_HEX(1024)
 #define TEST_UINT_OPS(N_a, N_b, N_result)                                                                                   \
 bool test_uint_##N_a##_##N_b##_##N_result##_addition()                                                                      \
 {                                                                                                                           \
-    FILE *f_add = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt","r");       \
+    FILE *f_add = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_addition.txt","r");       \
     if(!f_add)                                                                                                              \
         return false;                                                                                                       \
-    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt","r");               \
     if(!f_samp)                                                                                                             \
         return false;                                                                                                       \
     char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
@@ -143,10 +143,10 @@ bool test_uint_##N_a##_##N_b##_##N_result##_addition()                          
 }                                                                                                                           \
 bool test_uint_##N_a##_##N_b##_##N_result##_subtraction()                                                                   \
 {                                                                                                                           \
-    FILE *f_sub = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_subtraction.txt","r");    \
+    FILE *f_sub = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_subtraction.txt","r");    \
     if(!f_sub)                                                                                                              \
         return false;                                                                                                       \
-    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt","r");               \
     if(!f_samp)                                                                                                             \
         return false;                                                                                                       \
     char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
@@ -182,10 +182,10 @@ bool test_uint_##N_a##_##N_b##_##N_result##_subtraction()                       
 }                                                                                                                           \
 bool test_uint_##N_a##_##N_b##_##N_result##_multiplication()                                                                \
 {                                                                                                                           \
-    FILE *f_mul = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_multiplication.txt","r"); \
+    FILE *f_mul = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_multiplication.txt","r"); \
     if(!f_mul)                                                                                                              \
         return false;                                                                                                       \
-    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt","r");               \
     if(!f_samp)                                                                                                             \
         return false;                                                                                                       \
     char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
@@ -222,10 +222,10 @@ bool test_uint_##N_a##_##N_b##_##N_result##_multiplication()                    
 }                                                                                                                           \
 bool test_uint_##N_a##_##N_b##_##N_result##_comparison()                                                                    \
 {                                                                                                                           \
-    FILE *f_comp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_comparison.txt","r");    \
+    FILE *f_comp = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_comparison.txt","r");    \
     if(!f_comp)                                                                                                             \
         return false;                                                                                                       \
-    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt","r");               \
+    FILE *f_samp = fopen("/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt","r");               \
     if(!f_samp)                                                                                                             \
         return false;                                                                                                       \
     char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
