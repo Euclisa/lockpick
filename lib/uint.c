@@ -381,41 +381,34 @@ bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
 }
 
 
+static inline bool __lp_uint_eq_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+{
+    size_t word_i = 0;
+    for(; word_i < a_size; ++word_i)
+    {
+        if(a[word_i] != b[word_i])
+            return false;
+    }
+
+    for(; word_i < b_size; ++word_i)
+    {
+        if(b[word_i] != 0)
+            return false;
+    }
+
+    return true;
+}
+
+
 bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
     
-    __lp_uint_word_t *min_term, *max_term;
-    size_t min_term_size, max_term_size;
     if(a_size < b_size)
-    {
-        min_term = a;
-        min_term_size = a_size;
-        max_term = b;
-        max_term_size = b_size;
-    }
+        return __lp_uint_eq_left_smaller(a,a_size,b,b_size);
     else
-    {
-        min_term = b;
-        min_term_size = b_size;
-        max_term = a;
-        max_term_size = a_size;
-    }
-
-    for(size_t word_i = 0; word_i < min_term_size; ++word_i)
-    {
-        if(min_term[word_i] != max_term[word_i])
-            return false;
-    }
-
-    for(size_t word_i = min_term_size; word_i < max_term_size; ++word_i)
-    {
-        if(max_term[word_i] != 0)
-            return false;
-    }
-
-    return true;
+        return __lp_uint_eq_left_smaller(b,b_size,a,a_size);
 }
 
 
