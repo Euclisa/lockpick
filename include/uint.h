@@ -11,43 +11,45 @@
 */
 
 
-#define __UINT_BITS_PER_WORD (sizeof(uint16_t)*8)
-#define __UINT_BITS_PER_HEX 4
-#define __UINT_HEXES_PER_WORD (__UINT_BITS_PER_WORD/__UINT_BITS_PER_HEX)
+extern const __uint128_t __lp_uint_base;
+extern const uint64_t __lp_uint_max_word;
+extern const uint64_t __lp_uint_hexes_per_word;
 
+#define __lp_uint_bits_per_word (sizeof(uint64_t)*8)
+#define __lp_uint_bits_per_hex 4
 
-#define __is_pow_2(N) (((N) & ((N)-1)) == 0)
+#define __LP_UINT_IS_POW_2(N) (((N) & ((N)-1)) == 0)
 
-#define __UINT_VALIDATE_WIDTH(N) ((((N) % __UINT_BITS_PER_WORD == 0) && __is_pow_2(N)) ? (int64_t)(N/__UINT_BITS_PER_WORD) : (int64_t)-1)
+#define __LP_UINT_VALIDATE_WIDTH(N) ((((N) >= __lp_uint_bits_per_word) && __LP_UINT_IS_POW_2(N)) ? (int64_t)(N/__lp_uint_bits_per_word) : (int64_t)-1)
 
-#define __UINT_MAX_HEX_STR_REPRESENTATION(N) (__UINT_VALIDATE_WIDTH(N) >= 0 ? (int64_t)(N/__UINT_BITS_PER_HEX) : (int64_t)-1)
+#define __LP_UINT_MAX_HEX_STR_REPRESENTATION(N) (__LP_UINT_VALIDATE_WIDTH(N) >= 0 ? (int64_t)(N/__lp_uint_bits_per_hex) : (int64_t)-1)
 
 
 #define uint(N)                                                                                 \
 struct                                                                                          \
 {                                                                                               \
-    uint16_t __buffer[__UINT_VALIDATE_WIDTH(N)];                                                \
+    uint64_t __buffer[__LP_UINT_VALIDATE_WIDTH(N)];                                             \
 }
 
 #define __array_size(arr) (sizeof(arr) / sizeof(arr[0]))
 
-bool __uint_from_hex(const char *hex_str, uint16_t *value, size_t value_size);
-#define uint_from_hex(value,hex_str) __uint_from_hex(hex_str, (value).__buffer, __array_size((value).__buffer))
+bool __lp_uint_from_hex(const char *hex_str, uint64_t *value, size_t value_size);
+#define lp_uint_from_hex(value,hex_str) __lp_uint_from_hex(hex_str, (value).__buffer, __array_size((value).__buffer))
 
-char *__uint_to_hex(uint16_t *value, size_t value_size);
-#define uint_to_hex(value) __uint_to_hex((value).__buffer, __array_size((value).__buffer))
+char *__lp_uint_to_hex(uint64_t *value, size_t value_size);
+#define lp_uint_to_hex(value) __lp_uint_to_hex((value).__buffer, __array_size((value).__buffer))
 
-bool __uint_add(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size);
-#define uint_add(a,b,result) __uint_add((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+bool __lp_uint_add(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size);
+#define lp_uint_add(a,b,result) __lp_uint_add((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
-bool __uint_sub(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size);
-#define uint_sub(a,b,result) __uint_sub((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size);
+#define lp_uint_sub(a,b,result) __lp_uint_sub((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
-bool __uint_mul(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size, uint16_t *result, size_t result_size);
-#define uint_mul(a,b,result) __uint_mul((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+bool __lp_uint_mul(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size);
+#define lp_uint_mul(a,b,result) __lp_uint_mul((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
-bool __uint_eq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size);
-#define uint_eq(a,b) __uint_eq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
+bool __lp_uint_eq(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size);
+#define lp_uint_eq(a,b) __lp_uint_eq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
 
 
 #endif  // _LOCKPICK_INCLUDE_UINT_H

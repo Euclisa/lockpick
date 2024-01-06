@@ -28,7 +28,7 @@ target_include_directories(lockpick_tests PRIVATE ${LOCKPICK_INCLUDE_DIR})
 
 
 set(UINT_CASES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/uint/cases")
-set(RUN_UINT_CASES_TASK /usr/bin/python ${UINT_CASES_DIR}/generate.py --path ${UINT_CASES_DIR} 16_16 16_32 16_1024 256_256 256_1024 1024_32 1024_256)
+set(RUN_UINT_CASES_TASK /usr/bin/python ${UINT_CASES_DIR}/generate.py --path ${UINT_CASES_DIR} 64_64 64_128 64_1024 256_256 256_1024 1024_128 1024_256)
 
 add_custom_target(gen_tests COMMAND ${RUN_UINT_CASES_TASK})
 add_dependencies(lockpick_tests gen_tests)
