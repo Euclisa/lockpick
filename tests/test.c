@@ -4,5 +4,5 @@
 int main()
 {
     //test_rb_tree();
-    test_uint();
+    test_lp_uint();
 }

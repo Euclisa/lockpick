@@ -66,7 +66,7 @@ def gen_pairs(first_size, second_size, path, cases_per_test):
 
 if __name__ == "__main__":
 
-    arg_parser = argparse.ArgumentParser(description="uint(N) test cases generator")
+    arg_parser = argparse.ArgumentParser(description="lp_uint(N) test cases generator")
 
     arg_parser.add_argument('pairs',nargs='*',type=str)
     arg_parser.add_argument('--cases_num','-c',type=int,default=CASES_PER_SET_DEFAULT)

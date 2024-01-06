@@ -26,7 +26,7 @@ extern const uint64_t __LP_UINT_HEXES_PER_WORD;
 #define __LP_UINT_MAX_HEX_STR_REPRESENTATION(N) (__LP_UINT_VALIDATE_WIDTH(N) >= 0 ? (int64_t)(N/__LP_UINT_BITS_PER_HEX) : (int64_t)-1)
 
 
-#define uint(N)                                                                                 \
+#define lp_uint(N)                                                                                 \
 struct                                                                                          \
 {                                                                                               \
     __lp_uint_word_t __buffer[__LP_UINT_VALIDATE_WIDTH(N)];                                             \

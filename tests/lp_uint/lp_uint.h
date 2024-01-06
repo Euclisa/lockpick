@@ -1,6 +1,6 @@
 #ifndef _LOCKPICK_TESTS_UINT_H
 #define _LOCKPICK_TESTS_UINT_H
 
-void test_uint();
+void test_lp_uint();
 
 #endif  // _LOCKPICK_TESTS_LP_UINT_H
