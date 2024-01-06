@@ -11,18 +11,18 @@
 */
 
 
-extern const __uint128_t __lp_uint_base;
-extern const uint64_t __lp_uint_max_word;
-extern const uint64_t __lp_uint_hexes_per_word;
+extern const __uint128_t __LP_UINT_BASE;
+extern const uint64_t __LP_UINT_MAX_WORD;
+extern const uint64_t __LP_UINT_HEXES_PER_WORD;
 
-#define __lp_uint_bits_per_word (sizeof(uint64_t)*8)
-#define __lp_uint_bits_per_hex 4
+#define __LP_UINT_BITS_PER_WORD (sizeof(uint64_t)*8)
+#define __LP_UINT_BITS_PER_HEX 4
 
 #define __LP_UINT_IS_POW_2(N) (((N) & ((N)-1)) == 0)
 
-#define __LP_UINT_VALIDATE_WIDTH(N) ((((N) >= __lp_uint_bits_per_word) && __LP_UINT_IS_POW_2(N)) ? (int64_t)(N/__lp_uint_bits_per_word) : (int64_t)-1)
+#define __LP_UINT_VALIDATE_WIDTH(N) ((((N) >= __LP_UINT_BITS_PER_WORD) && __LP_UINT_IS_POW_2(N)) ? (int64_t)(N/__LP_UINT_BITS_PER_WORD) : (int64_t)-1)
 
-#define __LP_UINT_MAX_HEX_STR_REPRESENTATION(N) (__LP_UINT_VALIDATE_WIDTH(N) >= 0 ? (int64_t)(N/__lp_uint_bits_per_hex) : (int64_t)-1)
+#define __LP_UINT_MAX_HEX_STR_REPRESENTATION(N) (__LP_UINT_VALIDATE_WIDTH(N) >= 0 ? (int64_t)(N/__LP_UINT_BITS_PER_HEX) : (int64_t)-1)
 
 
 #define uint(N)                                                                                 \

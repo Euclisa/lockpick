@@ -7,9 +7,9 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-const __uint128_t __lp_uint_base = ((__uint128_t)1 << (sizeof(uint64_t)*8));
-const uint64_t __lp_uint_max_word = 0xffffffffffffffff;
-const uint64_t __lp_uint_hexes_per_word = __lp_uint_bits_per_word / __lp_uint_bits_per_hex;
+const __uint128_t __LP_UINT_BASE = ((__uint128_t)1 << (sizeof(uint64_t)*8));
+const uint64_t __LP_UINT_MAX_WORD = 0xffffffffffffffff;
+const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / __LP_UINT_BITS_PER_HEX;
 
 
 /**
@@ -46,7 +46,7 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, uint64
     int64_t curr_char_i = start;
     
     // Characters are parsed in reverse order so low hexes come first
-    for (uint8_t offset = 0; offset < __lp_uint_bits_per_word; offset += __lp_uint_bits_per_hex)
+    for (uint8_t offset = 0; offset < __LP_UINT_BITS_PER_WORD; offset += __LP_UINT_BITS_PER_HEX)
     {
         // If nothing left to parse
         if (curr_char_i < 0)
@@ -108,7 +108,7 @@ uint8_t __lp_uint_i2ch(uint64_t value, char *dest, bool truncate_zeros)
 {
     static const char i2ch_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     uint8_t wrote_hexes = 0;
-    for(int8_t shift = __lp_uint_bits_per_word-__lp_uint_bits_per_hex; shift >= 0; shift -= __lp_uint_bits_per_hex)
+    for(int8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX; shift >= 0; shift -= __LP_UINT_BITS_PER_HEX)
     {
         uint64_t shifted = value >> shift;
         if(truncate_zeros && shifted == 0)
@@ -145,8 +145,8 @@ char *__lp_uint_to_hex(uint64_t *value, size_t value_size)
         return "0";
 
     // All high zeros in the highest word must be truncated
-    size_t hex_str_len = (significant_words_offset) * __lp_uint_hexes_per_word;
-    for(uint8_t shift = 0; shift < __lp_uint_bits_per_word && (value[significant_words_offset] >> shift); shift += __lp_uint_bits_per_hex)
+    size_t hex_str_len = (significant_words_offset) * __LP_UINT_HEXES_PER_WORD;
+    for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += __LP_UINT_BITS_PER_HEX)
         ++hex_str_len;
 
     char *hex_str = (char*)malloc(hex_str_len+1);
@@ -168,15 +168,15 @@ static inline void __lp_uint_add_inplace_bigger(uint64_t *dest, size_t dest_size
     for(; word_i < other_size; ++word_i)
     {
         __uint128_t curr_sum = (__uint128_t)dest[word_i] + (__uint128_t)other[word_i] + carry;
-        dest[word_i] = curr_sum & __lp_uint_max_word;
-        carry = curr_sum >> __lp_uint_bits_per_word;
+        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
 
     for(; (word_i < dest_size) && (carry > 0); ++word_i)
     {
         __uint128_t curr_sum = (__uint128_t)dest[word_i] + carry;
-        dest[word_i] = curr_sum & __lp_uint_max_word;
-        carry = curr_sum >> __lp_uint_bits_per_word;
+        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
 }
 
@@ -192,7 +192,7 @@ static inline void __lp_uint_add_2w_inplace(uint64_t *dest, size_t dest_size, ui
     {
         __uint128_t sum1 = (__uint128_t)dest[1] + (__uint128_t)other_w1 + (__uint128_t)carry;
         dest[1] = sum1;
-        carry = sum1 >> __lp_uint_bits_per_word;
+        carry = sum1 >> __LP_UINT_BITS_PER_WORD;
     }
 
     if(carry && dest_size > 2)
@@ -212,16 +212,16 @@ static inline bool __lp_uint_add_left_smaller(uint64_t *a, size_t a_size, uint64
     for(; word_i < a_upper_bound; ++word_i)
     {
         __uint128_t curr_sum = (__uint128_t)a[word_i] + (__uint128_t)b[word_i] + carry;
-        result[word_i] = curr_sum & __lp_uint_max_word;
-        carry = curr_sum >> __lp_uint_bits_per_word;
+        result[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
 
     size_t b_upper_bound = MIN(b_size,result_size);
     for(; word_i < b_upper_bound; ++word_i)
     {
         __uint128_t curr_sum = (__uint128_t)b[word_i] + carry;
-        result[word_i] = curr_sum & __lp_uint_max_word;
-        carry = curr_sum >> __lp_uint_bits_per_word;
+        result[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
     
     if(result_size != b_upper_bound)
@@ -271,7 +271,7 @@ bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
         __uint128_t total_neg = b[word_i] + carry;
         if(a[word_i] < total_neg)
         {
-            result[word_i] += __lp_uint_base - total_neg;
+            result[word_i] += __LP_UINT_BASE - total_neg;
             carry = 1;
         }
         else
@@ -302,11 +302,11 @@ bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
                 If not all excess words of b were zero then we perform subtraction of bk from corresponding zero ak word.
                 After this carry is always one.
             */
-            result[word_i] = __lp_uint_base - (b[word_i] + carry);  // Either carry (then first part was skipped) or bk is not zero now
+            result[word_i] = __LP_UINT_BASE - (b[word_i] + carry);  // Either carry (then first part was skipped) or bk is not zero now
             carry = 1;
             ++word_i;
             for(; word_i < b_upper_bound; ++word_i)
-                result[word_i] = __lp_uint_base - (b[word_i] + carry); // carry and __lp_uint_base are optimized
+                result[word_i] = __LP_UINT_BASE - (b[word_i] + carry); // carry and __LP_UINT_BASE are optimized
         }
     }
     else
@@ -322,7 +322,7 @@ bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
                   begin         end (bk != 0)
         */
         for(; (word_i < a_upper_bound) && (a[word_i] < carry); ++word_i)
-            result[word_i] = __lp_uint_base - 1;
+            result[word_i] = __LP_UINT_BASE - 1;
         
         if(word_i < a_upper_bound)
         {
@@ -342,7 +342,7 @@ bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
         If result width is greater than either a and b then excess words are either 0xffff or 0 depending on carry only.
     */
     for(; word_i < result_size; ++word_i)
-        result[word_i] = __lp_uint_base - carry;
+        result[word_i] = __LP_UINT_BASE - carry;
 
     return true;
 }
@@ -372,7 +372,7 @@ bool __lp_uint_mul(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
         {
             size_t b_i = res_i-a_i;
             curr_mul = (__uint128_t)a[a_i]*(__uint128_t)b[b_i];
-            uint64_t curr_mul_words[2] = {curr_mul, curr_mul >> __lp_uint_bits_per_word};
+            uint64_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
             __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
         }
     }

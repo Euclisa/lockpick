@@ -57,7 +57,7 @@ bool test_uint##N##_from_to_hex()                                               
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                  \
     {                                                                                                                       \
         uint(N) val;                                                                                                        \
-        size_t hexes_num = N*__lp_uint_hexes_per_word/__lp_uint_bits_per_word;                                                                  \
+        size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                                                  \
         char *original_hex_str = __rand_hex_str(hexes_num);                                                                 \
         lp_uint_from_hex(val,original_hex_str);                                                                                \
         char *converted_hex_str = lp_uint_to_hex(val);                                                                         \
@@ -78,8 +78,8 @@ bool test_uint##N##_from_to_hex_overflow()                                      
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                  \
     {                                                                                                                       \
         uint(N) val;                                                                                                        \
-        size_t hexes_num = N*__lp_uint_hexes_per_word/__lp_uint_bits_per_word;                                                                  \
-        size_t hexes_num_overflowed = hexes_num + rand()%(N/__lp_uint_bits_per_word*4);                                               \
+        size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                                                  \
+        size_t hexes_num_overflowed = hexes_num + rand()%(N/__LP_UINT_BITS_PER_WORD*4);                                               \
         char *original_hex_str = __rand_hex_str(hexes_num_overflowed);                                                      \
         lp_uint_from_hex(val,original_hex_str);                                                                                \
         char *converted_hex_str = lp_uint_to_hex(val);                                                                         \
