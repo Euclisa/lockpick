@@ -53,4 +53,27 @@ bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_
 #define lp_uint_eq(a,b) __lp_uint_eq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
 
 
+typedef enum lp_uint_3way
+{
+    LP_UINT_EQUAL,
+    LP_UINT_LESS,
+    LP_UINT_GREATER
+} lp_uint_3way_t;
+
+lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
+#define lp_uint_3way(a,b) __lp_uint_3way((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
+
+bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
+#define lp_uint_ls(a,b) __lp_uint_ls((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
+
+bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
+#define lp_uint_leq(a,b) __lp_uint_leq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
+
+bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
+#define lp_uint_gt(a,b) __lp_uint_gt((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
+
+bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
+#define lp_uint_geq(a,b) __lp_uint_geq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
+
+
 #endif  // _LOCKPICK_INCLUDE_UINT_H

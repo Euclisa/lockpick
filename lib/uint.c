@@ -412,7 +412,7 @@ bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_
 }
 
 
-bool __uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
@@ -435,126 +435,47 @@ bool __uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b
     for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
     {
         if(max_term[word_i] != 0)
-            return a != max_term;
+        {
+            if(a != max_term)
+                return LP_UINT_LESS;
+            else
+                return LP_UINT_GREATER;
+        }
     }
 
     for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
     {
         if(a[word_i] == b[word_i])
             continue;
-        return a[word_i] < b[word_i];
+        if(a[word_i] < b[word_i])
+            return LP_UINT_LESS;
+        else
+            return LP_UINT_GREATER;
     }
 
-    return false;
+    return LP_UINT_EQUAL;
 }
 
 
-bool __uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return false;
-    
-    __lp_uint_word_t *max_term;
-    int64_t min_term_size, max_term_size;
-    if(a_size < b_size)
-    {
-        min_term_size = a_size;
-        max_term = b;
-        max_term_size = b_size;
-    }
-    else
-    {
-        min_term_size = b_size;
-        max_term = a;
-        max_term_size = a_size;
-    }
-
-    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
-    {
-        if(max_term[word_i] != 0)
-            return a == max_term;
-    }
-
-    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
-    {
-        if(a[word_i] == b[word_i])
-            continue;
-        return a[word_i] > b[word_i];
-    }
-
-    return false;
+    return __lp_uint_3way(a,a_size,b,b_size) == LP_UINT_LESS;
 }
 
 
-bool __uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return false;
-    
-    __lp_uint_word_t *max_term;
-    int64_t min_term_size, max_term_size;
-    if(a_size < b_size)
-    {
-        min_term_size = a_size;
-        max_term = b;
-        max_term_size = b_size;
-    }
-    else
-    {
-        min_term_size = b_size;
-        max_term = a;
-        max_term_size = a_size;
-    }
-
-    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
-    {
-        if(max_term[word_i] != 0)
-            return a != max_term;
-    }
-
-    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
-    {
-        if(a[word_i] == b[word_i])
-            continue;
-        return a[word_i] < b[word_i];
-    }
-
-    return true;
+    return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_GREATER;
 }
 
 
-bool __uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return false;
-    
-    __lp_uint_word_t *max_term;
-    int64_t min_term_size, max_term_size;
-    if(a_size < b_size)
-    {
-        min_term_size = a_size;
-        max_term = b;
-        max_term_size = b_size;
-    }
-    else
-    {
-        min_term_size = b_size;
-        max_term = a;
-        max_term_size = a_size;
-    }
+    return __lp_uint_3way(a,a_size,b,b_size) == LP_UINT_GREATER;
+}
 
-    for(int64_t word_i = max_term_size-1; word_i >= min_term_size; --word_i)
-    {
-        if(max_term[word_i] != 0)
-            return a == max_term;
-    }
 
-    for(int64_t word_i = min_term_size-1; word_i >= 0; --word_i)
-    {
-        if(a[word_i] == b[word_i])
-            continue;
-        return a[word_i] > b[word_i];
-    }
-
-    return true;
+bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+{
+    return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_LESS;
 }

@@ -5,7 +5,7 @@ import os
 CASES_PER_SET_DEFAULT = 10000
 
 DRY_FILE_NAME = "uint_test_files.txt"
-BASE = 1 << (1 << 10)
+BASE = 1 << (1 << 11)
 
 def gen_single(size):
     uint_mode = random.randint(0,100)
@@ -20,6 +20,10 @@ def gen_single(size):
     
     return uint
 
+
+def pad_uint_to_size(uint, size):
+    return min(2**size-1,uint)
+
 def get_pair_fn(first_size, second_size):
     return f"uint_{first_size}_{second_size}.txt"
 
@@ -31,12 +35,17 @@ def gen_pairs(first_size, second_size, path, cases_per_test):
     f_add = open(f"{path}/uint_{first_size}_{second_size}_addition.txt", 'w')
     f_sub = open(f"{path}/uint_{first_size}_{second_size}_subtraction.txt", 'w')
     f_mul = open(f"{path}/uint_{first_size}_{second_size}_multiplication.txt", 'w')
+    f_comp = open(f"{path}/uint_{first_size}_{second_size}_comparison.txt", 'w')
     for test_i in range(cases_per_test):
         first_uint = gen_single(first_size)
-        second_uint = gen_single(second_size)
+        if(random.randint(1,10) > 8):
+            second_uint = pad_uint_to_size(first_uint,second_size)
+        else:
+            second_uint = gen_single(second_size)
         res_add = first_uint + second_uint
         res_sub = first_uint - second_uint
         res_mul = first_uint * second_uint
+        res_comp = 0 if first_uint == second_uint else (1 if first_uint < second_uint else 2)
 
         first_hex = hex(first_uint)[2:]
         second_hex = hex(second_uint)[2:]
@@ -47,6 +56,7 @@ def gen_pairs(first_size, second_size, path, cases_per_test):
         f_add.write(f"{add_hex}\n")
         f_sub.write(f"{sub_hex}\n")
         f_mul.write(f"{mul_hex}\n")
+        f_comp.write(f"{res_comp}\n")
         
     
     f_samp.close()
