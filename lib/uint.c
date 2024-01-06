@@ -7,8 +7,8 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-const __uint128_t __LP_UINT_BASE = ((__uint128_t)1 << (sizeof(uint64_t)*8));
-const uint64_t __LP_UINT_MAX_WORD = 0xffffffffffffffff;
+const __uint128_t __LP_UINT_BASE = ((__uint128_t)1 << (__LP_UINT_BITS_PER_WORD));
+const __lp_uint_word_t __LP_UINT_MAX_WORD = (__lp_uint_word_t)-1;
 const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / __LP_UINT_BITS_PER_HEX;
 
 
@@ -40,7 +40,7 @@ uint8_t __uint_ch2i(char char_hex)
  * Returns number of character parsed.
  * -1 if invalid character was found.
  */
-int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, uint64_t *result)
+int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_uint_word_t *result)
 {
     *result = 0;
     int64_t curr_char_i = start;
@@ -53,7 +53,7 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, uint64
             break;
 
         char curr_char = hex_str[curr_char_i];
-        uint64_t char_converted = __uint_ch2i(curr_char);
+        __lp_uint_word_t char_converted = __uint_ch2i(curr_char);
         if(char_converted == BAD_CHAR)
             return -1;
 
@@ -75,7 +75,7 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, uint64
  * 
  * This is not supposed to be called by user. Use 'lp_uint_from_hex' macro instead.
  */
-bool __lp_uint_from_hex(const char *hex_str, uint64_t *value, size_t value_size)
+bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size)
 {
     size_t hex_str_len = strlen(hex_str);
     int64_t curr_char_i = hex_str_len-1;
@@ -104,13 +104,13 @@ bool __lp_uint_from_hex(const char *hex_str, uint64_t *value, size_t value_size)
  * 
  * Returns number of characters written.
  */
-uint8_t __lp_uint_i2ch(uint64_t value, char *dest, bool truncate_zeros)
+uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, bool truncate_zeros)
 {
     static const char i2ch_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     uint8_t wrote_hexes = 0;
     for(int8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX; shift >= 0; shift -= __LP_UINT_BITS_PER_HEX)
     {
-        uint64_t shifted = value >> shift;
+        __lp_uint_word_t shifted = value >> shift;
         if(truncate_zeros && shifted == 0)
             continue;
         char shifted_hex = i2ch_map[shifted & 0xf];
@@ -131,7 +131,7 @@ uint8_t __lp_uint_i2ch(uint64_t value, char *dest, bool truncate_zeros)
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
-char *__lp_uint_to_hex(uint64_t *value, size_t value_size)
+char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size)
 {
     if(!value)
         return NULL;
@@ -161,7 +161,7 @@ char *__lp_uint_to_hex(uint64_t *value, size_t value_size)
 }
 
 
-static inline void __lp_uint_add_inplace_bigger(uint64_t *dest, size_t dest_size, uint64_t *other, size_t other_size)
+static inline void __lp_uint_add_inplace_bigger(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
 {
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -181,12 +181,12 @@ static inline void __lp_uint_add_inplace_bigger(uint64_t *dest, size_t dest_size
 }
 
 
-static inline void __lp_uint_add_2w_inplace(uint64_t *dest, size_t dest_size, uint64_t *other)
+static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other)
 {
-    uint64_t other_w0 = other[0];
-    uint64_t other_w1 = other[1];
+    __lp_uint_word_t other_w0 = other[0];
+    __lp_uint_word_t other_w1 = other[1];
     dest[0] += other_w0;
-    uint64_t carry = (dest[0] < other_w0) ? 1 : 0;
+    __lp_uint_word_t carry = (dest[0] < other_w0) ? 1 : 0;
 
     if(dest_size > 1)
     {
@@ -204,7 +204,7 @@ static inline void __lp_uint_add_2w_inplace(uint64_t *dest, size_t dest_size, ui
 }
 
 
-static inline bool __lp_uint_add_left_smaller(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size)
+static inline bool __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -235,7 +235,7 @@ static inline bool __lp_uint_add_left_smaller(uint64_t *a, size_t a_size, uint64
 }
 
 
-bool __lp_uint_add(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size)
+bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -249,7 +249,7 @@ bool __lp_uint_add(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
 }
 
 
-bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size)
+bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -348,7 +348,7 @@ bool __lp_uint_sub(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
 }
 
 
-bool __lp_uint_mul(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint64_t *result, size_t result_size)
+bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -372,7 +372,7 @@ bool __lp_uint_mul(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
         {
             size_t b_i = res_i-a_i;
             curr_mul = (__uint128_t)a[a_i]*(__uint128_t)b[b_i];
-            uint64_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
+            __lp_uint_word_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
             __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
         }
     }
@@ -381,12 +381,12 @@ bool __lp_uint_mul(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size, uint6
 }
 
 
-bool __lp_uint_eq(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size)
+bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
     
-    uint64_t *min_term, *max_term;
+    __lp_uint_word_t *min_term, *max_term;
     size_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
@@ -419,12 +419,12 @@ bool __lp_uint_eq(uint64_t *a, size_t a_size, uint64_t *b, size_t b_size)
 }
 
 
-bool __uint_ls(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+bool __uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
     
-    uint16_t *max_term;
+    __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
@@ -456,12 +456,12 @@ bool __uint_ls(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
 }
 
 
-bool __uint_gt(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+bool __uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
     
-    uint16_t *max_term;
+    __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
@@ -493,12 +493,12 @@ bool __uint_gt(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
 }
 
 
-bool __uint_leq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+bool __uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
     
-    uint16_t *max_term;
+    __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
@@ -530,12 +530,12 @@ bool __uint_leq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
 }
 
 
-bool __uint_geq(uint16_t *a, size_t a_size, uint16_t *b, size_t b_size)
+bool __uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
     
-    uint16_t *max_term;
+    __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
