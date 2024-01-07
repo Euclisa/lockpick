@@ -15,8 +15,31 @@
 #define __LP_TEST_MICRO_DECIMALS 1000000
 #define __LP_TEST_MILLI_DECIMALS 1000
 
+#define __LP_TEST_ALLOCATOR_CLEAR ((size_t)-1)
+#define __LP_TEST_ALLOCATOR_BUFF_SIZE 1024
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+
+
+char *__lp_test_allocator(size_t size)
+{
+    static char buffer[__LP_TEST_ALLOCATOR_BUFF_SIZE];
+    static size_t offset = 0;
+    
+    if(size == __LP_TEST_ALLOCATOR_CLEAR)
+    {
+        offset = 0;
+        return buffer;
+    }
+
+    affirmf((__LP_TEST_ALLOCATOR_BUFF_SIZE-offset) >= size, "Failed to allocate %ld bytes. Out of memory.",size);
+
+    char *to_ret = buffer+offset;
+    offset += size;
+
+    return to_ret;
+}
 
 
 char *__get_time_str(const char *format)
@@ -25,7 +48,7 @@ char *__get_time_str(const char *format)
 
     time_t now = time(NULL);
 
-    char *time_str = (char*)malloc(MAX_TIME_STR_SIZE+1);
+    char *time_str = __lp_test_allocator(MAX_TIME_STR_SIZE+1);
     affirmf(time_str,"Failed to allocate string of length %ld",MAX_TIME_STR_SIZE);
 
     affirmf(strftime(time_str, MAX_TIME_STR_SIZE, format, localtime(&now)) > 0,"Failed to fetch local time"); 
@@ -38,14 +61,13 @@ void __lp_test_print_init(const char *project_name_str)
 {
     char *time_str = __get_time_str("%x %X");
     printf("*** Quality Assurance for '%s' (%s) ***\n",project_name_str,time_str);
-    free(time_str);
 }
 
 
 char *__create_padding(uint8_t curr_level)
 {
     uint16_t pad_size = (curr_level)*2;
-    char *str = malloc(pad_size+1);
+    char *str = __lp_test_allocator(pad_size+1);
     affirmf(str,"Failed to allocate string of length %ld",pad_size);
     
     for(size_t i = 0; i < pad_size; ++i)
@@ -62,9 +84,6 @@ void __lp_test_print_enter(uint8_t curr_level, const char *test_call_str)
     char *time_str = __get_time_str("%X");
     printf("%s|-+-> [%s] %sRUNNING%s Test: %s\n",
         space_padding,time_str,__LP_TEST_RUNNING_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC,test_call_str);
-
-    free(space_padding);
-    free(time_str);
 }
 
 
@@ -77,7 +96,7 @@ char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, 
     size_t stats_str_len = snprintf(NULL,0,stats_format,
         test_call_str,tests_passed,cases_passed,duration_total_ms,duration_per_case_ns)+1;
 
-    char *stats_str = (char*)malloc(stats_str_len+1);
+    char *stats_str = __lp_test_allocator(stats_str_len+1);
     affirmf(stats_str,"Failed to allocate string of length %ld",stats_str_len);
 
     uint64_t chars_written = snprintf(stats_str,stats_str_len,stats_format,
@@ -94,7 +113,7 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
     char *time_str = __get_time_str("%X");
 
     const size_t status_str_len = 32;
-    char *status_str = (char*)malloc(status_str_len+1);
+    char *status_str = __lp_test_allocator(status_str_len+1);
 
     uint64_t tests_passed = tests_total - tests_failed;
     bool print_stats = true;
@@ -115,23 +134,15 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
     {
         char *stats_str = __lp_test_get_stats_str(test_call_str,tests_passed,cases_passed,duration_total_ns);
         printf("%s",stats_str);
-        free(stats_str);
     }
 
     printf("\n");
-
-    free(space_padding);
-    free(time_str);
-    free(status_str);
 }
 
 
 void __lp_test_print_end(const char *project_name_str, uint64_t tests_num, uint64_t duration_total_ns, bool failed)
 {
-    // char *time_str = __get_time_str("%F %T");
-
     uint64_t duration_total_ms = duration_total_ns/(__LP_TEST_NANO_DECIMALS/__LP_TEST_MILLI_DECIMALS);
-    // uint64_t av_duration_mcs = mcs_time / tests_num;
 
     if(failed)
         printf("*** Quality Assurance for '%s' %sFAILED%s (%ld ms) ***\n",
@@ -243,4 +254,6 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
             break;
         }
     }
+
+    __lp_test_allocator(__LP_TEST_ALLOCATOR_CLEAR);
 }
