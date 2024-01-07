@@ -3,7 +3,7 @@
 
 #ifdef LOCKPICK_DEBUG
 #define assert_parent_child_ref(parent,child,func_name)  \
-        assert(parent->left == child || parent->right == child && func_name && "Node's parent must have reference to that node.");
+        assert(((parent->left == child) || (parent->right == child && func_name)) && "Node's parent must have reference to that node.");
 
 #define assert_node_color_red(node,func_name)   \
         assert(__rb_color(node) == __rb_red && func_name && "Node's color must be red in this case.")
@@ -55,7 +55,7 @@ struct rb_node *rb_uncle(const struct rb_node *node)
         if(grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            assert(parent == grandparent->left || parent == grandparent->right && "rb_uncle: Parent must be grandparent's child.");
+            assert((parent == grandparent->left || parent == grandparent->right) && "rb_uncle: Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == grandparent->left)
@@ -80,7 +80,7 @@ void __rb_grandparent_uncle(const struct rb_node *node, struct rb_node **grandpa
         if(*grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            assert(parent == (*grandparent)->left || parent == (*grandparent)->right && "rb_uncle: Parent must be grandparent's child.");
+            assert((parent == (*grandparent)->left || parent == (*grandparent)->right) && "rb_uncle: Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == (*grandparent)->left)
@@ -158,7 +158,7 @@ static inline void __rb_rotate_left(struct rb_node *node)
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        assert(global_parent->left == node || global_parent->right == node && "__rb_rotate_left: node must be a global_parent's child.");
+        assert((global_parent->left == node || global_parent->right == node) && "__rb_rotate_left: node must be a global_parent's child.");
         #endif
 
         if(global_parent->left == node)
@@ -189,7 +189,7 @@ static inline void __rb_rotate_right(struct rb_node *node)
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        assert(global_parent->left == node || global_parent->right == node && "__rb_rotate_right: node must be a global_parent's child.");
+        assert((global_parent->left == node || global_parent->right == node) && "__rb_rotate_right: node must be a global_parent's child.");
         #endif // LOCKPICK_DEBUG
 
         if(global_parent->left == node)
@@ -645,7 +645,7 @@ static inline struct rb_node *__rb_remove_node_one_child(struct rb_node *root, s
     assert_node_color_black(node,"__rb_remove_rebalance_one_child");
     assert_node_color_red(non_nil_child,"__rb_remove_rebalance_one_child");
 
-    assert(!node->left && node->right == non_nil_child || !node->right && node->left == non_nil_child && "__rb_remove_rebalance_one_child: Node must have only one child non-nil child that is equal to 'non_nil_child'.");
+    assert(((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child)) && "__rb_remove_rebalance_one_child: Node must have only one child non-nil child that is equal to 'non_nil_child'.");
     #endif // LOCKPICK_DEBUG
 
     struct rb_node *parent = rb_parent(node);
@@ -674,7 +674,7 @@ static inline struct rb_node *__rb_remove_rebalance(struct rb_node *root, struct
     struct rb_node *non_nil_child = NULL;
 
     #ifdef LOCKPICK_DEBUG
-    assert(!node->left || !node->right && "__rb_remove_rebalance_one_child: Node must have at least one nil child.");
+    assert((!node->left || !node->right) && "__rb_remove_rebalance_one_child: Node must have at least one nil child.");
     #endif // LOCKPICK_DEBUG
 
     if(node->left)
@@ -697,7 +697,6 @@ static inline struct rb_node *__rb_remove_rebalance(struct rb_node *root, struct
  */
 struct rb_node *rb_remove(struct rb_node *root, struct rb_node *node)
 {
-    struct rb_node *to_rm = node;
     if(node->left != NULL && node->right != NULL)
     {
         struct rb_node *successor = __rb_get_left_most_child(node->right);
