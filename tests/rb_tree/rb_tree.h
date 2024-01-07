@@ -3,4 +3,4 @@
 
 void test_rb_tree();
 
-#endif
+#endif  // _LOCKPICK_TESTS_RB_TREE_H
