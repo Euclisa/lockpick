@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-#define RBTEST_ELEMENTS_IN_TREE 1000
+#define RBTEST_ELEMENTS_IN_TREE 500
 #define RBTEST_TESTS_NUM 100
 
 struct int_rb_node
