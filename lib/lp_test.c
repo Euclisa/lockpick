@@ -157,7 +157,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 {
     static struct timespec session_init_ts;
     static char project_name_str[64];
-    static char failed_test_msg[256];
+    static char failed_test_msg[512];
     static uint8_t current_level = 0;
     static uint64_t level_tests_total[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_cases_passed[__LP_TEST_MAX_LEVELS] = {0};
@@ -231,7 +231,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
         {
             ++level_tests_failed[current_level];
             const char *format_fail_msg = va_arg(args,const char*);
-            snprintf(failed_test_msg,sizeof(failed_test_msg),format_fail_msg,args);
+            vsnprintf(failed_test_msg,sizeof(failed_test_msg)-1,format_fail_msg,args);
             break;
         }
         case __LP_TEST_END:

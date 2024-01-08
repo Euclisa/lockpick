@@ -64,7 +64,7 @@ void test_uint##N##_from_to_hex()                                               
         lp_uint_from_hex(val,original_hex_str);                                                                             \
         char *converted_hex_str = lp_uint_to_hex(val);                                                                      \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),                                                        \
-            "Expected: %s, got: %s\n",original_hex_str,converted_hex_str);                                                  \
+            "Expected: %s, got: %s",original_hex_str,converted_hex_str);                                                    \
         free(original_hex_str);                                                                                             \
         free(converted_hex_str);                                                                                            \
     }                                                                                                                       \
@@ -82,7 +82,7 @@ void test_uint##N##_from_to_hex_overflow()                                      
         lp_uint_from_hex(val,original_hex_str);                                                                             \
         char *converted_hex_str = lp_uint_to_hex(val);                                                                      \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)),                       \
-            "Expected: %s, got: %s\n",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);                 \
+            "Expected: %s, got: %s",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);                   \
         free(original_hex_str);                                                                                             \
         free(converted_hex_str);                                                                                            \
     }                                                                                                                       \
@@ -123,7 +123,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition()                          
         char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
         affirmf(hex_str_result_obt,                                                                                         \
             "(%d,%d,%d,+) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);      \
+        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
         free(hex_str_result_obt);                                                                                           \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
@@ -159,7 +159,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction()                       
         char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
         affirmf(hex_str_result_obt,                                                                                         \
             "(%d,%d,%d,-) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);      \
+        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
         free(hex_str_result_obt);                                                                                           \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
@@ -197,7 +197,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication()                    
         char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
         affirmf(hex_str_result_obt,                                                                                         \
             "(%d,%d,%d,*) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s\n",hex_str_result_true,hex_str_result_obt);      \
+        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
         free(hex_str_result_obt);                                                                                           \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
@@ -247,11 +247,136 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison()                        
     free(hex_str_a);                                                                                                        \
     free(hex_str_b);                                                                                                        \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_ops()                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_and()                                                                           \
+{                                                                                                                           \
+    const char *fn_and =                                                                                                    \
+        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_and.txt";                           \
+    FILE *f_and = fopen(fn_and,"r");                                                                                        \
+    affirmf(f_and,"Failed to open file '%s'",fn_and);                                                                       \
+    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
+    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
+    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
+    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
+    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
+    char *hex_str_result_true = (char*)malloc(                                                                              \
+        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
+    {                                                                                                                       \
+        lp_uint(N_a) a;                                                                                                     \
+        lp_uint_from_hex(a,hex_str_a);                                                                                      \
+        lp_uint(N_b) b;                                                                                                     \
+        lp_uint_from_hex(b,hex_str_b);                                                                                      \
+        lp_uint(N_result) res_obt, res_true;                                                                                \
+        affirmf(lp_uint_and(a,b,res_obt),                                                                                   \
+            "(%d,%d,%d,&) Failed to bitwise and pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                        \
+        affirmf(fscanf(f_and,"%s\n",hex_str_result_true) != EOF,                                                            \
+            "(%d,%d,%d,&) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
+        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
+            "(%d,%d,%d,&) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
+        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
+        affirmf(hex_str_result_obt,                                                                                         \
+            "(%d,%d,%d,&) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
+        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
+        free(hex_str_result_obt);                                                                                           \
+    }                                                                                                                       \
+    fclose(f_samp);                                                                                                         \
+    fclose(f_and);                                                                                                          \
+    free(hex_str_a);                                                                                                        \
+    free(hex_str_b);                                                                                                        \
+    free(hex_str_result_true);                                                                                              \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_or()                                                                            \
+{                                                                                                                           \
+    const char *fn_or =                                                                                                     \
+        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_or.txt";                            \
+    FILE *f_or = fopen(fn_or,"r");                                                                                          \
+    affirmf(f_or,"Failed to open file '%s'",fn_or);                                                                         \
+    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
+    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
+    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
+    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
+    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
+    char *hex_str_result_true = (char*)malloc(                                                                              \
+        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
+    {                                                                                                                       \
+        lp_uint(N_a) a;                                                                                                     \
+        lp_uint_from_hex(a,hex_str_a);                                                                                      \
+        lp_uint(N_b) b;                                                                                                     \
+        lp_uint_from_hex(b,hex_str_b);                                                                                      \
+        lp_uint(N_result) res_obt, res_true;                                                                                \
+        affirmf(lp_uint_or(a,b,res_obt),                                                                                    \
+            "(%d,%d,%d,&) Failed to bitwise and pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                        \
+        affirmf(fscanf(f_or,"%s\n",hex_str_result_true) != EOF,                                                             \
+            "(%d,%d,%d,&) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
+        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
+            "(%d,%d,%d,&) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
+        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
+        affirmf(hex_str_result_obt,                                                                                         \
+            "(%d,%d,%d,&) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
+        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
+        free(hex_str_result_obt);                                                                                           \
+    }                                                                                                                       \
+    fclose(f_samp);                                                                                                         \
+    fclose(f_or);                                                                                                           \
+    free(hex_str_a);                                                                                                        \
+    free(hex_str_b);                                                                                                        \
+    free(hex_str_result_true);                                                                                              \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_xor()                                                                           \
+{                                                                                                                           \
+    const char *fn_xor =                                                                                                    \
+        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_xor.txt";                           \
+    FILE *f_xor = fopen(fn_xor,"r");                                                                                        \
+    affirmf(f_xor,"Failed to open file '%s'",fn_xor);                                                                       \
+    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
+    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
+    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
+    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
+    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
+    char *hex_str_result_true = (char*)malloc(                                                                              \
+        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
+    {                                                                                                                       \
+        lp_uint(N_a) a;                                                                                                     \
+        lp_uint_from_hex(a,hex_str_a);                                                                                      \
+        lp_uint(N_b) b;                                                                                                     \
+        lp_uint_from_hex(b,hex_str_b);                                                                                      \
+        lp_uint(N_result) res_obt, res_true;                                                                                \
+        affirmf(lp_uint_xor(a,b,res_obt),                                                                                   \
+            "(%d,%d,%d,&) Failed to bitwise and pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                        \
+        affirmf(fscanf(f_xor,"%s\n",hex_str_result_true) != EOF,                                                            \
+            "(%d,%d,%d,&) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
+        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
+            "(%d,%d,%d,&) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
+        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
+        affirmf(hex_str_result_obt,                                                                                         \
+            "(%d,%d,%d,&) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
+        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
+        free(hex_str_result_obt);                                                                                           \
+    }                                                                                                                       \
+    fclose(f_samp);                                                                                                         \
+    fclose(f_xor);                                                                                                          \
+    free(hex_str_a);                                                                                                        \
+    free(hex_str_b);                                                                                                        \
+    free(hex_str_result_true);                                                                                              \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic()                                                                \
 {                                                                                                                           \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_addition());                                                         \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_subtraction());                                                      \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_multiplication());                                                   \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise()                                                                   \
+{                                                                                                                           \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_and());                                                              \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_or());                                                               \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_xor());                                                              \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_ops()                                                                           \
+{                                                                                                                           \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic());                                                   \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise());                                                      \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_comparison());                                                       \
 }
 

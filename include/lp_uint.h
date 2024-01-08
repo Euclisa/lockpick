@@ -49,6 +49,7 @@ bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
 bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
 #define lp_uint_mul(a,b,result) __lp_uint_mul((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
+
 bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
 #define lp_uint_eq(a,b) __lp_uint_eq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
 
@@ -75,5 +76,23 @@ bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_
 bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);
 #define lp_uint_geq(a,b) __lp_uint_geq((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer))
 
+
+bool __lp_uint_and(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
+#define lp_uint_and(a,b,result) __lp_uint_and((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+
+bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
+#define lp_uint_and_ip(dest,other) __lp_uint_and_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
+
+bool __lp_uint_or(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
+#define lp_uint_or(a,b,result) __lp_uint_or((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+
+bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
+#define lp_uint_or_ip(dest,other) __lp_uint_or_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
+
+bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
+#define lp_uint_xor(a,b,result) __lp_uint_xor((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+
+bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
+#define lp_uint_xor_ip(dest,other) __lp_uint_xor_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
 
 #endif  // _LOCKPICK_INCLUDE_LP_UINT_H

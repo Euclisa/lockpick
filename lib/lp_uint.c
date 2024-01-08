@@ -463,9 +463,9 @@ inline bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
 /**
  * __lp_uint_eq_left_smaller - performs equality check of 'a' and 'b' treating left side ('a') as a uint of smaller or equal size than right side ('b')
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer; <= 'b_size'
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer; >= 'a_size'
  * 
  * Returns true if 'a' and 'b' represent equal numbers.
  * 
@@ -493,9 +493,9 @@ static inline bool __lp_uint_eq_left_smaller(__lp_uint_word_t *a, size_t a_size,
 /**
  * __lp_uint_eq - performs equality check of 'a' and 'b'
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer
  * 
  * Returns true if 'a' and 'b' represent equal numbers.
  * 
@@ -516,9 +516,9 @@ inline bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
 /**
  * __lp_uint_3way - performs three-way comparison of 'a' and 'b'
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer
  * 
  * Returns value of type 'lp_uint_3way_t':
  * LP_UINT_EQUAL - if 'a' and 'b' are equal
@@ -575,9 +575,9 @@ inline lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_ui
 /**
  * __lp_uint_ls - performs check if 'a' is less than 'b'
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer
  * 
  * Returns true if 'a' represents number which is less than number represented by 'b'
  * 
@@ -592,9 +592,9 @@ inline bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
 /**
  * __lp_uint_leq - performs check if 'a' is less or equal than 'b'
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer
  * 
  * Returns true if 'a' represents number which is less or equal than number represented by 'b'
  * 
@@ -609,9 +609,9 @@ inline bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
 /**
  * __lp_uint_gt - performs check if 'a' is greater than 'b'
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer
  * 
  * Returns true if 'a' represents number which is greater than number represented by 'b'
  * 
@@ -626,9 +626,9 @@ inline bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
 /**
  * __lp_uint_geq - performs check if 'a' is greater or equal than 'b'
  * @a:       pointer on left side uint buffer
- * @a_size:  size of left side uint buffer; <= @b_size
+ * @a_size:  size of left side uint buffer
  * @b:       pointer on right side uint buffer
- * @b_size:  size of right side uint buffer; >= @a_size
+ * @b_size:  size of right side uint buffer
  * 
  * Returns true if 'a' represents number which is greater or equal than number represented by 'b'
  * 
@@ -637,4 +637,214 @@ inline bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
 inline bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_LESS;
+}
+
+
+/**
+ * __lp_uint_and - performs bitwise *and* operation on 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_and' macro instead.
+ */
+inline bool __lp_uint_and(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    size_t upper_bound = MIN(MIN(a_size,b_size),result_size);
+    size_t res_i = 0;
+    for(; res_i < upper_bound; ++res_i)
+        result[res_i] = a[res_i] & b[res_i];
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_and_inplace - performs bitwise *and* operation on 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform operation with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_and_ip' macro instead.
+ */
+inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+    
+    size_t upper_bound = MIN(dest_size,other_size);
+    size_t dest_i = 0;
+    for(; dest_i < upper_bound; ++dest_i)
+        dest[dest_i] &= other[dest_i];
+    
+    for(; dest_i < dest_size; ++dest_i)
+        dest[dest_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_or - performs bitwise *or* operation on 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_or' macro instead.
+ */
+inline bool __lp_uint_or(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    __lp_uint_word_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    size_t min_upper_bound = MIN(min_term_size,result_size);
+    size_t res_i = 0;
+    for(; res_i < min_upper_bound; ++res_i)
+        result[res_i] = a[res_i] | b[res_i];
+    
+    size_t max_upper_bound = MIN(max_term_size,result_size);
+    for(; res_i < max_upper_bound; ++res_i)
+        result[res_i] = max_term[res_i];
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_or_inplace - performs bitwise *or* operation on 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform operation with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_or_ip' macro instead.
+ */
+inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+    
+    size_t upper_bound = MIN(dest_size,other_size);
+    for(size_t i = 0; i < upper_bound; ++i)
+        dest[i] |= other[i];
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_xor - performs bitwise *xor* operation on 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_oxr' macro instead.
+ */
+inline bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    __lp_uint_word_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    size_t min_upper_bound = MIN(min_term_size,result_size);
+    size_t res_i = 0;
+    for(; res_i < min_upper_bound; ++res_i)
+        result[res_i] = a[res_i] ^ b[res_i];
+    
+    size_t max_upper_bound = MIN(max_term_size,result_size);
+    for(; res_i < max_upper_bound; ++res_i)
+        result[res_i] = max_term[res_i];
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_xor_inplace - performs bitwise *xor* operation on 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform operation with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_xor_ip' macro instead.
+ */
+inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+    
+    size_t upper_bound = MIN(dest_size,other_size);
+    for(size_t i = 0; i < upper_bound; ++i)
+        dest[i] ^= other[i];
+    
+    return true;
 }
