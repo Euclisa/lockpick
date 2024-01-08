@@ -142,7 +142,12 @@ char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size)
 
     // If all words == 0
     if(significant_words_offset < 0)
-        return "0";
+    {
+        char *hex_str = (char*)malloc(2);
+        hex_str[0] = '0';
+        hex_str[1] = '\0';
+        return hex_str;
+    }
 
     // All high zeros in the highest word must be truncated
     size_t hex_str_len = (significant_words_offset) * __LP_UINT_HEXES_PER_WORD;
