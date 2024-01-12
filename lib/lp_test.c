@@ -225,7 +225,6 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
                 level_cases_passed[current_level+1],
                 duration_total_ns,
                 failed_test_msg);
-            strcpy(failed_test_msg,"");
             break;
         }
         case __LP_TEST_PASS:

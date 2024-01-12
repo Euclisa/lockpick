@@ -111,7 +111,7 @@ TEST_UINT_FROM_TO_HEX(256)
 TEST_UINT_FROM_TO_HEX(1024)
 
 
-#define CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+#define CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
     affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                                 \
         "Failed to parse res from hex string: %s",hex_str_result_true);                                                     \
     affirmf(lp_uint_to_hex(res_obt,hex_str_result_obt,hex_str_result_len) > 0,                                              \
@@ -138,7 +138,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint(N_a) *a_samples, lp
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_add(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_add);                                                                                                          \
@@ -155,7 +155,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction(lp_uint(N_a) *a_samples,
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_sub(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_sub);                                                                                                          \
@@ -173,7 +173,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint(N_a) *a_sampl
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_mul(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_mul);                                                                                                          \
@@ -220,7 +220,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint(N_a) *a_samples, lp_uint
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_and(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_and);                                                                                                          \
@@ -238,7 +238,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint(N_a) *a_samples, lp_uint(
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_or(a_samples[samp_i],b_samples[samp_i],res_obt),                                                    \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_or);                                                                                                           \
@@ -256,7 +256,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint(N_a) *a_samples, lp_uint
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_xor(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_xor);                                                                                                          \
@@ -295,39 +295,139 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops()                               
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic(a_samples,b_samples));                                \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(a_samples,b_samples));                                   \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_comparison(a_samples,b_samples));                                    \
+    free(a_samples);                                                                                                        \
+    free(b_samples);                                                                                                        \
 }
+
+
+#define TEST_UINT_OPS_INPLACE(N_a, N_b)                                                                                     \
+void test_uint_##N_a##_##N_b##_and_inplace(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                \
+{                                                                                                                           \
+    const char *fn_and =                                                                                                    \
+        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_and.txt";                           \
+    FILE *f_and = fopen(fn_and,"r");                                                                                        \
+    affirmf(f_and,"Failed to open file '%s'",fn_and);                                                                       \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f_and,"%s\n",hex_str_result_true) != EOF)                                                                  \
+    {                                                                                                                       \
+        lp_uint(N_a) res_true, res_obt;                                                                                     \
+        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
+        affirmf(lp_uint_and_ip(res_obt,b_samples[samp_i]),                                                                  \
+            "Failed to perfrom addition");                                                                                  \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f_and);                                                                                                          \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_or_inplace(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                \
+{                                                                                                                           \
+    const char *fn_or =                                                                                                    \
+        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_or.txt";                           \
+    FILE *f_or = fopen(fn_or,"r");                                                                                        \
+    affirmf(f_or,"Failed to open file '%s'",fn_or);                                                                       \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f_or,"%s\n",hex_str_result_true) != EOF)                                                                  \
+    {                                                                                                                       \
+        lp_uint(N_a) res_true, res_obt;                                                                                     \
+        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
+        affirmf(lp_uint_or_ip(res_obt,b_samples[samp_i]),                                                                  \
+            "Failed to perfrom addition");                                                                                  \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f_or);                                                                                                          \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_xor_inplace(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                \
+{                                                                                                                           \
+    const char *fn_xor =                                                                                                    \
+        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_xor.txt";                           \
+    FILE *f_xor = fopen(fn_xor,"r");                                                                                        \
+    affirmf(f_xor,"Failed to open file '%s'",fn_xor);                                                                       \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f_xor,"%s\n",hex_str_result_true) != EOF)                                                                  \
+    {                                                                                                                       \
+        lp_uint(N_a) res_true, res_obt;                                                                                     \
+        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
+        affirmf(lp_uint_xor_ip(res_obt,b_samples[samp_i]),                                                                  \
+            "Failed to perfrom addition");                                                                                  \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f_xor);                                                                                                          \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_ops_bitwise_inplace(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                        \
+{                                                                                                                           \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_and_inplace(a_samples, b_samples));                                               \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_or_inplace(a_samples, b_samples));                                               \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_xor_inplace(a_samples, b_samples));                                               \
+}                                                                                                                           \
+void test_uint_##N_a##_##N_b##_ops_inplace()                                                                                \
+{                                                                                                                           \
+    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
+    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
+    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
+    size_t samples_num = __count_line_in_file(f_samp);                                                                      \
+    lp_uint(N_a) *a_samples = (lp_uint(N_a)*)malloc(sizeof(lp_uint(N_a))*samples_num);                                      \
+    lp_uint(N_b) *b_samples = (lp_uint(N_a)*)malloc(sizeof(lp_uint(N_b))*samples_num);                                      \
+    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
+    char hex_str_a[hex_str_a_len+1];                                                                                        \
+    const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \
+    char hex_str_b[hex_str_b_len+1];                                                                                        \
+    for(size_t samp_i = 0; samp_i < samples_num; ++samp_i)                                                                  \
+    {                                                                                                                       \
+        affirmf(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF,                                                        \
+            "Failed to read sample");                                                                                       \
+        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a) && lp_uint_from_hex(b_samples[samp_i],hex_str_b),             \
+            "Failed to initialize sample from hex string");                                                                 \
+    }                                                                                                                       \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_ops_bitwise_inplace(a_samples,b_samples));                                        \
+    free(a_samples);                                                                                                        \
+    free(b_samples);                                                                                                        \
+}
+
 
 TEST_UINT_OPS(64,64,256)
 TEST_UINT_OPS(64,64,64)
+TEST_UINT_OPS_INPLACE(64,64)
 
 TEST_UINT_OPS(64,128,256)
 TEST_UINT_OPS(64,128,128)
 TEST_UINT_OPS(64,128,64)
+TEST_UINT_OPS_INPLACE(64,128)
 
 TEST_UINT_OPS(64,1024,256)
 TEST_UINT_OPS(64,1024,64)
 TEST_UINT_OPS(64,1024,1024)
+TEST_UINT_OPS_INPLACE(64,1024)
 
 TEST_UINT_OPS(256,256,1024)
 TEST_UINT_OPS(256,256,512)
 TEST_UINT_OPS(256,256,256)
 TEST_UINT_OPS(256,256,64)
+TEST_UINT_OPS_INPLACE(256,256)
 
 TEST_UINT_OPS(256,1024,1024)
 TEST_UINT_OPS(256,1024,256)
 TEST_UINT_OPS(256,1024,64)
+TEST_UINT_OPS_INPLACE(256,1024)
 
 TEST_UINT_OPS(1024,128,1024)
 TEST_UINT_OPS(1024,128,128)
 TEST_UINT_OPS(1024,128,64)
+TEST_UINT_OPS_INPLACE(1024,128)
 
 TEST_UINT_OPS(1024,256,1024)
 TEST_UINT_OPS(1024,256,256)
 TEST_UINT_OPS(1024,256,64)
+TEST_UINT_OPS_INPLACE(1024,256)
 
 TEST_UINT_OPS(1024,1024,2048)
 TEST_UINT_OPS(1024,1024,1024)
 TEST_UINT_OPS(1024,1024,64)
+TEST_UINT_OPS_INPLACE(1024,1024)
 
 
 void test_lp_uint()
@@ -344,33 +444,41 @@ void test_lp_uint()
 
     LP_TEST_RUN(test_uint_64_64_256_ops());
     LP_TEST_RUN(test_uint_64_64_64_ops());
+    LP_TEST_RUN(test_uint_64_64_ops_inplace());
 
     LP_TEST_RUN(test_uint_64_128_256_ops());
     LP_TEST_RUN(test_uint_64_128_128_ops());
     LP_TEST_RUN(test_uint_64_128_64_ops());
+    LP_TEST_RUN(test_uint_64_128_ops_inplace());
 
     LP_TEST_RUN(test_uint_64_1024_1024_ops());
     LP_TEST_RUN(test_uint_64_1024_256_ops());
     LP_TEST_RUN(test_uint_64_1024_64_ops());
+    LP_TEST_RUN(test_uint_64_1024_ops_inplace());
 
     LP_TEST_RUN(test_uint_256_256_1024_ops());
     LP_TEST_RUN(test_uint_256_256_512_ops());
     LP_TEST_RUN(test_uint_256_256_256_ops());
     LP_TEST_RUN(test_uint_256_256_64_ops());
+    LP_TEST_RUN(test_uint_256_256_ops_inplace());
 
     LP_TEST_RUN(test_uint_256_1024_1024_ops());
     LP_TEST_RUN(test_uint_256_1024_256_ops());
     LP_TEST_RUN(test_uint_256_1024_64_ops());
+    LP_TEST_RUN(test_uint_256_1024_ops_inplace());
 
     LP_TEST_RUN(test_uint_1024_128_1024_ops());
     LP_TEST_RUN(test_uint_1024_128_128_ops());
     LP_TEST_RUN(test_uint_1024_128_64_ops());
+    LP_TEST_RUN(test_uint_1024_128_ops_inplace());
 
     LP_TEST_RUN(test_uint_1024_256_1024_ops());
     LP_TEST_RUN(test_uint_1024_256_256_ops());
     LP_TEST_RUN(test_uint_1024_256_64_ops());
+    LP_TEST_RUN(test_uint_1024_256_ops_inplace());
 
     LP_TEST_RUN(test_uint_1024_1024_2048_ops());
     LP_TEST_RUN(test_uint_1024_1024_1024_ops());
     LP_TEST_RUN(test_uint_1024_1024_64_ops());
+    LP_TEST_RUN(test_uint_1024_1024_ops_inplace());
 }
