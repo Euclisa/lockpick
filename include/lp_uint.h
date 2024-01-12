@@ -46,11 +46,20 @@ bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *
 bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
 #define lp_uint_add(a,b,result) __lp_uint_add((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
+bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
+#define lp_uint_add_ip(dest,other) __lp_uint_add_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
+
 bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
 #define lp_uint_sub(a,b,result) __lp_uint_sub((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 
+bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
+#define lp_uint_sub_ip(dest,other) __lp_uint_sub_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
+
 bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
 #define lp_uint_mul(a,b,result) __lp_uint_mul((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
+
+bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
+#define lp_uint_mul_ip(dest,other) __lp_uint_mul_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
 
 
 bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size);

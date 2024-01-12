@@ -19,7 +19,7 @@ inline void __affirmf(bool cond, const char *format, ...)
 
     char msg[__LP_MAX_AFFIRMF_MSG_SIZE+1] = {0};
     if(format)
-        snprintf(msg,sizeof(msg),format,args);
+        vsnprintf(msg,sizeof(msg),format,args);
 
     printf("\n%s:%ld: Control flow consistency check '%s' failed in function: '%s'. Details: '%s'. Bailing out...\n",file_str,line_num,cond_str,func_str,msg);
     exit(1);

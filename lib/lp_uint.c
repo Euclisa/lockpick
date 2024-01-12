@@ -187,6 +187,17 @@ int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest,
 }
 
 
+/**
+ * __lp_uint_copy - copies value from 'src' to 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @src:        pointer on source uint buffer
+ * @src_size:   size of source uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_copy' macro instead.
+ */
 inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *src, size_t src_size)
 {
     if(dest == NULL || src == NULL)
@@ -201,37 +212,6 @@ inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_w
         dest[word_i] = 0;
     
     return true;
-}
-
-
-/**
- * __lp_uint_add_inplace_bigger - performs addition of 'dest' and 'other' treating dest as number of higher or equal width storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform addition with
- * @other_size: size of another uint buffer
- * 
- * Returns nothing because does not perform any checks.
- * 
- * Calls must be performed from higher level functions that check for pointers and sizes validity.
- */
-static inline void __lp_uint_add_inplace_bigger(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
-{
-    __uint128_t carry = 0;
-    size_t word_i = 0;
-    for(; word_i < other_size; ++word_i)
-    {
-        __uint128_t curr_sum = (__uint128_t)dest[word_i] + (__uint128_t)other[word_i] + carry;
-        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
-        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
-    }
-
-    for(; (word_i < dest_size) && (carry > 0); ++word_i)
-    {
-        __uint128_t curr_sum = (__uint128_t)dest[word_i] + carry;
-        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
-        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
-    }
 }
 
 
@@ -335,6 +315,43 @@ inline bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
     else
         __lp_uint_add_left_smaller(b,b_size,a,a_size,result,result_size);
     
+    return true;
+}
+
+
+/**
+ * __lp_uint_add_inplace_bigger - performs addition of 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_add_ip' macro instead.
+ */
+inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+
+    __uint128_t carry = 0;
+    size_t word_i = 0;
+    size_t other_upper_bound = MIN(other_size,dest_size);
+    for(; word_i < other_upper_bound; ++word_i)
+    {
+        __uint128_t curr_sum = (__uint128_t)dest[word_i] + (__uint128_t)other[word_i] + carry;
+        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
+    }
+
+    for(; (word_i < dest_size) && (carry > 0); ++word_i)
+    {
+        __uint128_t curr_sum = (__uint128_t)dest[word_i] + carry;
+        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
+    }
+
     return true;
 }
 
@@ -452,6 +469,53 @@ inline bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
 
 
 /**
+ * __lp_uint_sub_inplace - performs subtraction of 'other' from 'dest' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_sub_ip' macro instead.
+ */
+inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+
+    __uint128_t carry = 0;
+    size_t word_i = 0;
+    size_t other_upper_bound = MIN(other_size,dest_size);
+    for(; word_i < other_upper_bound; ++word_i)
+    {
+        __uint128_t total_neg = other[word_i] + carry;
+        if(dest[word_i] < total_neg)
+        {
+            dest[word_i] += __LP_UINT_BASE - total_neg;
+            carry = 1;
+        }
+        else
+        {
+            dest[word_i] -= total_neg;
+            carry = 0;
+        }
+    }
+
+    if(carry > 0)
+    {
+        for(; word_i < dest_size; ++word_i)
+        {
+            if(dest[word_i]-- != 0)
+                break;
+        }
+    }
+
+    return true;
+}
+
+
+/**
  * __lp_uint_mul - performs school multiplication of 'a' and 'b' storing result in 'result'
  * @a:              pointer on left side uint buffer
  * @a_size:         size of left side uint buffer
@@ -493,6 +557,62 @@ inline bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
             __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
         }
     }
+
+    return true;
+}
+
+
+/**
+ * __lp_uint_mul_inplace - performs multiplication of 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_mul_ip' macro instead.
+ * 
+ * CAUTION: It is preferable to use regular version of multiplication
+ * because this inplace version does the same amount of operations
+ * plus copying from temporary buffer to 'dest' (plus 'malloc' and 'free' calls).
+ */
+inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    // Basically, rewritting procedure above taking into account that 'a_size' ('dest_size') is now equal to 'result_size'
+    if(!dest || !other)
+        return false;
+    
+    __lp_uint_word_t *result = (__lp_uint_word_t*)malloc(sizeof(__lp_uint_word_t)*dest_size);
+    size_t result_size = dest_size;
+
+    for(size_t res_i = 0; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    size_t dest_last_i = dest_size - 1;
+    size_t other_last_i = other_size - 1;
+    size_t effective_res_last_i = dest_last_i+other_last_i;
+    size_t result_upper_bound = MIN(effective_res_last_i,result_size-1);
+    size_t res_i = 0;
+    for(; res_i < result_size; ++res_i)
+    {
+        size_t a_lower_bound = res_i > other_last_i ? res_i - other_last_i : 0;
+        size_t a_upper_bound = res_i;
+        __uint128_t curr_mul;
+        for(size_t a_i = a_lower_bound; a_i <= a_upper_bound; ++a_i)
+        {
+            size_t b_i = res_i-a_i;
+            curr_mul = (__uint128_t)dest[a_i]*(__uint128_t)other[b_i];
+            // Split 128-bit word into two 64-bit word and treat it like a regular 2-word sized uint adding it to corresponding result with offset
+            __lp_uint_word_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
+            __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
+        }
+    }
+
+    for(size_t dest_i = 0; dest_i < dest_size; ++dest_i)
+        dest[dest_i] = result[dest_i];
+    
+    free(result);
 
     return true;
 }

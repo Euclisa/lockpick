@@ -163,7 +163,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 {
     static struct timespec session_init_ts;
     static char project_name_str[64];
-    static char failed_test_msg[512] = {0};
+    static char failed_test_msg[1024] = {0};
     static uint8_t current_level = 0;
     static uint64_t level_tests_total[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_cases_passed[__LP_TEST_MAX_LEVELS] = {0};
