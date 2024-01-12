@@ -111,19 +111,12 @@ TEST_UINT_FROM_TO_HEX(256)
 TEST_UINT_FROM_TO_HEX(1024)
 
 
-#define CHUNK_READ_TRUE_RES_AND_TEST(file,hex_str_a,hex_str_b,hex_str_result_true)                                          \
+#define CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
     affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                                 \
         "Failed to parse res from hex string: %s",hex_str_result_true);                                                     \
     affirmf(lp_uint_to_hex(res_obt,hex_str_result_obt,hex_str_result_len) > 0,                                              \
         "Failed to convert value to hex string");                                                                           \
     LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);
-
-
-#define CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                \
-    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
-    char hex_str_a[hex_str_a_len+1];                                                                                        \
-    const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \
-    char hex_str_b[hex_str_b_len+1];
 
 
 #define CHUNK_INIT_HEX_STR_RESULTS(hex_str_result_len_v)                                                                    \
@@ -145,7 +138,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint(N_a) *a_samples, lp
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_add(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(f_add,hex_str_result_true,hex_str_result_true,hex_str_result_true)                     \
+        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_add);                                                                                                          \
@@ -162,7 +155,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction(lp_uint(N_a) *a_samples,
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_sub(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(f_add,hex_str_result_true,hex_str_result_true,hex_str_result_true)                     \
+        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_sub);                                                                                                          \
@@ -180,7 +173,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint(N_a) *a_sampl
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_mul(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(f_add,hex_str_result_true,hex_str_result_true,hex_str_result_true)                     \
+        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_mul);                                                                                                          \
@@ -227,7 +220,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint(N_a) *a_samples, lp_uint
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_and(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(f_add,hex_str_result_true,hex_str_result_true,hex_str_result_true)                     \
+        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_and);                                                                                                          \
@@ -245,7 +238,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint(N_a) *a_samples, lp_uint(
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_or(a_samples[samp_i],b_samples[samp_i],res_obt),                                                    \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(f_or,hex_str_result_true,hex_str_result_true,hex_str_result_true)                      \
+        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_or);                                                                                                           \
@@ -263,7 +256,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint(N_a) *a_samples, lp_uint
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_xor(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
             "Failed to perfrom addition");                                                                                  \
-        CHUNK_READ_TRUE_RES_AND_TEST(f_add,hex_str_result_true,hex_str_result_true,hex_str_result_true)                     \
+        CHUNK_READ_TRUE_RES_AND_TEST(hex_str_result_true)                                                                   \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
     fclose(f_xor);                                                                                                          \
