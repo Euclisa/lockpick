@@ -100,21 +100,34 @@ bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t val
  * __lp_uint_i2ch - converts single word to hex string
  * @value:          word to convert
  * @dest:           destination pointer on string to store result in
+ * @n:              maximum number of hexes to write into dest
  * @truncate_zeros: whether to truncate high zeros or not
  * 
  * Returns number of characters written.
  */
-uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, bool truncate_zeros)
+uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool truncate_zeros)
 {
     static const char i2ch_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    uint8_t wrote_hexes = 0;
-    for(int8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX; shift >= 0; shift -= __LP_UINT_BITS_PER_HEX)
+
+    // If high order zeros truncation requested then truncate and remember number of truncated
+    uint8_t hexes_truncated = 0;
+    while(truncate_zeros)
     {
+        uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(hexes_truncated+1);
         __lp_uint_word_t shifted = value >> shift;
-        if(truncate_zeros && shifted == 0)
-            continue;
+        if(shifted != 0)
+            break;
+        ++hexes_truncated;
+    }
+
+    uint8_t max_hexes_to_write = MIN(__LP_UINT_HEXES_PER_WORD-hexes_truncated,n);
+    uint8_t wrote_hexes = 0;
+    for(; wrote_hexes < max_hexes_to_write; ++wrote_hexes)
+    {
+        uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(wrote_hexes+hexes_truncated+1);
+        __lp_uint_word_t shifted = value >> shift;
         char shifted_hex = i2ch_map[shifted & 0xf];
-        dest[wrote_hexes++] = shifted_hex;
+        dest[wrote_hexes] = shifted_hex;
     }
 
     return wrote_hexes;
@@ -125,16 +138,18 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, bool truncate_zeros)
  * __lp_uint_to_hex - converts uint object to hex string
  * @value:      pointer on uint buffer
  * @value_size: size of uint buffer
+ * @dest:           destination pointer on string to store result in
+ * @n:              maximum number of hexes to write into dest
  * 
- * Returns pointer on hex string.
- * NULL if 'value' is NULL.
+ * Returns number of hexes in hex string corresponding to 'value'.
+ * Negative value is returned on error.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
-char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size)
+int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
 {
     if(!value)
-        return NULL;
+        return -1;
 
     // Find first non-zero word (from the end)
     int64_t significant_words_offset = value_size-1;
@@ -143,26 +158,32 @@ char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size)
     // If all words == 0
     if(significant_words_offset < 0)
     {
-        char *hex_str = (char*)malloc(2);
-        hex_str[0] = '0';
-        hex_str[1] = '\0';
-        return hex_str;
+        if(n > 0 && dest != NULL)
+        {
+            dest[0] = '0';
+            dest[1] = '\0';
+        }
+
+        return 2;
     }
 
     // All high zeros in the highest word must be truncated
     size_t hex_str_len = (significant_words_offset) * __LP_UINT_HEXES_PER_WORD;
     for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += __LP_UINT_BITS_PER_HEX)
         ++hex_str_len;
-
-    char *hex_str = (char*)malloc(hex_str_len+1);
-    hex_str[hex_str_len] = '\0';
-
-    size_t wrote_hexes = 0;
-    wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],hex_str+wrote_hexes,true);
-    while(significant_words_offset >= 0)
-        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],hex_str+wrote_hexes,false);
     
-    return hex_str;
+    if(dest != NULL)
+    {
+        size_t hex_str_len_truncated = MIN(n,hex_str_len);
+        dest[hex_str_len_truncated] = '\0';
+
+        size_t wrote_hexes = 0;
+        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,true);
+        while(significant_words_offset >= 0)
+            wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,false);
+    }
+    
+    return hex_str_len;
 }
 
 

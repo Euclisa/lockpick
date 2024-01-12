@@ -37,8 +37,8 @@ struct                                                                          
 bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size);
 #define lp_uint_from_hex(value,hex_str) __lp_uint_from_hex(hex_str, (value).__buffer, __array_size((value).__buffer))
 
-char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size);
-#define lp_uint_to_hex(value) __lp_uint_to_hex((value).__buffer, __array_size((value).__buffer))
+int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest, size_t n_chars);
+#define lp_uint_to_hex(value,dest,n) __lp_uint_to_hex((value).__buffer, __array_size((value).__buffer), dest, n)
 
 bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
 #define lp_uint_add(a,b,result) __lp_uint_add((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))

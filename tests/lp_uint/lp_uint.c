@@ -11,16 +11,13 @@
 #define BITS_PER_WORD (sizeof(uint16_t)*8)
 
 
-char *__rand_hex_str(size_t hexes_num)
+void __rand_hex_str(char *dest, size_t hexes_num)
 {
     static const char hexes[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    char *hex_str = (char*)malloc(hexes_num+1);
-    hex_str[hexes_num] = '\0';
 
+    dest[hexes_num] = '\0';
     for(size_t i = 0; i < hexes_num; ++i)
-        hex_str[i] = hexes[rand()%sizeof(hexes)];
-    
-    return hex_str;
+        dest[i] = hexes[rand()%sizeof(hexes)];
 }
 
 
@@ -59,14 +56,15 @@ void test_uint##N##_from_to_hex()                                               
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                  \
     {                                                                                                                       \
         lp_uint(N) val;                                                                                                     \
-        size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                              \
-        char *original_hex_str = __rand_hex_str(hexes_num);                                                                 \
+        const size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                        \
+        char original_hex_str[hexes_num+1];                                                                                 \
+        char converted_hex_str[hexes_num+1];                                                                                \
+        __rand_hex_str(original_hex_str,hexes_num);                                                                         \
         lp_uint_from_hex(val,original_hex_str);                                                                             \
-        char *converted_hex_str = lp_uint_to_hex(val);                                                                      \
+        affirmf(lp_uint_to_hex(val,converted_hex_str,hexes_num) > 0,                                                        \
+            "Failed to convert value to hex string");                                                                       \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),                                                        \
             "Expected: %s, got: %s",original_hex_str,converted_hex_str);                                                    \
-        free(original_hex_str);                                                                                             \
-        free(converted_hex_str);                                                                                            \
     }                                                                                                                       \
 }                                                                                                                           \
 void test_uint##N##_from_to_hex_overflow()                                                                                  \
@@ -78,9 +76,12 @@ void test_uint##N##_from_to_hex_overflow()                                      
         lp_uint(N) val;                                                                                                     \
         size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                              \
         size_t hexes_num_overflowed = hexes_num + rand()%(N/__LP_UINT_BITS_PER_WORD*4);                                     \
-        char *original_hex_str = __rand_hex_str(hexes_num_overflowed);                                                      \
+        char *original_hex_str = (char*)malloc(hexes_num_overflowed+1);                                                     \
+        char *converted_hex_str = (char*)malloc(hexes_num_overflowed+1);                                                    \
+        __rand_hex_str(original_hex_str,hexes_num_overflowed);                                                              \
         lp_uint_from_hex(val,original_hex_str);                                                                             \
-        char *converted_hex_str = lp_uint_to_hex(val);                                                                      \
+        affirmf(lp_uint_to_hex(val,converted_hex_str,hexes_num_overflowed) > 0,                                             \
+            "Failed to convert value to hex string");                                                                       \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)),                       \
             "Expected: %s, got: %s",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);                   \
         free(original_hex_str);                                                                                             \
@@ -94,6 +95,29 @@ TEST_UINT_FROM_TO_HEX(256)
 TEST_UINT_FROM_TO_HEX(1024)
 
 
+#define CHUNK_READ_TRUE_RES_AND_TEST(file,hex_str_a,hex_str_b,hex_str_result_true)                                          \
+    affirmf(fscanf(file,"%s\n",hex_str_result_true) != EOF,                                                                 \
+        "No result for pair: %s, %s",hex_str_a,hex_str_b);                                                                  \
+    affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                                 \
+        "Failed to parse res from hex string: %s",hex_str_result_true);                                                     \
+    affirmf(lp_uint_to_hex(res_obt,hex_str_result_obt,hex_str_result_len) > 0,                                              \
+        "Failed to convert value to hex string");                                                                           \
+    LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);
+
+
+#define CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                \
+    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
+    char hex_str_a[hex_str_a_len+1];                                                                                        \
+    const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \
+    char hex_str_b[hex_str_b_len+1];
+
+
+#define CHUNK_INIT_HEX_STR_RESULTS(hex_str_result_len_v)                                                                    \
+    const size_t hex_str_result_len = hex_str_result_len_v;                                                                 \
+    char hex_str_result_true[hex_str_result_len+1];                                                                         \
+    char hex_str_result_obt[hex_str_result_len+1];
+
+
 #define TEST_UINT_OPS(N_a, N_b, N_result)                                                                                   \
 void test_uint_##N_a##_##N_b##_##N_result##_addition()                                                                      \
 {                                                                                                                           \
@@ -103,10 +127,8 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition()                          
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
-    char *hex_str_result_true = (char*)malloc(                                                                              \
-        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         lp_uint(N_a) a;                                                                                                     \
@@ -115,22 +137,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition()                          
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_add(a,b,res_obt),                                                                                   \
-            "(%d,%d,%d,+) Failed to add pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(fscanf(f_add,"%s\n",hex_str_result_true) != EOF,                                                            \
-            "(%d,%d,%d,+) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
-            "(%d,%d,%d,+) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
-        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
-        affirmf(hex_str_result_obt,                                                                                         \
-            "(%d,%d,%d,+) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
-        free(hex_str_result_obt);                                                                                           \
+            "Failed to add pair: %s, %s",hex_str_a,hex_str_b);                                                              \
+        CHUNK_READ_TRUE_RES_AND_TEST(f_add,hex_str_a,hex_str_b,hex_str_result_true)                                         \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_add);                                                                                                          \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
-    free(hex_str_result_true);                                                                                              \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_subtraction()                                                                   \
 {                                                                                                                           \
@@ -140,9 +151,8 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction()                       
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
-    char *hex_str_result_true = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(2048)+1);                                \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(2048))                                                  \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         lp_uint(N_a) a;                                                                                                     \
@@ -151,22 +161,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction()                       
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_sub(a,b,res_obt),                                                                                   \
-            "(%d,%d,%d,-) Failed to subtract pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                           \
-        affirmf(fscanf(f_sub,"%s\n",hex_str_result_true) != EOF,                                                            \
-            "(%d,%d,%d,-) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
-            "(%d,%d,%d,-) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
-        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
-        affirmf(hex_str_result_obt,                                                                                         \
-            "(%d,%d,%d,-) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
-        free(hex_str_result_obt);                                                                                           \
+            "Failed to subtract pair: %s, %s",hex_str_a,hex_str_b);                                                         \
+        CHUNK_READ_TRUE_RES_AND_TEST(f_sub,hex_str_a,hex_str_b,hex_str_result_true)                                         \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_sub);                                                                                                          \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
-    free(hex_str_result_true);                                                                                              \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_multiplication()                                                                \
 {                                                                                                                           \
@@ -177,10 +176,8 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication()                    
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
-    char *hex_str_result_true = (char*)malloc(                                                                              \
-        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         lp_uint(N_a) a;                                                                                                     \
@@ -189,22 +186,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication()                    
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_mul(a,b,res_obt),                                                                                   \
-            "(%d,%d,%d,*) Failed to multiply pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                           \
-        affirmf(fscanf(f_mul,"%s\n",hex_str_result_true) != EOF,                                                            \
-            "(%d,%d,%d,*) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
-            "(%d,%d,%d,*) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
-        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
-        affirmf(hex_str_result_obt,                                                                                         \
-            "(%d,%d,%d,*) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
-        free(hex_str_result_obt);                                                                                           \
+            "Failed to multiply pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                        \
+        CHUNK_READ_TRUE_RES_AND_TEST(f_mul,hex_str_a,hex_str_b,hex_str_result_true)                                         \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_mul);                                                                                                          \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
-    free(hex_str_result_true);                                                                                              \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_comparison()                                                                    \
 {                                                                                                                           \
@@ -215,8 +201,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison()                        
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
     lp_uint_3way_t res_true,res_obt;                                                                                        \
     int32_t res_true_int;                                                                                                   \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
@@ -226,7 +211,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison()                        
         lp_uint(N_b) b;                                                                                                     \
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         affirmf(fscanf(f_comp,"%d\n",&res_true_int) != EOF,                                                                 \
-            "(%d,%d,%d,<=>) No result for pair: %s, %s",N_a,N_b,hex_str_a,hex_str_b);                                       \
+            "No result for pair: %s, %s",hex_str_a,hex_str_b);                                                              \
         res_true = res_true_int;                                                                                            \
         res_obt = lp_uint_3way(a,b);                                                                                        \
         LP_TEST_ASSERT(res_true == res_obt,                                                                                 \
@@ -244,8 +229,6 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison()                        
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_comp);                                                                                                         \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_and()                                                                           \
 {                                                                                                                           \
@@ -256,10 +239,8 @@ void test_uint_##N_a##_##N_b##_##N_result##_and()                               
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
-    char *hex_str_result_true = (char*)malloc(                                                                              \
-        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         lp_uint(N_a) a;                                                                                                     \
@@ -268,22 +249,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_and()                               
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_and(a,b,res_obt),                                                                                   \
-            "(%d,%d,%d,&) Failed to bitwise and pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                        \
-        affirmf(fscanf(f_and,"%s\n",hex_str_result_true) != EOF,                                                            \
-            "(%d,%d,%d,&) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
-            "(%d,%d,%d,&) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
-        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
-        affirmf(hex_str_result_obt,                                                                                         \
-            "(%d,%d,%d,&) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
-        free(hex_str_result_obt);                                                                                           \
+            "Failed to bitwise 'and' pair: %s, %s",hex_str_a,hex_str_b);                                                    \
+        CHUNK_READ_TRUE_RES_AND_TEST(f_and,hex_str_a,hex_str_b,hex_str_result_true)                                         \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_and);                                                                                                          \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
-    free(hex_str_result_true);                                                                                              \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_or()                                                                            \
 {                                                                                                                           \
@@ -294,10 +264,8 @@ void test_uint_##N_a##_##N_b##_##N_result##_or()                                
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
-    char *hex_str_result_true = (char*)malloc(                                                                              \
-        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         lp_uint(N_a) a;                                                                                                     \
@@ -306,22 +274,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_or()                                
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_or(a,b,res_obt),                                                                                    \
-            "(%d,%d,%d,&) Failed to bitwise and pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                        \
-        affirmf(fscanf(f_or,"%s\n",hex_str_result_true) != EOF,                                                             \
-            "(%d,%d,%d,&) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
-            "(%d,%d,%d,&) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
-        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
-        affirmf(hex_str_result_obt,                                                                                         \
-            "(%d,%d,%d,&) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
-        free(hex_str_result_obt);                                                                                           \
+            "Failed to bitwise 'or' pair: %s, %s",hex_str_a,hex_str_b);                                                     \
+        CHUNK_READ_TRUE_RES_AND_TEST(f_or,hex_str_a,hex_str_b,hex_str_result_true)                                          \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_or);                                                                                                           \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
-    free(hex_str_result_true);                                                                                              \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_xor()                                                                           \
 {                                                                                                                           \
@@ -332,10 +289,8 @@ void test_uint_##N_a##_##N_b##_##N_result##_xor()                               
     const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    char *hex_str_a = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+1);                                           \
-    char *hex_str_b = (char*)malloc(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+1);                                           \
-    char *hex_str_result_true = (char*)malloc(                                                                              \
-        __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b)+2);                             \
+    CHUNK_INIT_HEX_STR_OPERANDS(N_a,N_b)                                                                                    \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
     while(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF)                                                              \
     {                                                                                                                       \
         lp_uint(N_a) a;                                                                                                     \
@@ -344,22 +299,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_xor()                               
         lp_uint_from_hex(b,hex_str_b);                                                                                      \
         lp_uint(N_result) res_obt, res_true;                                                                                \
         affirmf(lp_uint_xor(a,b,res_obt),                                                                                   \
-            "(%d,%d,%d,&) Failed to bitwise and pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                        \
-        affirmf(fscanf(f_xor,"%s\n",hex_str_result_true) != EOF,                                                            \
-            "(%d,%d,%d,&) No result for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);                                \
-        affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                             \
-            "(%d,%d,%d,&) Failed to parse res from hex string: %s",N_a,N_b,N_result,hex_str_result_true);                   \
-        char *hex_str_result_obt = lp_uint_to_hex(res_obt);                                                                 \
-        affirmf(hex_str_result_obt,                                                                                         \
-            "(%d,%d,%d,&) Failed to convert res to hex string for pair: %s, %s",N_a,N_b,N_result,hex_str_a,hex_str_b);      \
-        LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);        \
-        free(hex_str_result_obt);                                                                                           \
+            "Failed to bitwise 'xor' pair: %s, %s",hex_str_a,hex_str_b);                                                    \
+        CHUNK_READ_TRUE_RES_AND_TEST(f_xor,hex_str_a,hex_str_b,hex_str_result_true)                                         \
     }                                                                                                                       \
     fclose(f_samp);                                                                                                         \
     fclose(f_xor);                                                                                                          \
-    free(hex_str_a);                                                                                                        \
-    free(hex_str_b);                                                                                                        \
-    free(hex_str_result_true);                                                                                              \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic()                                                                \
 {                                                                                                                           \
