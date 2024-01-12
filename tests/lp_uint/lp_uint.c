@@ -125,6 +125,26 @@ TEST_UINT_FROM_TO_HEX(1024)
     char hex_str_result_obt[hex_str_result_len+1];
 
 
+#define CHUNK_INIT_OPS_SAMPLES_BUFFERS(N_a,N_b)                                                                             \
+    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
+    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
+    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
+    size_t samples_num = __count_line_in_file(f_samp);                                                                      \
+    lp_uint_t(N_a) *a_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_a))*samples_num);                                \
+    lp_uint_t(N_b) *b_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_b))*samples_num);                                \
+    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
+    char hex_str_a[hex_str_a_len+1];                                                                                        \
+    const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \
+    char hex_str_b[hex_str_b_len+1];                                                                                        \
+    for(size_t samp_i = 0; samp_i < samples_num; ++samp_i)                                                                  \
+    {                                                                                                                       \
+        affirmf(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF,                                                        \
+            "Failed to read sample");                                                                                       \
+        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a) && lp_uint_from_hex(b_samples[samp_i],hex_str_b),             \
+            "Failed to initialize sample from hex string");                                                                 \
+    }
+
+
 #define TEST_UINT_OPS(N_a, N_b, N_result)                                                                                   \
 void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                  \
 {                                                                                                                           \
@@ -137,7 +157,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint_t(N_a) *a_samples, 
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
         affirmf(lp_uint_add(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -154,7 +174,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction(lp_uint_t(N_a) *a_sample
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
         affirmf(lp_uint_sub(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -172,7 +192,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint_t(N_a) *a_sam
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
         affirmf(lp_uint_mul(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -219,7 +239,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint_t(N_a) *a_samples, lp_ui
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
         affirmf(lp_uint_and(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -237,7 +257,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint_t(N_a) *a_samples, lp_uin
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
         affirmf(lp_uint_or(a_samples[samp_i],b_samples[samp_i],res_obt),                                                    \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -255,7 +275,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint_t(N_a) *a_samples, lp_ui
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
         affirmf(lp_uint_xor(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -275,23 +295,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(lp_uint_t(N_a) *a_sample
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_ops()                                                                           \
 {                                                                                                                           \
-    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
-    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
-    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    size_t samples_num = __count_line_in_file(f_samp);                                                                      \
-    lp_uint_t(N_a) *a_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_a))*samples_num);                                \
-    lp_uint_t(N_b) *b_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_b))*samples_num);                                \
-    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
-    char hex_str_a[hex_str_a_len+1];                                                                                        \
-    const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \
-    char hex_str_b[hex_str_b_len+1];                                                                                        \
-    for(size_t samp_i = 0; samp_i < samples_num; ++samp_i)                                                                  \
-    {                                                                                                                       \
-        affirmf(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF,                                                        \
-            "Failed to read sample");                                                                                       \
-        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a) && lp_uint_from_hex(b_samples[samp_i],hex_str_b),             \
-            "Failed to initialize sample from hex string");                                                                 \
-    }                                                                                                                       \
+    CHUNK_INIT_OPS_SAMPLES_BUFFERS(N_a,N_b)                                                                                 \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic(a_samples,b_samples));                                \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(a_samples,b_samples));                                   \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_comparison(a_samples,b_samples));                                    \
@@ -314,7 +318,7 @@ void test_uint_##N_a##_##N_b##_addition_inplace(lp_uint_t(N_a) *a_samples, lp_ui
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
         affirmf(lp_uint_add_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -333,7 +337,7 @@ void test_uint_##N_a##_##N_b##_subtraction_inplace(lp_uint_t(N_a) *a_samples, lp
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
         affirmf(lp_uint_sub_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -352,7 +356,7 @@ void test_uint_##N_a##_##N_b##_multiplication_inplace(lp_uint_t(N_a) *a_samples,
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
         affirmf(lp_uint_mul_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -371,7 +375,7 @@ void test_uint_##N_a##_##N_b##_and_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
         affirmf(lp_uint_and_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -390,7 +394,7 @@ void test_uint_##N_a##_##N_b##_or_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
         affirmf(lp_uint_or_ip(res_obt,b_samples[samp_i]),                                                                   \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -409,7 +413,7 @@ void test_uint_##N_a##_##N_b##_xor_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
         affirmf(lp_uint_xor_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom addition");                                                                                  \
+            "Failed to perfrom operation");                                                                                 \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -429,23 +433,7 @@ void test_uint_##N_a##_##N_b##_ops_bitwise_inplace(lp_uint_t(N_a) *a_samples, lp
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_ops_inplace()                                                                                \
 {                                                                                                                           \
-    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
-    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
-    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    size_t samples_num = __count_line_in_file(f_samp);                                                                      \
-    lp_uint_t(N_a) *a_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_a))*samples_num);                                \
-    lp_uint_t(N_b) *b_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_b))*samples_num);                                \
-    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
-    char hex_str_a[hex_str_a_len+1];                                                                                        \
-    const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \
-    char hex_str_b[hex_str_b_len+1];                                                                                        \
-    for(size_t samp_i = 0; samp_i < samples_num; ++samp_i)                                                                  \
-    {                                                                                                                       \
-        affirmf(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF,                                                        \
-            "Failed to read sample");                                                                                       \
-        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a) && lp_uint_from_hex(b_samples[samp_i],hex_str_b),             \
-            "Failed to initialize sample from hex string");                                                                 \
-    }                                                                                                                       \
+    CHUNK_INIT_OPS_SAMPLES_BUFFERS(N_a,N_b)                                                                                 \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_ops_arithmetic_inplace(a_samples,b_samples));                                     \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_ops_bitwise_inplace(a_samples,b_samples));                                        \
     free(a_samples);                                                                                                        \
