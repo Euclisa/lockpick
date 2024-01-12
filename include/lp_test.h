@@ -32,7 +32,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...);
     __lp_test_process_action(__LP_TEST_LEAVE,#f_call,__lpt_start_ts,__lpt_end_ts);      \
 })
 
-#define LP_TEST_ASSERT(cond, msg, ...)  ({                                              \
+#define LP_TEST_ASSERT(cond,msg,...)  ({                                                \
     __lp_test_actions_t __lpt_asrt_act = (cond) ? __LP_TEST_PASS : __LP_TEST_FAIL;      \
     __lp_test_process_action(__lpt_asrt_act,msg,##__VA_ARGS__);                         \
     if(__lpt_asrt_act == __LP_TEST_FAIL)                                                \
