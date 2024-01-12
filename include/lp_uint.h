@@ -39,6 +39,10 @@ bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t val
 int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest, size_t n_chars);
 #define lp_uint_to_hex(value,dest,n) __lp_uint_to_hex((value).__buffer, __array_size((value).__buffer), dest, n)
 
+inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *src, size_t src_size);
+#define lp_uint_copy(dest,src) __lp_uint_copy((dest).__buffer, __array_size((dest).__buffer), (src).__buffer, __array_size((src).__buffer))
+
+
 bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size);
 #define lp_uint_add(a,b,result) __lp_uint_add((a).__buffer, __array_size((a).__buffer), (b).__buffer, __array_size((b).__buffer), (result).__buffer, __array_size((result).__buffer))
 

@@ -187,6 +187,23 @@ int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest,
 }
 
 
+inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *src, size_t src_size)
+{
+    if(dest == NULL || src == NULL)
+        return false;
+    
+    size_t src_upper_bound = MIN(dest_size,src_size);
+    size_t word_i = 0;
+    for(; word_i < src_upper_bound; ++word_i)
+        dest[word_i] = src[word_i];
+    
+    for(; word_i < dest_size; ++word_i)
+        dest[word_i] = 0;
+    
+    return true;
+}
+
+
 /**
  * __lp_uint_add_inplace_bigger - performs addition of 'dest' and 'other' treating dest as number of higher or equal width storing result in 'dest'
  * @dest:       pointer on destination uint buffer
