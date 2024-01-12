@@ -302,6 +302,8 @@ static inline void __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_add' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
 inline bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
@@ -368,6 +370,8 @@ inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_sub' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
 inline bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
@@ -527,6 +531,8 @@ inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_mul' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
 inline bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
@@ -810,6 +816,8 @@ inline bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_and' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
 inline bool __lp_uint_and(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
@@ -870,6 +878,8 @@ inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_or' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
 inline bool __lp_uint_or(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
@@ -945,6 +955,8 @@ inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_oxr' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
 inline bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
