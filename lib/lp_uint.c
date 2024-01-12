@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define BAD_CHAR 255
+#define __LP_UINT_BAD_CHAR 255
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -17,7 +17,7 @@ const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / __LP_UINT_BI
  * @char_hex:	hex character ([0-9a-fA-F])
  * 
  * Returns unsigned integer corresponding to the given character.
- * BAD_CHAR if @char_hex is invalid.
+ * BAD_CHAR if 'char_hex' is invalid.
  */
 uint8_t __uint_ch2i(char char_hex)
 {
@@ -27,7 +27,7 @@ uint8_t __uint_ch2i(char char_hex)
         return char_hex - 'A' + 10;
     if(char_hex >= 'a' && char_hex <= 'f')
         return char_hex - 'a' + 10;
-    return BAD_CHAR;
+    return __LP_UINT_BAD_CHAR;
 }
 
 
@@ -54,7 +54,7 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_u
 
         char curr_char = hex_str[curr_char_i];
         __lp_uint_word_t char_converted = __uint_ch2i(curr_char);
-        if(char_converted == BAD_CHAR)
+        if(char_converted == __LP_UINT_BAD_CHAR)
             return -1;
 
         *result += char_converted << offset;
@@ -100,21 +100,34 @@ bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t val
  * __lp_uint_i2ch - converts single word to hex string
  * @value:          word to convert
  * @dest:           destination pointer on string to store result in
+ * @n:              maximum number of hexes to write into dest
  * @truncate_zeros: whether to truncate high zeros or not
  * 
  * Returns number of characters written.
  */
-uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, bool truncate_zeros)
+uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool truncate_zeros)
 {
     static const char i2ch_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    uint8_t wrote_hexes = 0;
-    for(int8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX; shift >= 0; shift -= __LP_UINT_BITS_PER_HEX)
+
+    // If high order zeros truncation requested then truncate and remember number of truncated
+    uint8_t hexes_truncated = 0;
+    while(truncate_zeros)
     {
+        uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(hexes_truncated+1);
         __lp_uint_word_t shifted = value >> shift;
-        if(truncate_zeros && shifted == 0)
-            continue;
+        if(shifted != 0)
+            break;
+        ++hexes_truncated;
+    }
+
+    uint8_t max_hexes_to_write = MIN(__LP_UINT_HEXES_PER_WORD-hexes_truncated,n);
+    uint8_t wrote_hexes = 0;
+    for(; wrote_hexes < max_hexes_to_write; ++wrote_hexes)
+    {
+        uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(wrote_hexes+hexes_truncated+1);
+        __lp_uint_word_t shifted = value >> shift;
         char shifted_hex = i2ch_map[shifted & 0xf];
-        dest[wrote_hexes++] = shifted_hex;
+        dest[wrote_hexes] = shifted_hex;
     }
 
     return wrote_hexes;
@@ -125,16 +138,18 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, bool truncate_zeros)
  * __lp_uint_to_hex - converts uint object to hex string
  * @value:      pointer on uint buffer
  * @value_size: size of uint buffer
+ * @dest:           destination pointer on string to store result in
+ * @n:              maximum number of hexes to write into dest
  * 
- * Returns pointer on hex string.
- * NULL if @value is NULL.
+ * Returns number of hexes in hex string corresponding to 'value'.
+ * Negative value is returned on error.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
-char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size)
+int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
 {
     if(!value)
-        return NULL;
+        return -1;
 
     // Find first non-zero word (from the end)
     int64_t significant_words_offset = value_size-1;
@@ -143,49 +158,73 @@ char *__lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size)
     // If all words == 0
     if(significant_words_offset < 0)
     {
-        char *hex_str = (char*)malloc(2);
-        hex_str[0] = '0';
-        hex_str[1] = '\0';
-        return hex_str;
+        if(n > 0 && dest != NULL)
+        {
+            dest[0] = '0';
+            dest[1] = '\0';
+        }
+
+        return 2;
     }
 
     // All high zeros in the highest word must be truncated
     size_t hex_str_len = (significant_words_offset) * __LP_UINT_HEXES_PER_WORD;
     for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += __LP_UINT_BITS_PER_HEX)
         ++hex_str_len;
-
-    char *hex_str = (char*)malloc(hex_str_len+1);
-    hex_str[hex_str_len] = '\0';
-
-    size_t wrote_hexes = 0;
-    wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],hex_str+wrote_hexes,true);
-    while(significant_words_offset >= 0)
-        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],hex_str+wrote_hexes,false);
     
-    return hex_str;
+    if(dest != NULL)
+    {
+        size_t hex_str_len_truncated = MIN(n,hex_str_len);
+        dest[hex_str_len_truncated] = '\0';
+
+        size_t wrote_hexes = 0;
+        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,true);
+        while(significant_words_offset >= 0)
+            wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,false);
+    }
+    
+    return hex_str_len;
 }
 
 
-static inline void __lp_uint_add_inplace_bigger(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+/**
+ * __lp_uint_copy - copies value from 'src' to 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @src:        pointer on source uint buffer
+ * @src_size:   size of source uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_copy' macro instead.
+ */
+inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *src, size_t src_size)
 {
-    __uint128_t carry = 0;
+    if(dest == NULL || src == NULL)
+        return false;
+    
+    size_t src_upper_bound = MIN(dest_size,src_size);
     size_t word_i = 0;
-    for(; word_i < other_size; ++word_i)
-    {
-        __uint128_t curr_sum = (__uint128_t)dest[word_i] + (__uint128_t)other[word_i] + carry;
-        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
-        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
-    }
-
-    for(; (word_i < dest_size) && (carry > 0); ++word_i)
-    {
-        __uint128_t curr_sum = (__uint128_t)dest[word_i] + carry;
-        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
-        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
-    }
+    for(; word_i < src_upper_bound; ++word_i)
+        dest[word_i] = src[word_i];
+    
+    for(; word_i < dest_size; ++word_i)
+        dest[word_i] = 0;
+    
+    return true;
 }
 
 
+/**
+ * __lp_uint_add_2w_inplace - performs addition of 'dest' and 'other' treating other as a uint of size 2 words storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * 
+ * Returns nothing because does not perform any checks.
+ * 
+ * Calls must be performed from higher level functions that check for pointers and sizes validity.
+ */
 static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other)
 {
     __lp_uint_word_t other_w0 = other[0];
@@ -209,7 +248,20 @@ static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_
 }
 
 
-static inline bool __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+/**
+ * __lp_uint_add_left_smaller - performs addition treating left side ('a') as a uint of smaller or equal size than right side ('b') storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer; <= @b_size
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer; >= @a_size
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns nothing because does not perform any checks.
+ * 
+ * Calls must be performed from higher level functions that check for pointers and sizes validity.
+ */
+static inline void __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -235,12 +287,25 @@ static inline bool __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size
         for(size_t word_i = b_upper_bound+1; word_i < result_size; ++word_i)
             result[word_i] = 0;
     }
-
-    return true;
 }
 
 
-bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+/**
+ * __lp_uint_add - performs addition of 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_add' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
+ */
+inline bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -248,13 +313,67 @@ bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
         return false;
 
     if(a_size < b_size)
-        return __lp_uint_add_left_smaller(a,a_size,b,b_size,result,result_size);
+        __lp_uint_add_left_smaller(a,a_size,b,b_size,result,result_size);
     else
-        return __lp_uint_add_left_smaller(b,b_size,a,a_size,result,result_size);
+        __lp_uint_add_left_smaller(b,b_size,a,a_size,result,result_size);
+    
+    return true;
 }
 
 
-bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+/**
+ * __lp_uint_add_inplace_bigger - performs addition of 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_add_ip' macro instead.
+ */
+inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+
+    __uint128_t carry = 0;
+    size_t word_i = 0;
+    size_t other_upper_bound = MIN(other_size,dest_size);
+    for(; word_i < other_upper_bound; ++word_i)
+    {
+        __uint128_t curr_sum = (__uint128_t)dest[word_i] + (__uint128_t)other[word_i] + carry;
+        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
+    }
+
+    for(; (word_i < dest_size) && (carry > 0); ++word_i)
+    {
+        __uint128_t curr_sum = (__uint128_t)dest[word_i] + carry;
+        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
+    }
+
+    return true;
+}
+
+
+/**
+ * __lp_uint_sub - performs subtraction of 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_sub' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
+ */
+inline bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -353,7 +472,69 @@ bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
 }
 
 
-bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+/**
+ * __lp_uint_sub_inplace - performs subtraction of 'other' from 'dest' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_sub_ip' macro instead.
+ */
+inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+
+    __uint128_t carry = 0;
+    size_t word_i = 0;
+    size_t other_upper_bound = MIN(other_size,dest_size);
+    for(; word_i < other_upper_bound; ++word_i)
+    {
+        __uint128_t total_neg = other[word_i] + carry;
+        if(dest[word_i] < total_neg)
+        {
+            dest[word_i] += __LP_UINT_BASE - total_neg;
+            carry = 1;
+        }
+        else
+        {
+            dest[word_i] -= total_neg;
+            carry = 0;
+        }
+    }
+
+    if(carry > 0)
+    {
+        for(; word_i < dest_size; ++word_i)
+        {
+            if(dest[word_i]-- != 0)
+                break;
+        }
+    }
+
+    return true;
+}
+
+
+/**
+ * __lp_uint_mul - performs school multiplication of 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_mul' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
+ */
+inline bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -377,6 +558,7 @@ bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
         {
             size_t b_i = res_i-a_i;
             curr_mul = (__uint128_t)a[a_i]*(__uint128_t)b[b_i];
+            // Split 128-bit word into two 64-bit word and treat it like a regular 2-word sized uint adding it to corresponding result with offset
             __lp_uint_word_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
             __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
         }
@@ -386,6 +568,73 @@ bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
 }
 
 
+/**
+ * __lp_uint_mul_inplace - performs multiplication of 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform addition with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success, false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_mul_ip' macro instead.
+ * 
+ * CAUTION: It is preferable to use regular version of multiplication
+ * because this inplace version does the same amount of operations
+ * plus copying from temporary buffer to 'dest' (plus 'malloc' and 'free' calls).
+ */
+inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    // Basically, rewritting procedure above taking into account that 'a_size' ('dest_size') is now equal to 'result_size'
+    if(!dest || !other)
+        return false;
+    
+    __lp_uint_word_t *result = (__lp_uint_word_t*)malloc(sizeof(__lp_uint_word_t)*dest_size);
+    size_t result_size = dest_size;
+
+    for(size_t res_i = 0; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    size_t dest_last_i = dest_size - 1;
+    size_t other_last_i = other_size - 1;
+    size_t effective_res_last_i = dest_last_i+other_last_i;
+    size_t result_upper_bound = MIN(effective_res_last_i,result_size-1);
+    size_t res_i = 0;
+    for(; res_i < result_size; ++res_i)
+    {
+        size_t a_lower_bound = res_i > other_last_i ? res_i - other_last_i : 0;
+        size_t a_upper_bound = res_i;
+        __uint128_t curr_mul;
+        for(size_t a_i = a_lower_bound; a_i <= a_upper_bound; ++a_i)
+        {
+            size_t b_i = res_i-a_i;
+            curr_mul = (__uint128_t)dest[a_i]*(__uint128_t)other[b_i];
+            // Split 128-bit word into two 64-bit word and treat it like a regular 2-word sized uint adding it to corresponding result with offset
+            __lp_uint_word_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
+            __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
+        }
+    }
+
+    for(size_t dest_i = 0; dest_i < dest_size; ++dest_i)
+        dest[dest_i] = result[dest_i];
+    
+    free(result);
+
+    return true;
+}
+
+
+/**
+ * __lp_uint_eq_left_smaller - performs equality check of 'a' and 'b' treating left side ('a') as a uint of smaller or equal size than right side ('b')
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer; <= 'b_size'
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer; >= 'a_size'
+ * 
+ * Returns true if 'a' and 'b' represent equal numbers.
+ * 
+ * Calls must be performed from higher level functions that check for pointers and sizes validity.
+ */
 static inline bool __lp_uint_eq_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     size_t word_i = 0;
@@ -405,7 +654,18 @@ static inline bool __lp_uint_eq_left_smaller(__lp_uint_word_t *a, size_t a_size,
 }
 
 
-bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+/**
+ * __lp_uint_eq - performs equality check of 'a' and 'b'
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer
+ * 
+ * Returns true if 'a' and 'b' represent equal numbers.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_eq' macro instead.
+ */
+inline bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
@@ -417,7 +677,21 @@ bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_
 }
 
 
-lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+/**
+ * __lp_uint_3way - performs three-way comparison of 'a' and 'b'
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer
+ * 
+ * Returns value of type 'lp_uint_3way_t':
+ * LP_UINT_EQUAL - if 'a' and 'b' are equal
+ * LP_UINT_LESS - if 'a' is less than 'b'
+ * LP_UINT_GREATER - if 'a' is greater than 'b'
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_3way' macro instead.
+ */
+inline lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
@@ -462,25 +736,285 @@ lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_uint_word
 }
 
 
-bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+/**
+ * __lp_uint_ls - performs check if 'a' is less than 'b'
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer
+ * 
+ * Returns true if 'a' represents number which is less than number represented by 'b'
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_ls' macro instead.
+ */
+inline bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) == LP_UINT_LESS;
 }
 
 
-bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+/**
+ * __lp_uint_leq - performs check if 'a' is less or equal than 'b'
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer
+ * 
+ * Returns true if 'a' represents number which is less or equal than number represented by 'b'
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_leq' macro instead.
+ */
+inline bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_GREATER;
 }
 
 
-bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+/**
+ * __lp_uint_gt - performs check if 'a' is greater than 'b'
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer
+ * 
+ * Returns true if 'a' represents number which is greater than number represented by 'b'
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_gt' macro instead.
+ */
+inline bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) == LP_UINT_GREATER;
 }
 
 
-bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+/**
+ * __lp_uint_geq - performs check if 'a' is greater or equal than 'b'
+ * @a:       pointer on left side uint buffer
+ * @a_size:  size of left side uint buffer
+ * @b:       pointer on right side uint buffer
+ * @b_size:  size of right side uint buffer
+ * 
+ * Returns true if 'a' represents number which is greater or equal than number represented by 'b'
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_geq' macro instead.
+ */
+inline bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_LESS;
+}
+
+
+/**
+ * __lp_uint_and - performs bitwise *and* operation on 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_and' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
+ */
+inline bool __lp_uint_and(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    size_t upper_bound = MIN(MIN(a_size,b_size),result_size);
+    size_t res_i = 0;
+    for(; res_i < upper_bound; ++res_i)
+        result[res_i] = a[res_i] & b[res_i];
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_and_inplace - performs bitwise *and* operation on 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform operation with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_and_ip' macro instead.
+ */
+inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+    
+    size_t upper_bound = MIN(dest_size,other_size);
+    size_t dest_i = 0;
+    for(; dest_i < upper_bound; ++dest_i)
+        dest[dest_i] &= other[dest_i];
+    
+    for(; dest_i < dest_size; ++dest_i)
+        dest[dest_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_or - performs bitwise *or* operation on 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_or' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
+ */
+inline bool __lp_uint_or(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    __lp_uint_word_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    size_t min_upper_bound = MIN(min_term_size,result_size);
+    size_t res_i = 0;
+    for(; res_i < min_upper_bound; ++res_i)
+        result[res_i] = a[res_i] | b[res_i];
+    
+    size_t max_upper_bound = MIN(max_term_size,result_size);
+    for(; res_i < max_upper_bound; ++res_i)
+        result[res_i] = max_term[res_i];
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_or_inplace - performs bitwise *or* operation on 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform operation with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_or_ip' macro instead.
+ */
+inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+    
+    size_t upper_bound = MIN(dest_size,other_size);
+    for(size_t i = 0; i < upper_bound; ++i)
+        dest[i] |= other[i];
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_xor - performs bitwise *xor* operation on 'a' and 'b' storing result in 'result'
+ * @a:              pointer on left side uint buffer
+ * @a_size:         size of left side uint buffer
+ * @b:              pointer on right side uint buffer
+ * @b_size:         size of right side uint buffer
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_oxr' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
+ */
+inline bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !b || !result)
+        return false;
+    if(a == result || b == result)
+        return false;
+    
+    __lp_uint_word_t *max_term;
+    int64_t min_term_size, max_term_size;
+    if(a_size < b_size)
+    {
+        min_term_size = a_size;
+        max_term = b;
+        max_term_size = b_size;
+    }
+    else
+    {
+        min_term_size = b_size;
+        max_term = a;
+        max_term_size = a_size;
+    }
+
+    size_t min_upper_bound = MIN(min_term_size,result_size);
+    size_t res_i = 0;
+    for(; res_i < min_upper_bound; ++res_i)
+        result[res_i] = a[res_i] ^ b[res_i];
+    
+    size_t max_upper_bound = MIN(max_term_size,result_size);
+    for(; res_i < max_upper_bound; ++res_i)
+        result[res_i] = max_term[res_i];
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_xor_inplace - performs bitwise *xor* operation on 'dest' and 'other' storing result in 'dest'
+ * @dest:       pointer on destination uint buffer
+ * @dest_size:  size of destination uint buffer
+ * @other:      pointer on another uint buffer to perform operation with
+ * @other_size: size of another uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_xor_ip' macro instead.
+ */
+inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+{
+    if(!dest || !other)
+        return false;
+    
+    size_t upper_bound = MIN(dest_size,other_size);
+    for(size_t i = 0; i < upper_bound; ++i)
+        dest[i] ^= other[i];
+    
+    return true;
 }

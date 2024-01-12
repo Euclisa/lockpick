@@ -9,7 +9,7 @@
 
 void __affirmf(bool cond, const char *format, ...);
 
-#define affirmf(cond,format,...) __affirmf(cond,format,#cond,__FILE__,__LINE__,##__VA_ARGS__)
+#define affirmf(cond,format,...) __affirmf(cond,format,#cond,__FILE__,__LINE__,__func__,##__VA_ARGS__)
 
 
 #endif // _LOCKPICK_INCLUDE_AFFIRMF_H

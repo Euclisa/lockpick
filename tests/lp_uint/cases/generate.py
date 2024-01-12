@@ -36,6 +36,9 @@ def gen_pairs(first_size, second_size, path, cases_per_test):
     f_sub = open(f"{path}/lp_uint_{first_size}_{second_size}_subtraction.txt", 'w')
     f_mul = open(f"{path}/lp_uint_{first_size}_{second_size}_multiplication.txt", 'w')
     f_comp = open(f"{path}/lp_uint_{first_size}_{second_size}_comparison.txt", 'w')
+    f_and = open(f"{path}/lp_uint_{first_size}_{second_size}_and.txt", 'w')
+    f_or = open(f"{path}/lp_uint_{first_size}_{second_size}_or.txt", 'w')
+    f_xor = open(f"{path}/lp_uint_{first_size}_{second_size}_xor.txt", 'w')
     for test_i in range(cases_per_test):
         first_uint = gen_single(first_size)
         if(random.randint(1,10) > 8):
@@ -46,23 +49,35 @@ def gen_pairs(first_size, second_size, path, cases_per_test):
         res_sub = first_uint - second_uint
         res_mul = first_uint * second_uint
         res_comp = 0 if first_uint == second_uint else (1 if first_uint < second_uint else 2)
+        res_and = first_uint & second_uint
+        res_or = first_uint | second_uint
+        res_xor = first_uint ^ second_uint
 
         first_hex = hex(first_uint)[2:]
         second_hex = hex(second_uint)[2:]
         add_hex = hex(res_add)[2:]
         sub_hex = hex(res_sub if res_sub > 0 else BASE + res_sub)[2:]
         mul_hex = hex(res_mul)[2:]
+        and_hex = hex(res_and)[2:]
+        or_hex = hex(res_or)[2:]
+        xor_hex = hex(res_xor)[2:]
         f_samp.write(f"{first_hex} {second_hex}\n")
         f_add.write(f"{add_hex}\n")
         f_sub.write(f"{sub_hex}\n")
         f_mul.write(f"{mul_hex}\n")
         f_comp.write(f"{res_comp}\n")
+        f_and.write(f"{and_hex}\n")
+        f_or.write(f"{or_hex}\n")
+        f_xor.write(f"{xor_hex}\n")
         
     
     f_samp.close()
     f_add.close()
     f_sub.close()
     f_mul.close()
+    f_and.close()
+    f_or.close()
+    f_xor.close()
 
 if __name__ == "__main__":
 
