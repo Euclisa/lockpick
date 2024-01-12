@@ -185,7 +185,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint(N_a) *a_sampl
     }                                                                                                                       \
     fclose(f_mul);                                                                                                          \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                                                    \
+void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                    \
 {                                                                                                                           \
     const char *fn_comp =                                                                                                   \
         "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_comparison.txt";                    \
@@ -232,7 +232,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint(N_a) *a_samples, lp_uint
     }                                                                                                                       \
     fclose(f_and);                                                                                                          \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                                                            \
+void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                            \
 {                                                                                                                           \
     const char *fn_or =                                                                                                     \
         "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_or.txt";                            \
@@ -250,7 +250,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint(N_a) *a_samples, lp_uint(
     }                                                                                                                       \
     fclose(f_or);                                                                                                           \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                           \
 {                                                                                                                           \
     const char *fn_xor =                                                                                                    \
         "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_xor.txt";                           \
@@ -274,7 +274,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic(lp_uint(N_a) *a_sampl
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_subtraction(a_samples, b_samples));                                  \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_multiplication(a_samples, b_samples));                               \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                                                                   \
+void test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(lp_uint(N_a) *a_samples, lp_uint(N_b) *b_samples)                   \
 {                                                                                                                           \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_and(a_samples, b_samples));                                          \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_or(a_samples, b_samples));                                           \
