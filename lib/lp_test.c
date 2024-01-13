@@ -107,8 +107,23 @@ char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, 
 }
 
 
-void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str, uint64_t tests_failed, uint64_t tests_total, uint64_t cases_passed, uint64_t duration_total_ns, char *failed_test_msg)
+/**
+ * __lp_test_print_leave_status - prints status message on '__LP_TEST_LEAVE' event.
+ * @curr_level:                 level of current test
+ * @test_call_str:              name of test call
+ * @tests_failed:               number of tests failed (meaning test groups, not cases)
+ * @tests_total:                total number of tests (meaning test groups, not cases)
+ * @cases_passed:               total number of cases passed in all groups below
+ * @duration_total_ns:          total duration between current '__LP_TEST_LEAVE__LP_TEST_LEAVE' and its corresponding '__LP_TEST_ENTER' events
+ * @last_failed_test_call_str:  name of last failed test call
+ * @failed_test_msg:            message of last failed test case
+ * 
+ * Returns boolean flag representing status of printed message:
+ * true if it is failure, false if success.
+*/
+bool __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str, uint64_t tests_failed, uint64_t tests_total, uint64_t cases_passed, uint64_t duration_total_ns, char *last_failed_test_call_str, char *failed_test_msg)
 {
+    bool failure = false;
     char *space_padding = __create_padding(curr_level);
     char *time_str = __get_time_str("%X");
 
@@ -117,7 +132,7 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
 
     uint64_t tests_passed = tests_total - tests_failed;
     bool print_stats = true;
-    bool print_msg = false;
+    bool print_details = false;
 
     if(cases_passed == 0 && tests_failed == 0)
     {
@@ -127,7 +142,8 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
     else if(tests_failed > 0)
     {
         snprintf(status_str,status_str_len,"%sFAILED%s",__LP_TEST_FAILED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
-        print_msg = true;
+        print_details = last_failed_test_call_str[0] != '\0';
+        failure = true;
     }
     else
         snprintf(status_str,status_str_len,"%sPASSED%s",__LP_TEST_PASSED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
@@ -139,18 +155,29 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
         char *stats_str = __lp_test_get_stats_str(test_call_str,tests_passed,cases_passed,duration_total_ns);
         printf("%s",stats_str);
     }
-    if(print_msg)
-        printf(" | Details: %s",failed_test_msg);
+    if(print_details)
+        printf(" | Details ('%s'): %s",last_failed_test_call_str,failed_test_msg);
 
     printf("\n");
+
+    return failure;
 }
 
 
-void __lp_test_print_end(const char *project_name_str, uint64_t tests_num, uint64_t duration_total_ns, bool failed)
+/**
+ * __lp_test_print_end - prints status message on '__LP_TEST_END' event.
+ * @project_name_str:       name of project corresponding to session
+ * @tests_total:            total number of tests in session
+ * @duration_total_ns:      total duration of test session
+ * @failure:                flag that represents status of test session
+ * 
+ * Returns nothing.
+*/
+void __lp_test_print_end(const char *project_name_str, uint64_t tests_total, uint64_t duration_total_ns, bool failure)
 {
     uint64_t duration_total_ms = duration_total_ns/(__LP_TEST_NANO_DECIMALS/__LP_TEST_MILLI_DECIMALS);
 
-    if(failed)
+    if(failure)
         printf("*** Quality Assurance for '%s' %sFAILED%s (%ld ms) ***\n",
             project_name_str,__LP_TEST_FAILED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC,duration_total_ms);
     else
@@ -159,15 +186,27 @@ void __lp_test_print_end(const char *project_name_str, uint64_t tests_num, uint6
 }
 
 
+/**
+ * __lp_test_process_action - processes action of user program towards test session.
+ * @action:       action type
+ * 
+ * Returns nothing.
+ * 
+ * This is not supposed to be called by user. One should use predefined macro definitions instead.
+*/
 void __lp_test_process_action(__lp_test_actions_t action, ...)
 {
     static struct timespec session_init_ts;
-    static char project_name_str[64];
+    static char project_name_str[64] = {0};
+    static char last_test_call_str[64] = {0};
+    static char last_failed_test_call_str[64] = {0};
     static char failed_test_msg[1024] = {0};
     static uint8_t current_level = 0;
+    static uint8_t level_max_print_depth[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_tests_total[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_cases_passed[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_tests_failed[__LP_TEST_MAX_LEVELS] = {0};
+    static bool failure = false;
 
     va_list args;
     va_start(args, action);
@@ -184,6 +223,8 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
             affirmf(project_name_str_obt,"Project name must be not null");
             snprintf(project_name_str,sizeof(project_name_str),"%s",project_name_str_obt);
 
+            level_max_print_depth[0] = __LP_TEST_MAX_LEVELS+1;
+
             __lp_test_print_init(project_name_str);
             break;
         }
@@ -191,9 +232,14 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
         {
             affirmf(current_level < __LP_TEST_MAX_LEVELS-1, "Max number of test levels in tree exceeded (%d).",__LP_TEST_MAX_LEVELS);
 
-            const char *test_call_str = va_arg(args, const char*);
-            __lp_test_print_enter(current_level,test_call_str);
             ++current_level;
+            const char *test_call_str = va_arg(args, const char*);
+            strcpy(last_test_call_str,test_call_str);
+            uint64_t curr_test_max_print_depth = va_arg(args, uint64_t);
+            uint8_t prev_test_max_print_depth = level_max_print_depth[current_level-1] == 0 ? 0 : level_max_print_depth[current_level-1]-1;
+            level_max_print_depth[current_level] = MIN(prev_test_max_print_depth,curr_test_max_print_depth);
+            if(level_max_print_depth[current_level] > 0)
+                __lp_test_print_enter(current_level-1,test_call_str);
             level_tests_total[current_level] = 1;
             level_tests_failed[current_level] = 0;
             level_cases_passed[current_level] = 0;
@@ -204,7 +250,6 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
             affirmf(current_level > 0,"Can't call '__LP_TEST_LEAVE' before '__LP_TEST_ENTER'");
 
             const char *test_call_str = va_arg(args, const char*);
-
             struct timespec test_start_ts = va_arg(args,struct timespec);
             struct timespec test_end_ts = va_arg(args,struct timespec);
             uint64_t duration_total_ns = 
@@ -217,14 +262,24 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
             level_tests_total[current_level] += level_tests_total[current_level+1];
             level_cases_passed[current_level] += level_cases_passed[current_level+1];
 
-            __lp_test_print_leave_status(
-                current_level,
-                test_call_str,
-                level_tests_failed[current_level+1],
-                level_tests_total[current_level+1],
-                level_cases_passed[current_level+1],
-                duration_total_ns,
-                failed_test_msg);
+            if(level_max_print_depth[current_level+1] > 0)
+            {
+                bool curr_failure = __lp_test_print_leave_status(
+                    current_level,
+                    test_call_str,
+                    level_tests_failed[current_level+1],
+                    level_tests_total[current_level+1],
+                    level_cases_passed[current_level+1],
+                    duration_total_ns,
+                    last_failed_test_call_str,
+                    failed_test_msg);
+                if(curr_failure)
+                {
+                    strcpy(failed_test_msg,"");
+                    strcpy(last_failed_test_call_str,"");
+                    failure = true;
+                }
+            }
             break;
         }
         case __LP_TEST_PASS:
@@ -239,6 +294,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
             ++level_tests_failed[current_level];
             const char *format_fail_msg = va_arg(args,const char*);
             vsnprintf(failed_test_msg,sizeof(failed_test_msg)-1,format_fail_msg,args);
+            snprintf(last_failed_test_call_str,sizeof(last_failed_test_call_str)-1,"%s",last_test_call_str);
             break;
         }
         case __LP_TEST_END:
@@ -252,7 +308,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
                 (session_end_ts.tv_sec-session_init_ts.tv_sec)*__LP_TEST_NANO_DECIMALS +
                 (session_end_ts.tv_nsec-session_init_ts.tv_nsec);
 
-            __lp_test_print_end(project_name_str,level_cases_passed[current_level],duration_total_ns,level_tests_failed[current_level] > 0);
+            __lp_test_print_end(project_name_str,level_cases_passed[current_level],duration_total_ns,failure);
             break;
         }
         default:
