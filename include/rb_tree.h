@@ -7,44 +7,41 @@
 #include <assert.h>
 #endif // LOCKPICK_DEBUG
 
-#define RB_SUCCESS 0
-#define RB_ALLOC_FAIL 1
 
-enum __rb_colors
+typedef enum __lp_rb_colors
 {
-    __rb_black = 0,
-    __rb_red   = 1
-};
+    __LP_RB_BLACK = 0,
+    __LP_RB_RED   = 1
+} __lp_rb_color_t;
 
-struct rb_node
+typedef struct lp_rb_node
 {
-    struct rb_node *left, *right;
+    struct lp_rb_node *left, *right;
     unsigned long __parent_color;
-} aligned(2);
+} aligned(2) lp_rb_node_t;
 
 
-enum __rb_colors __rb_color(const struct rb_node *node);
+__lp_rb_color_t __lp_rb_color(const lp_rb_node_t *node);
 
-void __rb_set_color(struct rb_node *node, enum __rb_colors color);
+void __lp_rb_set_color(lp_rb_node_t *node, __lp_rb_color_t color);
 
-struct rb_node *rb_parent(const struct rb_node *node);
-struct rb_node *rb_grandparent(const struct rb_node *node);
-struct rb_node *rb_uncle(const struct rb_node *node);
-void __rb_grandparent_uncle(const struct rb_node *node, struct rb_node **grandparent, struct rb_node **uncle);
-struct rb_node *rb_sibling(const struct rb_node *node);
+lp_rb_node_t *lp_rb_parent(const lp_rb_node_t *node);
+lp_rb_node_t *lp_rb_grandparent(const lp_rb_node_t *node);
+lp_rb_node_t *lp_rb_uncle(const lp_rb_node_t *node);
+lp_rb_node_t *lp_rb_sibling(const lp_rb_node_t *node);
 
-void rb_set_parent(struct rb_node *node, const struct rb_node *parent_ptr);
+void lp_rb_set_parent(lp_rb_node_t *node, const lp_rb_node_t *parent_ptr);
 
-bool rb_is_left(const struct rb_node *node);
-bool rb_is_left_p(const struct rb_node *node, const struct rb_node *parent);
+bool lp_rb_is_left(const lp_rb_node_t *node);
+bool lp_rb_is_left_p(const lp_rb_node_t *node, const lp_rb_node_t *parent);
 
-bool rb_is_right(const struct rb_node *node);
-bool rb_is_right_p(const struct rb_node *node, const struct rb_node *parent);
+bool lp_rb_is_right(const lp_rb_node_t *node);
+bool lp_rb_is_right_p(const lp_rb_node_t *node, const lp_rb_node_t *parent);
 
-struct rb_node *rb_insert_rebalance(struct rb_node *root, struct rb_node *node);
+lp_rb_node_t *lp_rb_insert_rebalance(lp_rb_node_t *root, lp_rb_node_t *node);
 
-struct rb_node *rb_remove(struct rb_node *root, struct rb_node *node);
+lp_rb_node_t *lp_rb_remove(lp_rb_node_t *root, lp_rb_node_t *node);
 
-bool rb_check_consistency(const struct rb_node *root);
+bool lp_rb_check_consistency(const lp_rb_node_t *root);
 
 #endif // LOCKPICK_INCLUDE_RB_TREE_H

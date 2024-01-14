@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_LP_UINT_H
-#define _LOCKPICK_INCLUDE_LP_UINT_H
+#ifndef _LOCKPICK_INCLUDE_UINT_H
+#define _LOCKPICK_INCLUDE_UINT_H
 
 #include <stdint.h>
 #include <assert.h>
@@ -107,4 +107,4 @@ bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size
 bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size);
 #define lp_uint_xor_ip(dest,other) __lp_uint_xor_inplace((dest).__buffer, __array_size((dest).__buffer), (other).__buffer, __array_size((other).__buffer))
 
-#endif  // _LOCKPICK_INCLUDE_LP_UINT_H
+#endif  // _LOCKPICK_INCLUDE_UINT_H

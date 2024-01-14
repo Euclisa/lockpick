@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_LP_TEST_H
-#define _LOCKPICK_INCLUDE_LP_TEST_H
+#ifndef _LOCKPICK_INCLUDE_TEST_H
+#define _LOCKPICK_INCLUDE_TEST_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -22,15 +22,20 @@ typedef enum __lp_test_actions
 
 void __lp_test_process_action(__lp_test_actions_t action, ...);
 
+#define __LP_TEST_GET_OVERLOADING(_1,_2,NAME,...) NAME
 
-#define LP_TEST_RUN(f_call)  ({                                                         \
+#define __LP_TEST_RUN_WITH_DEPTH(f_call,max_print_depth)  ({                            \
     struct timespec __lpt_start_ts,__lpt_end_ts;                                        \
-    __lp_test_process_action(__LP_TEST_ENTER,#f_call);                                  \
+    __lp_test_process_action(__LP_TEST_ENTER,#f_call,max_print_depth);                  \
     clock_gettime(CLOCK_MONOTONIC,&__lpt_start_ts);                                     \
     f_call;                                                                             \
     clock_gettime(CLOCK_MONOTONIC,&__lpt_end_ts);                                       \
     __lp_test_process_action(__LP_TEST_LEAVE,#f_call,__lpt_start_ts,__lpt_end_ts);      \
 })
+
+#define __LP_TEST_RUN_DEFAULT(f_call) __LP_TEST_RUN_WITH_DEPTH(f_call,__LP_TEST_MAX_LEVELS)
+
+#define LP_TEST_RUN(...) __LP_TEST_GET_OVERLOADING(__VA_ARGS__,__LP_TEST_RUN_WITH_DEPTH,__LP_TEST_RUN_DEFAULT)(__VA_ARGS__)
 
 #define LP_TEST_ASSERT(cond,msg,...)  ({                                                \
     __lp_test_actions_t __lpt_asrt_act = (cond) ? __LP_TEST_PASS : __LP_TEST_FAIL;      \
@@ -48,4 +53,4 @@ void __lp_test_process_action(__lp_test_actions_t action, ...);
 })
 
 
-#endif // _LOCKPICK_INCLUDE_LP_TEST_H
+#endif // _LOCKPICK_INCLUDE_TEST_H
