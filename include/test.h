@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_LP_TEST_H
-#define _LOCKPICK_INCLUDE_LP_TEST_H
+#ifndef _LOCKPICK_INCLUDE_TEST_H
+#define _LOCKPICK_INCLUDE_TEST_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -53,4 +53,4 @@ void __lp_test_process_action(__lp_test_actions_t action, ...);
 })
 
 
-#endif // _LOCKPICK_INCLUDE_LP_TEST_H
+#endif // _LOCKPICK_INCLUDE_TEST_H

@@ -1,4 +1,4 @@
-#include "lp_test.h"
+#include "test.h"
 #include "affirmf.h"
 #include <assert.h>
 #include <stdio.h>

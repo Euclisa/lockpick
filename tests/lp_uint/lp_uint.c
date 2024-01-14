@@ -1,6 +1,6 @@
-#include "lp_test.h"
+#include "test.h"
 #include "affirmf.h"
-#include <lp_uint.h>
+#include <uint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
