@@ -126,7 +126,7 @@ TEST_UINT_FROM_TO_HEX(1024)
 
 
 #define CHUNK_INIT_OPS_SAMPLES_BUFFERS(N_a,N_b)                                                                             \
-    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b ".txt";             \
+    const char *fn_samp = "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b ".txt";             \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
     size_t samples_num = __count_line_in_file(f_samp);                                                                      \
@@ -148,7 +148,7 @@ TEST_UINT_FROM_TO_HEX(1024)
 #define TEST_UINT_OPS(N_a, N_b, N_result)                                                                                   \
 void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                  \
 {                                                                                                                           \
-    const char *fn_add = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_addition.txt";     \
+    const char *fn_add = "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt";     \
     FILE *f_add = fopen(fn_add,"r");                                                                                        \
     affirmf(f_add,"Failed to open file '%s'",fn_add);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -165,7 +165,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint_t(N_a) *a_samples, 
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_subtraction(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)               \
 {                                                                                                                           \
-    const char *fn_sub = "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_subtraction.txt";  \
+    const char *fn_sub = "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_subtraction.txt";  \
     FILE *f_sub = fopen(fn_sub,"r");                                                                                        \
     affirmf(f_sub,"Failed to open file '%s'",fn_sub);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(2048))                                                  \
@@ -183,7 +183,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_subtraction(lp_uint_t(N_a) *a_sample
 void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)            \
 {                                                                                                                           \
     const char *fn_mul =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_multiplication.txt";                \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_multiplication.txt";                \
     FILE *f_mul = fopen(fn_mul,"r");                                                                                        \
     affirmf(f_mul,"Failed to open file '%s'",fn_mul);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -201,7 +201,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint_t(N_a) *a_sam
 void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                \
 {                                                                                                                           \
     const char *fn_comp =                                                                                                   \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_comparison.txt";                    \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_comparison.txt";                    \
     FILE *f_comp = fopen(fn_comp,"r");                                                                                      \
     affirmf(f_comp,"Failed to open file '%s'",fn_comp);                                                                     \
     lp_uint_3way_t res_true,res_obt;                                                                                        \
@@ -230,7 +230,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint_t(N_a) *a_samples
 void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
 {                                                                                                                           \
     const char *fn_and =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_and.txt";                           \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_and.txt";                           \
     FILE *f_and = fopen(fn_and,"r");                                                                                        \
     affirmf(f_and,"Failed to open file '%s'",fn_and);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -248,7 +248,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint_t(N_a) *a_samples, lp_ui
 void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                        \
 {                                                                                                                           \
     const char *fn_or =                                                                                                     \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_or.txt";                            \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_or.txt";                            \
     FILE *f_or = fopen(fn_or,"r");                                                                                          \
     affirmf(f_or,"Failed to open file '%s'",fn_or);                                                                         \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -266,7 +266,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint_t(N_a) *a_samples, lp_uin
 void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
 {                                                                                                                           \
     const char *fn_xor =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_xor.txt";                           \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_xor.txt";                           \
     FILE *f_xor = fopen(fn_xor,"r");                                                                                        \
     affirmf(f_xor,"Failed to open file '%s'",fn_xor);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -308,7 +308,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops()                               
 void test_uint_##N_a##_##N_b##_addition_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
 {                                                                                                                           \
     const char *fn_add =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_addition.txt";                      \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt";                      \
     FILE *f_add = fopen(fn_add,"r");                                                                                        \
     affirmf(f_add,"Failed to open file '%s'",fn_add);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -327,7 +327,7 @@ void test_uint_##N_a##_##N_b##_addition_inplace(lp_uint_t(N_a) *a_samples, lp_ui
 void test_uint_##N_a##_##N_b##_subtraction_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                    \
 {                                                                                                                           \
     const char *fn_sub =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_subtraction.txt";                   \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_subtraction.txt";                   \
     FILE *f_sub = fopen(fn_sub,"r");                                                                                        \
     affirmf(f_sub,"Failed to open file '%s'",fn_sub);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(2048))                                                  \
@@ -346,7 +346,7 @@ void test_uint_##N_a##_##N_b##_subtraction_inplace(lp_uint_t(N_a) *a_samples, lp
 void test_uint_##N_a##_##N_b##_multiplication_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                 \
 {                                                                                                                           \
     const char *fn_mul =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_multiplication.txt";                \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_multiplication.txt";                \
     FILE *f_mul = fopen(fn_mul,"r");                                                                                        \
     affirmf(f_mul,"Failed to open file '%s'",fn_mul);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -365,7 +365,7 @@ void test_uint_##N_a##_##N_b##_multiplication_inplace(lp_uint_t(N_a) *a_samples,
 void test_uint_##N_a##_##N_b##_and_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                            \
 {                                                                                                                           \
     const char *fn_and =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_and.txt";                           \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_and.txt";                           \
     FILE *f_and = fopen(fn_and,"r");                                                                                        \
     affirmf(f_and,"Failed to open file '%s'",fn_and);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -384,7 +384,7 @@ void test_uint_##N_a##_##N_b##_and_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(
 void test_uint_##N_a##_##N_b##_or_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                             \
 {                                                                                                                           \
     const char *fn_or =                                                                                                     \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_or.txt";                            \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_or.txt";                            \
     FILE *f_or = fopen(fn_or,"r");                                                                                          \
     affirmf(f_or,"Failed to open file '%s'",fn_or);                                                                         \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
@@ -403,7 +403,7 @@ void test_uint_##N_a##_##N_b##_or_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N
 void test_uint_##N_a##_##N_b##_xor_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                            \
 {                                                                                                                           \
     const char *fn_xor =                                                                                                    \
-        "/home/me/Documents/Code/lockpick/tests/lp_uint/cases/lp_uint_" #N_a "_" #N_b "_xor.txt";                           \
+        "/home/me/Documents/Code/lockpick/tests/uint/cases/uint_" #N_a "_" #N_b "_xor.txt";                           \
     FILE *f_xor = fopen(fn_xor,"r");                                                                                        \
     affirmf(f_xor,"Failed to open file '%s'",fn_xor);                                                                       \
     CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \

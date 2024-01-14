@@ -198,7 +198,7 @@ int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest,
  * 
  * This is not supposed to be called by user. Use 'lp_uint_copy' macro instead.
  */
-inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *src, size_t src_size)
+inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *src, size_t src_size)
 {
     if(dest == NULL || src == NULL)
         return false;
@@ -225,7 +225,7 @@ inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_w
  * 
  * Calls must be performed from higher level functions that check for pointers and sizes validity.
  */
-static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other)
+static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other)
 {
     __lp_uint_word_t other_w0 = other[0];
     __lp_uint_word_t other_w1 = other[1];
@@ -261,7 +261,7 @@ static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_
  * 
  * Calls must be performed from higher level functions that check for pointers and sizes validity.
  */
-static inline void __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+static inline void __lp_uint_add_left_smaller(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -305,7 +305,7 @@ static inline void __lp_uint_add_left_smaller(__lp_uint_word_t *a, size_t a_size
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline bool __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -332,7 +332,7 @@ inline bool __lp_uint_add(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * 
  * This is not supposed to be called by user. Use 'lp_uint_add_ip' macro instead.
  */
-inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
         return false;
@@ -373,7 +373,7 @@ inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -483,7 +483,7 @@ inline bool __lp_uint_sub(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * 
  * This is not supposed to be called by user. Use 'lp_uint_sub_ip' macro instead.
  */
-inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
         return false;
@@ -534,7 +534,7 @@ inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -583,7 +583,7 @@ inline bool __lp_uint_mul(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * because this inplace version does the same amount of operations
  * plus copying from temporary buffer to 'dest' (plus 'malloc' and 'free' calls).
  */
-inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     // Basically, rewritting procedure above taking into account that 'a_size' ('dest_size') is now equal to 'result_size'
     if(!dest || !other)
@@ -635,7 +635,7 @@ inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * 
  * Calls must be performed from higher level functions that check for pointers and sizes validity.
  */
-static inline bool __lp_uint_eq_left_smaller(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+static inline bool __lp_uint_eq_left_smaller(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     size_t word_i = 0;
     for(; word_i < a_size; ++word_i)
@@ -665,7 +665,7 @@ static inline bool __lp_uint_eq_left_smaller(__lp_uint_word_t *a, size_t a_size,
  * 
  * This is not supposed to be called by user. Use 'lp_uint_eq' macro instead.
  */
-inline bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+inline bool __lp_uint_eq(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
@@ -691,7 +691,7 @@ inline bool __lp_uint_eq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
  * 
  * This is not supposed to be called by user. Use 'lp_uint_3way' macro instead.
  */
-inline lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+inline lp_uint_3way_t __lp_uint_3way(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
         return false;
@@ -747,7 +747,7 @@ inline lp_uint_3way_t __lp_uint_3way(__lp_uint_word_t *a, size_t a_size, __lp_ui
  * 
  * This is not supposed to be called by user. Use 'lp_uint_ls' macro instead.
  */
-inline bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+inline bool __lp_uint_ls(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) == LP_UINT_LESS;
 }
@@ -764,7 +764,7 @@ inline bool __lp_uint_ls(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
  * 
  * This is not supposed to be called by user. Use 'lp_uint_leq' macro instead.
  */
-inline bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+inline bool __lp_uint_leq(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_GREATER;
 }
@@ -781,7 +781,7 @@ inline bool __lp_uint_leq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * 
  * This is not supposed to be called by user. Use 'lp_uint_gt' macro instead.
  */
-inline bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+inline bool __lp_uint_gt(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) == LP_UINT_GREATER;
 }
@@ -798,7 +798,7 @@ inline bool __lp_uint_gt(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
  * 
  * This is not supposed to be called by user. Use 'lp_uint_geq' macro instead.
  */
-inline bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size)
+inline bool __lp_uint_geq(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     return __lp_uint_3way(a,a_size,b,b_size) != LP_UINT_LESS;
 }
@@ -819,7 +819,7 @@ inline bool __lp_uint_geq(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_and(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -849,7 +849,7 @@ inline bool __lp_uint_and(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * 
  * This is not supposed to be called by user. Use 'lp_uint_and_ip' macro instead.
  */
-inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
         return false;
@@ -881,7 +881,7 @@ inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_or(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -930,7 +930,7 @@ inline bool __lp_uint_or(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b
  * 
  * This is not supposed to be called by user. Use 'lp_uint_or_ip' macro instead.
  */
-inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
         return false;
@@ -958,7 +958,7 @@ inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
         return false;
@@ -1007,7 +1007,7 @@ inline bool __lp_uint_xor(__lp_uint_word_t *a, size_t a_size, __lp_uint_word_t *
  * 
  * This is not supposed to be called by user. Use 'lp_uint_xor_ip' macro instead.
  */
-inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
         return false;

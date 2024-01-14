@@ -1,5 +1,5 @@
 #include "rb_tree/rb_tree.h"
-#include "lp_uint/lp_uint.h"
+#include "uint/uint.h"
 #include "test.h"
 
 int main()
