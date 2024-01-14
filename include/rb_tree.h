@@ -7,8 +7,6 @@
 #include <assert.h>
 #endif // LOCKPICK_DEBUG
 
-#define RB_SUCCESS 0
-#define RB_ALLOC_FAIL 1
 
 typedef enum __lp_rb_colors
 {
