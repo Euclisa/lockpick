@@ -482,7 +482,7 @@ TEST_UINT_OPS(1024,1024,64)
 TEST_UINT_OPS_INPLACE(1024,1024)
 
 
-void test_lp_uint()
+void lp_test_uint()
 {
     LP_TEST_RUN(test_uint64_from_to_hex());
     LP_TEST_RUN(test_uint64_from_to_hex_overflow());
