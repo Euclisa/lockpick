@@ -7,4 +7,6 @@
 
 #define aligned(N) __attribute__((aligned(N)))
 
+#define lp_assert(cond,msg) assert((cond) && __func__ && msg)
+
 #endif // LOCKPICK_INCLUDE_STDDEF_H

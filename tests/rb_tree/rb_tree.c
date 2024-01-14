@@ -11,7 +11,7 @@
 struct int_rb_node
 {
     int value;
-    struct rb_node __rb_node; 
+    lp_rb_node_t __rb_node; 
 };
 
 
@@ -34,34 +34,34 @@ void shuffle(int *arr, int length)
 }
 
 
-struct rb_node *int_rb_insert(struct rb_node *root, struct int_rb_node *node)
+lp_rb_node_t *int_rb_insert(lp_rb_node_t *root, struct int_rb_node *node)
 {
     if(root)
     {
         struct int_rb_node *current = container_of(root,struct int_rb_node,__rb_node);
         while(1)
         {
-            struct rb_node **next_child;
+            lp_rb_node_t **next_child;
             next_child = current->value < node->value ? &current->__rb_node.right : &current->__rb_node.left;
             if(!*next_child)
             {
                 *next_child = &node->__rb_node;
-                rb_set_parent(&node->__rb_node,&current->__rb_node);
+                lp_rb_set_parent(&node->__rb_node,&current->__rb_node);
                 break;
             }
             current = container_of(*next_child,struct int_rb_node,__rb_node);
         }
     }
     else
-        rb_set_parent(&node->__rb_node,NULL);
+        lp_rb_set_parent(&node->__rb_node,NULL);
     node->__rb_node.left = NULL;
     node->__rb_node.right = NULL;
 
-    return rb_insert_rebalance(root,&node->__rb_node);
+    return lp_rb_insert_rebalance(root,&node->__rb_node);
 }
 
 
-struct int_rb_node *int_rb_find(struct rb_node *root, int value)
+struct int_rb_node *int_rb_find(lp_rb_node_t *root, int value)
 {
     if(root)
     {
@@ -71,7 +71,7 @@ struct int_rb_node *int_rb_find(struct rb_node *root, int value)
             if(current->value == value)
                 return current;
 
-            struct rb_node *next_child = current->value < value ? current->__rb_node.right : current->__rb_node.left;
+            lp_rb_node_t *next_child = current->value < value ? current->__rb_node.right : current->__rb_node.left;
             current = container_of(next_child,struct int_rb_node,__rb_node);
         }
     }
@@ -84,7 +84,7 @@ void test_rb_tree_monotonic_insert_random_remove(size_t tests_num, size_t elemen
 {
     for(int test_i = 0; test_i < tests_num; ++test_i)
     {
-        struct rb_node *root = NULL;
+        lp_rb_node_t *root = NULL;
 
         int values[RBTEST_MAX_ELEMENTS_IN_TREE];
 
@@ -94,7 +94,7 @@ void test_rb_tree_monotonic_insert_random_remove(size_t tests_num, size_t elemen
             node->value = i;
             values[i] = node->value;
             root = int_rb_insert(root,node);
-            LP_TEST_ASSERT(rb_check_consistency(root), "Red-black tree is not consistent on insertion.");
+            LP_TEST_ASSERT(lp_rb_check_consistency(root), "Red-black tree is not consistent on insertion.");
         }
 
         shuffle(values, elements_in_tree);
@@ -102,8 +102,8 @@ void test_rb_tree_monotonic_insert_random_remove(size_t tests_num, size_t elemen
         for(int i = 0; i < elements_in_tree; ++i)
         {
             struct int_rb_node *node = int_rb_find(root,values[i]);
-            root = rb_remove(root,&node->__rb_node);
-            LP_TEST_ASSERT(rb_check_consistency(root), "Red-black tree is not consistent on deletion.");
+            root = lp_rb_remove(root,&node->__rb_node);
+            LP_TEST_ASSERT(lp_rb_check_consistency(root), "Red-black tree is not consistent on deletion.");
             free(node);
         }
     }
@@ -114,7 +114,7 @@ void test_rb_tree_random_insert_random_remove(size_t tests_num, size_t elements_
 {
     for(int test_i = 0; test_i < tests_num; ++test_i)
     {
-        struct rb_node *root = NULL;
+        lp_rb_node_t *root = NULL;
 
         int values[RBTEST_MAX_ELEMENTS_IN_TREE];
 
@@ -124,7 +124,7 @@ void test_rb_tree_random_insert_random_remove(size_t tests_num, size_t elements_
             node->value = i;
             values[i] = node->value;
             root = int_rb_insert(root,node);
-            LP_TEST_ASSERT(rb_check_consistency(root), "Red-black tree is not consistent on insertion.");
+            LP_TEST_ASSERT(lp_rb_check_consistency(root), "Red-black tree is not consistent on insertion.");
         }
 
         shuffle(values, elements_in_tree);
@@ -132,8 +132,8 @@ void test_rb_tree_random_insert_random_remove(size_t tests_num, size_t elements_
         for(int i = 0; i < elements_in_tree; ++i)
         {
             struct int_rb_node *node = int_rb_find(root,values[i]);
-            root = rb_remove(root,&node->__rb_node);
-            LP_TEST_ASSERT(rb_check_consistency(root), "Red-black tree is not consistent on deletion.");
+            root = lp_rb_remove(root,&node->__rb_node);
+            LP_TEST_ASSERT(lp_rb_check_consistency(root), "Red-black tree is not consistent on deletion.");
             free(node);
         }
     }
@@ -144,21 +144,21 @@ void test_rb_tree_random_insert_root_remove(size_t tests_num, size_t elements_in
 {
     for(int test_i = 0; test_i < tests_num; ++test_i)
     {
-        struct rb_node *root = NULL;
+        lp_rb_node_t *root = NULL;
 
         for(int i = 0; i < elements_in_tree; ++i)
         {
             struct int_rb_node *node = (struct int_rb_node*)malloc(sizeof(struct int_rb_node));
             node->value = i;
             root = int_rb_insert(root,node);
-            LP_TEST_ASSERT(rb_check_consistency(root), "Red-black tree is not consistent on insertion.");
+            LP_TEST_ASSERT(lp_rb_check_consistency(root), "Red-black tree is not consistent on insertion.");
         }
 
         for(int i = 0; i < elements_in_tree; ++i)
         {
             struct int_rb_node *node = container_of(root,struct int_rb_node,__rb_node);
-            root = rb_remove(root,&node->__rb_node);
-            LP_TEST_ASSERT(rb_check_consistency(root), "Red-black tree is not consistent on deletion.");
+            root = lp_rb_remove(root,&node->__rb_node);
+            LP_TEST_ASSERT(lp_rb_check_consistency(root), "Red-black tree is not consistent on deletion.");
             free(node);
         }
     }
