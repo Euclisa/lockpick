@@ -165,7 +165,7 @@ void test_rb_tree_random_insert_root_remove(size_t tests_num, size_t elements_in
 }
 
 
-void test_rb_tree()
+void lp_test_rb_tree()
 {
     srand(0);
     LP_TEST_RUN(test_rb_tree_monotonic_insert_random_remove(1000,50));
