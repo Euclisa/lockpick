@@ -2,17 +2,17 @@
 #include <stdlib.h>
 
 #ifdef LOCKPICK_DEBUG
-#define assert_parent_child_ref(parent,child,func_name)  \
-        assert(((parent->left == child) || (parent->right == child && func_name)) && "Node's parent must have reference to that node.");
+#define __lp_assert_rb_parent_child_ref(parent,child)  \
+        lp_assert((parent->left == child) || (parent->right == child), "Node's parent must have reference to that node.");
 
-#define assert_node_color_red(node,func_name)   \
-        assert(__lp_rb_color(node) == __LP_RB_RED && func_name && "Node's color must be red in this case.")
+#define __lp_assert_rb_node_color_red(node)   \
+        lp_assert(__lp_rb_color(node) == __LP_RB_RED, "Node's color must be red in this case.")
 
-#define assert_node_color_black(node,func_name)   \
-        assert(__lp_rb_color(node) == __LP_RB_BLACK && func_name && "Node's color must be black in this case.")
+#define __lp_assert_rb_node_color_black(node)   \
+        lp_assert(__lp_rb_color(node) == __LP_RB_BLACK, "Node's color must be black in this case.")
 
-#define assert_node_exists(node,func_name)  \
-        assert(node && func_name && "Node must be present in this case.")
+#define __lp_assert_rb_node_exists(node)  \
+        lp_assert(node, "Node must be present in this case.")
 #endif // LOCKPICK_DEBUG
 
 
@@ -55,7 +55,7 @@ lp_rb_node_t *lp_rb_uncle(const lp_rb_node_t *node)
         if(grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            assert((parent == grandparent->left || parent == grandparent->right) && "lp_rb_uncle: Parent must be grandparent's child.");
+            lp_assert(parent == grandparent->left || parent == grandparent->right, "Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == grandparent->left)
@@ -80,7 +80,7 @@ void __lp_rb_grandparent_uncle(const lp_rb_node_t *node, lp_rb_node_t **grandpar
         if(*grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            assert((parent == (*grandparent)->left || parent == (*grandparent)->right) && "lp_rb_uncle: Parent must be grandparent's child.");
+            lp_assert(parent == (*grandparent)->left || parent == (*grandparent)->right, "Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == (*grandparent)->left)
@@ -107,7 +107,7 @@ lp_rb_node_t *lp_rb_sibling(const lp_rb_node_t *node)
 void lp_rb_set_parent(lp_rb_node_t *node, const lp_rb_node_t *parent_ptr)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(!((unsigned long)parent_ptr & 1) && "lp_rb_set_parent: parent_ptr must be aligned at least to 2 bytes boundary.");
+    lp_assert(!((unsigned long)parent_ptr & 1), "'parent_ptr' must be aligned at least to 2 bytes boundary.");
     #endif // LOCKPICK_DEBUG
     node->__parent_color = (unsigned long)parent_ptr | __lp_rb_color(node);
 }
@@ -158,7 +158,7 @@ static inline void __lp_rb_rotate_left(lp_rb_node_t *node)
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        assert((global_parent->left == node || global_parent->right == node) && "__lp_rb_rotate_left: node must be a global_parent's child.");
+        lp_assert(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
         #endif
 
         if(global_parent->left == node)
@@ -189,7 +189,7 @@ static inline void __lp_rb_rotate_right(lp_rb_node_t *node)
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        assert((global_parent->left == node || global_parent->right == node) && "__lp_rb_rotate_right: node must be a global_parent's child.");
+        lp_assert(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
         #endif // LOCKPICK_DEBUG
 
         if(global_parent->left == node)
@@ -210,7 +210,7 @@ static inline void __lp_rb_rotate_right(lp_rb_node_t *node)
 static inline lp_rb_node_t *__lp_rb_get_left_most_child(lp_rb_node_t *root)
 {
     #ifdef LOCKPICK_DEBUG
-    assert_node_exists(root,"__lp_rb_get_left_most_child");
+    __lp_assert_rb_node_exists(root);
     #endif // LOCKPICK_DEBUG
 
     while(root->left != NULL)
@@ -222,7 +222,7 @@ static inline lp_rb_node_t *__lp_rb_get_left_most_child(lp_rb_node_t *root)
 static inline void __lp_rb_rebind_child_from_parent(const lp_rb_node_t *old_child, lp_rb_node_t *new_child, lp_rb_node_t *parent)
 {
     #ifdef LOCKPICK_DEBUG
-    assert_parent_child_ref(parent,old_child,"__lp_rb_rebind_child_from_parent");
+    __lp_assert_rb_parent_child_ref(parent,old_child);
     #endif // LOCKPICK_DEBUG
     
     if(parent->left == old_child)
@@ -285,7 +285,7 @@ static inline lp_rb_node_t *__lp_rb_insert_rebalance_c2(lp_rb_node_t *root, lp_r
 static inline void __lp_rb_insert_rebalance_c3(lp_rb_node_t *node, lp_rb_node_t *parent, lp_rb_node_t *uncle, lp_rb_node_t *grandparent)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(parent && grandparent && node && uncle && "__lp_rb_insert_rebalance_c3: All nodes must be non-null.");
+    lp_assert(parent && grandparent && node && uncle, "All nodes must be non-null.");
     #endif // LOCKPICK_DEBUG
     // In this case uncle is red then parent is not root by implementation (otherwise, uncle is null -> is black)
     __lp_rb_set_color(parent,__LP_RB_BLACK);
@@ -316,7 +316,7 @@ static inline void __lp_rb_insert_rebalance_c3(lp_rb_node_t *node, lp_rb_node_t 
 static inline lp_rb_node_t *__lp_rb_insert_rebalance_c4(lp_rb_node_t *root, lp_rb_node_t *node, lp_rb_node_t *parent, lp_rb_node_t *grandparent)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(parent && grandparent && node && "__lp_rb_insert_rebalance_c4: All nodes must be non-null.");
+    lp_assert(parent && grandparent && node, "All nodes must be non-null.");
     #endif // LOCKPICK_DEBUG
     bool node_is_right = lp_rb_is_right(node);
     bool parent_is_left = lp_rb_is_left(parent);
@@ -437,11 +437,11 @@ static inline lp_rb_node_t *__lp_rb_rebalance_leaf(lp_rb_node_t *root, lp_rb_nod
             return root;
 
         #ifdef LOCKPICK_DEBUG
-        assert_parent_child_ref(parent,node,"__lp_rb_rebalance_leaf");
+        __lp_assert_rb_parent_child_ref(parent,node);
         // Sibling must be, otherwise black violation would take place. Though nephews might be nil.
-        assert_node_exists(sibling,"__lp_rb_rebalance_leaf");
+        __lp_assert_rb_node_exists(sibling);
         // Current node must be black by design of rb-tree.
-        assert_node_color_black(node,"__lp_rb_rebalance_leaf");
+        __lp_assert_rb_node_color_black(node);
         #endif // LOCKPICK_DEBUG
 
         /**
@@ -484,12 +484,12 @@ static inline lp_rb_node_t *__lp_rb_rebalance_leaf(lp_rb_node_t *root, lp_rb_nod
         {
             #ifdef LOCKPICK_DEBUG
             // Check for red violation
-            assert_node_color_black(parent,"__lp_rb_rebalance_leaf");
-            assert_node_color_black(close_nephew,"__lp_rb_rebalance_leaf");
-            assert_node_color_black(dist_nephew,"__lp_rb_rebalance_leaf");
+            __lp_assert_rb_node_color_black(parent);
+            __lp_assert_rb_node_color_black(close_nephew);
+            __lp_assert_rb_node_color_black(dist_nephew);
             // Nephews must be, otherwise black violation would take place
-            assert_node_exists(close_nephew,"__lp_rb_rebalance_leaf");
-            assert_node_exists(dist_nephew,"__lp_rb_rebalance_leaf");
+            __lp_assert_rb_node_exists(close_nephew);
+            __lp_assert_rb_node_exists(dist_nephew);
             #endif // LOCKPICK_DEBUG
 
             if(root == parent)
@@ -524,7 +524,7 @@ static inline lp_rb_node_t *__lp_rb_rebalance_leaf(lp_rb_node_t *root, lp_rb_nod
         {
             #ifdef LOCKPICK_DEBUG
             // Check for red violation
-            assert_node_color_black(sibling,"__lp_rb_rebalance_leaf");
+            __lp_assert_rb_node_color_black(sibling);
             #endif // LOCKPICK_DEBUG
 
             __lp_rb_set_color(sibling,__LP_RB_RED);
@@ -571,11 +571,11 @@ static inline lp_rb_node_t *__lp_rb_rebalance_leaf(lp_rb_node_t *root, lp_rb_nod
 
         #ifdef LOCKPICK_DEBUG
         // At this point distant sibling must be red by algorithm design
-        assert_node_color_red(dist_nephew,"__lp_rb_rebalance_leaf");
+        __lp_assert_rb_node_color_red(dist_nephew);
         // Check for red violation
-        assert_node_color_black(sibling,"__lp_rb_rebalance_leaf");
+        __lp_assert_rb_node_color_black(sibling);
         // Sibling must be, otherwise black violation would take place. Though nephews might be nil.
-        assert_node_exists(sibling,"__lp_rb_rebalance_leaf");
+        __lp_assert_rb_node_exists(sibling);
         #endif // LOCKPICK_DEBUG
 
         if(root == parent)
@@ -642,10 +642,10 @@ static inline lp_rb_node_t *__lp_rb_remove_node_one_child(lp_rb_node_t *root, lp
 {
     #ifdef LOCKPICK_DEBUG
     // In case when node has exactly one non-nil child, this node must be black and child's color must be red. Otherwise it would be black violation.
-    assert_node_color_black(node,"__rb_remove_rebalance_one_child");
-    assert_node_color_red(non_nil_child,"__rb_remove_rebalance_one_child");
+    __lp_assert_rb_node_color_black(node);
+    __lp_assert_rb_node_color_red(non_nil_child);
 
-    assert(((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child)) && "__rb_remove_rebalance_one_child: Node must have only one child non-nil child that is equal to 'non_nil_child'.");
+    lp_assert((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child), "Node must have only one child non-nil child that is equal to 'non_nil_child'.");
     #endif // LOCKPICK_DEBUG
 
     lp_rb_node_t *parent = lp_rb_parent(node);
@@ -674,7 +674,7 @@ static inline lp_rb_node_t *__lp_rb_remove_rebalance(lp_rb_node_t *root, lp_rb_n
     lp_rb_node_t *non_nil_child = NULL;
 
     #ifdef LOCKPICK_DEBUG
-    assert((!node->left || !node->right) && "__rb_remove_rebalance_one_child: Node must have at least one nil child.");
+    lp_assert(!node->left || !node->right, "Node must have at least one nil child.");
     #endif // LOCKPICK_DEBUG
 
     if(node->left)
