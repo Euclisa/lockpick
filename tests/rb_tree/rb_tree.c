@@ -1,5 +1,5 @@
 #include <rb_tree.h>
-#include "lp_test.h"
+#include "test.h"
 #include "container_of.h"
 #include <time.h>
 #include <stdlib.h>
