@@ -1,4 +1,4 @@
-#include "lp_uint.h"
+#include "uint.h"
 #include <string.h>
 #include <stdlib.h>
 

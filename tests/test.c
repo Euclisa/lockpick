@@ -1,6 +1,6 @@
 #include "rb_tree/rb_tree.h"
 #include "lp_uint/lp_uint.h"
-#include "lp_test.h"
+#include "test.h"
 
 int main()
 {

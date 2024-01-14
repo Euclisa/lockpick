@@ -2,60 +2,60 @@
 #include <stdlib.h>
 
 #ifdef LOCKPICK_DEBUG
-#define assert_parent_child_ref(parent,child,func_name)  \
-        assert(((parent->left == child) || (parent->right == child && func_name)) && "Node's parent must have reference to that node.");
+#define __lp_assert_rb_parent_child_ref(parent,child)  \
+        lp_assert((parent->left == child) || (parent->right == child), "Node's parent must have reference to that node.");
 
-#define assert_node_color_red(node,func_name)   \
-        assert(__rb_color(node) == __rb_red && func_name && "Node's color must be red in this case.")
+#define __lp_assert_rb_node_color_red(node)   \
+        lp_assert(__lp_rb_color(node) == __LP_RB_RED, "Node's color must be red in this case.")
 
-#define assert_node_color_black(node,func_name)   \
-        assert(__rb_color(node) == __rb_black && func_name && "Node's color must be black in this case.")
+#define __lp_assert_rb_node_color_black(node)   \
+        lp_assert(__lp_rb_color(node) == __LP_RB_BLACK, "Node's color must be black in this case.")
 
-#define assert_node_exists(node,func_name)  \
-        assert(node && func_name && "Node must be present in this case.")
+#define __lp_assert_rb_node_exists(node)  \
+        lp_assert(node, "Node must be present in this case.")
 #endif // LOCKPICK_DEBUG
 
 
-inline enum __rb_colors __rb_color(const struct rb_node *node)
+inline __lp_rb_color_t __lp_rb_color(const lp_rb_node_t *node)
 {
-    return node ? (enum __rb_colors)(node->__parent_color & 1) : __rb_black;
+    return node ? (__lp_rb_color_t)(node->__parent_color & 1) : __LP_RB_BLACK;
 }
 
 
-inline void __rb_set_color(struct rb_node *node, enum __rb_colors color)
+inline void __lp_rb_set_color(lp_rb_node_t *node, __lp_rb_color_t color)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(node && "__rb_set_color: Node must be non-null");
+    assert(node && "__lp_rb_set_color: Node must be non-null");
     #endif // LOCKPICK_DEBUG
     node->__parent_color = (node->__parent_color & ~1) | color;
 }
 
 
-inline struct rb_node *rb_parent(const struct rb_node *node)
+inline lp_rb_node_t *lp_rb_parent(const lp_rb_node_t *node)
 {
-    return node ? (struct rb_node*)(node->__parent_color & ~1) : (struct rb_node *)NULL;
+    return node ? (lp_rb_node_t*)(node->__parent_color & ~1) : (lp_rb_node_t *)NULL;
 }
 
 
-inline struct rb_node *rb_grandparent(const struct rb_node *node)
+inline lp_rb_node_t *lp_rb_grandparent(const lp_rb_node_t *node)
 {
-    struct rb_node *parent = rb_parent(node);
+    lp_rb_node_t *parent = lp_rb_parent(node);
     if(parent)
-        return rb_parent(parent);
-    return (struct rb_node*)NULL;
+        return lp_rb_parent(parent);
+    return (lp_rb_node_t*)NULL;
 }
 
 
-struct rb_node *rb_uncle(const struct rb_node *node)
+lp_rb_node_t *lp_rb_uncle(const lp_rb_node_t *node)
 {
-    struct rb_node *parent = rb_parent(node);
+    lp_rb_node_t *parent = lp_rb_parent(node);
     if(parent)
     {
-        struct rb_node *grandparent = rb_parent(parent);
+        lp_rb_node_t *grandparent = lp_rb_parent(parent);
         if(grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            assert((parent == grandparent->left || parent == grandparent->right) && "rb_uncle: Parent must be grandparent's child.");
+            lp_assert(parent == grandparent->left || parent == grandparent->right, "Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == grandparent->left)
@@ -65,22 +65,22 @@ struct rb_node *rb_uncle(const struct rb_node *node)
         }
     }
 
-    return (struct rb_node*)NULL;
+    return (lp_rb_node_t*)NULL;
 }
 
 
-void __rb_grandparent_uncle(const struct rb_node *node, struct rb_node **grandparent, struct rb_node **uncle)
+void __lp_rb_grandparent_uncle(const lp_rb_node_t *node, lp_rb_node_t **grandparent, lp_rb_node_t **uncle)
 {
     *grandparent = NULL;
     *uncle = NULL;
-    struct rb_node *parent = rb_parent(node);
+    lp_rb_node_t *parent = lp_rb_parent(node);
     if(parent)
     {
-        *grandparent = rb_parent(parent);
+        *grandparent = lp_rb_parent(parent);
         if(*grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            assert((parent == (*grandparent)->left || parent == (*grandparent)->right) && "rb_uncle: Parent must be grandparent's child.");
+            lp_assert(parent == (*grandparent)->left || parent == (*grandparent)->right, "Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == (*grandparent)->left)
@@ -92,11 +92,11 @@ void __rb_grandparent_uncle(const struct rb_node *node, struct rb_node **grandpa
 }
 
 
-struct rb_node *rb_sibling(const struct rb_node *node)
+lp_rb_node_t *lp_rb_sibling(const lp_rb_node_t *node)
 {
-    const struct rb_node *parent = rb_parent(node);
+    const lp_rb_node_t *parent = lp_rb_parent(node);
     if(!parent)
-        return (struct rb_node*)NULL;
+        return (lp_rb_node_t*)NULL;
     if(parent->left == node)
         return parent->right;
     else
@@ -104,41 +104,41 @@ struct rb_node *rb_sibling(const struct rb_node *node)
 }
 
 
-void rb_set_parent(struct rb_node *node, const struct rb_node *parent_ptr)
+void lp_rb_set_parent(lp_rb_node_t *node, const lp_rb_node_t *parent_ptr)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(!((unsigned long)parent_ptr & 1) && "rb_set_parent: parent_ptr must be aligned at least to 2 bytes boundary.");
+    lp_assert(!((unsigned long)parent_ptr & 1), "'parent_ptr' must be aligned at least to 2 bytes boundary.");
     #endif // LOCKPICK_DEBUG
-    node->__parent_color = (unsigned long)parent_ptr | __rb_color(node);
+    node->__parent_color = (unsigned long)parent_ptr | __lp_rb_color(node);
 }
 
 
-bool rb_is_left(const struct rb_node *node)
+bool lp_rb_is_left(const lp_rb_node_t *node)
 {
-    struct rb_node *parent = rb_parent(node);
+    lp_rb_node_t *parent = lp_rb_parent(node);
     if(!parent)
         return false;
     return parent->left == node;
 }
 
-bool rb_is_left_p(const struct rb_node *node, const struct rb_node *parent)
+bool lp_rb_is_left_p(const lp_rb_node_t *node, const lp_rb_node_t *parent)
 {
     if(!parent)
         return false;
-    return rb_parent(node)->left == node;
+    return lp_rb_parent(node)->left == node;
 }
 
 
 
-bool rb_is_right(const struct rb_node *node)
+bool lp_rb_is_right(const lp_rb_node_t *node)
 {
-    struct rb_node *parent = rb_parent(node);
+    lp_rb_node_t *parent = lp_rb_parent(node);
     if(!parent)
         return false;
     return parent->right == node;
 }
 
-bool rb_is_right_p(const struct rb_node *node, const struct rb_node *parent)
+bool lp_rb_is_right_p(const lp_rb_node_t *node, const lp_rb_node_t *parent)
 {
     if(!parent)
         return false;
@@ -146,19 +146,19 @@ bool rb_is_right_p(const struct rb_node *node, const struct rb_node *parent)
 }
 
 /**
- * __rb_rotate_left - performs rotation of the tree around specified node
+ * __lp_rb_rotate_left - performs rotation of the tree around specified node
  * @node:	pointer to the node around which rotation would be performed.
  * 
  */
-static inline void __rb_rotate_left(struct rb_node *node)
+static inline void __lp_rb_rotate_left(lp_rb_node_t *node)
 {
-    struct rb_node *pivot = node->right;
-    struct rb_node *global_parent = rb_parent(node);
-    rb_set_parent(pivot,global_parent);
+    lp_rb_node_t *pivot = node->right;
+    lp_rb_node_t *global_parent = lp_rb_parent(node);
+    lp_rb_set_parent(pivot,global_parent);
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        assert((global_parent->left == node || global_parent->right == node) && "__rb_rotate_left: node must be a global_parent's child.");
+        lp_assert(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
         #endif
 
         if(global_parent->left == node)
@@ -169,27 +169,27 @@ static inline void __rb_rotate_left(struct rb_node *node)
 
     node->right = pivot->left;
     if(pivot->left)
-        rb_set_parent(pivot->left,node);
+        lp_rb_set_parent(pivot->left,node);
     
     pivot->left = node;
-    rb_set_parent(node,pivot);
+    lp_rb_set_parent(node,pivot);
 }
 
 
 /**
- * __rb_rotate_right - performs rotation of the tree around specified node
+ * __lp_rb_rotate_right - performs rotation of the tree around specified node
  * @node:	pointer to the node around which rotation would be performed.
  * 
  */
-static inline void __rb_rotate_right(struct rb_node *node)
+static inline void __lp_rb_rotate_right(lp_rb_node_t *node)
 {
-    struct rb_node *pivot = node->left;
-    struct rb_node *global_parent = rb_parent(node);
-    rb_set_parent(pivot,global_parent);
+    lp_rb_node_t *pivot = node->left;
+    lp_rb_node_t *global_parent = lp_rb_parent(node);
+    lp_rb_set_parent(pivot,global_parent);
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        assert((global_parent->left == node || global_parent->right == node) && "__rb_rotate_right: node must be a global_parent's child.");
+        lp_assert(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
         #endif // LOCKPICK_DEBUG
 
         if(global_parent->left == node)
@@ -200,17 +200,17 @@ static inline void __rb_rotate_right(struct rb_node *node)
 
     node->left = pivot->right;
     if(pivot->right)
-        rb_set_parent(pivot->right,node);
+        lp_rb_set_parent(pivot->right,node);
     
     pivot->right = node;
-    rb_set_parent(node,pivot);
+    lp_rb_set_parent(node,pivot);
 }
 
 
-static inline struct rb_node *__rb_get_left_most_child(struct rb_node *root)
+static inline lp_rb_node_t *__lp_rb_get_left_most_child(lp_rb_node_t *root)
 {
     #ifdef LOCKPICK_DEBUG
-    assert_node_exists(root,"__rb_get_left_most_child");
+    __lp_assert_rb_node_exists(root);
     #endif // LOCKPICK_DEBUG
 
     while(root->left != NULL)
@@ -219,10 +219,10 @@ static inline struct rb_node *__rb_get_left_most_child(struct rb_node *root)
 }
 
 
-static inline void __rb_rebind_child_from_parent(const struct rb_node *old_child, struct rb_node *new_child, struct rb_node *parent)
+static inline void __lp_rb_rebind_child_from_parent(const lp_rb_node_t *old_child, lp_rb_node_t *new_child, lp_rb_node_t *parent)
 {
     #ifdef LOCKPICK_DEBUG
-    assert_parent_child_ref(parent,old_child,"__rb_rebind_child_from_parent");
+    __lp_assert_rb_parent_child_ref(parent,old_child);
     #endif // LOCKPICK_DEBUG
     
     if(parent->left == old_child)
@@ -233,7 +233,7 @@ static inline void __rb_rebind_child_from_parent(const struct rb_node *old_child
 
 
 /**
- * __rb_insert_rebalance_c1 - performs rebalance procedure in case when the current node is root.
+ * __lp_rb_insert_rebalance_c1 - performs rebalance procedure in case when the current node is root.
  * 
  * In this case tree is empty and node is new root.
  * 
@@ -242,14 +242,14 @@ static inline void __rb_rebind_child_from_parent(const struct rb_node *old_child
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_insert_rebalance_c1(struct rb_node *root, struct rb_node *node)
+static inline lp_rb_node_t *__lp_rb_insert_rebalance_c1(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    __rb_set_color(node,__rb_black);
+    __lp_rb_set_color(node,__LP_RB_BLACK);
     return node;
 }
 
 /**
- * __rb_insert_rebalance_c2 - performs rebalance procedure in case when parent of the current node is black.
+ * __lp_rb_insert_rebalance_c2 - performs rebalance procedure in case when parent of the current node is black.
  * 
  * In this case all conditions would be met if we just color node in red.
  * 
@@ -258,15 +258,15 @@ static inline struct rb_node *__rb_insert_rebalance_c1(struct rb_node *root, str
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_insert_rebalance_c2(struct rb_node *root, struct rb_node *node)
+static inline lp_rb_node_t *__lp_rb_insert_rebalance_c2(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    __rb_set_color(node,__rb_red);
+    __lp_rb_set_color(node,__LP_RB_RED);
     return root;
 }
 
 
 /**
- * __rb_insert_rebalance_c3 - performs rebalance procedure in case when parent and uncle of the current node are red.
+ * __lp_rb_insert_rebalance_c3 - performs rebalance procedure in case when parent and uncle of the current node are red.
  * 
  *      B                      R
  *     | \                    | \
@@ -282,21 +282,21 @@ static inline struct rb_node *__rb_insert_rebalance_c2(struct rb_node *root, str
  * 
  * Returns root of the resulting tree.
  */
-static inline void __rb_insert_rebalance_c3(struct rb_node *node, struct rb_node *parent, struct rb_node *uncle, struct rb_node *grandparent)
+static inline void __lp_rb_insert_rebalance_c3(lp_rb_node_t *node, lp_rb_node_t *parent, lp_rb_node_t *uncle, lp_rb_node_t *grandparent)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(parent && grandparent && node && uncle && "__rb_insert_rebalance_c3: All nodes must be non-null.");
+    lp_assert(parent && grandparent && node && uncle, "All nodes must be non-null.");
     #endif // LOCKPICK_DEBUG
     // In this case uncle is red then parent is not root by implementation (otherwise, uncle is null -> is black)
-    __rb_set_color(parent,__rb_black);
-    __rb_set_color(uncle,__rb_black);
-    __rb_set_color(grandparent,__rb_red);
-    __rb_set_color(node,__rb_red);
+    __lp_rb_set_color(parent,__LP_RB_BLACK);
+    __lp_rb_set_color(uncle,__LP_RB_BLACK);
+    __lp_rb_set_color(grandparent,__LP_RB_RED);
+    __lp_rb_set_color(node,__LP_RB_RED);
 }
 
 
 /**
- * __rb_insert_rebalance_c4 - performs rebalance procedure in case when uncle of the current node is black and parent is red
+ * __lp_rb_insert_rebalance_c4 - performs rebalance procedure in case when uncle of the current node is black and parent is red
  * 
  *      B                         B                        B*
  *     | \                       | \                      | \
@@ -313,75 +313,75 @@ static inline void __rb_insert_rebalance_c3(struct rb_node *node, struct rb_node
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_insert_rebalance_c4(struct rb_node *root, struct rb_node *node, struct rb_node *parent, struct rb_node *grandparent)
+static inline lp_rb_node_t *__lp_rb_insert_rebalance_c4(lp_rb_node_t *root, lp_rb_node_t *node, lp_rb_node_t *parent, lp_rb_node_t *grandparent)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(parent && grandparent && node && "__rb_insert_rebalance_c4: All nodes must be non-null.");
+    lp_assert(parent && grandparent && node, "All nodes must be non-null.");
     #endif // LOCKPICK_DEBUG
-    bool node_is_right = rb_is_right(node);
-    bool parent_is_left = rb_is_left(parent);
-    __rb_set_color(node,__rb_red);
+    bool node_is_right = lp_rb_is_right(node);
+    bool parent_is_left = lp_rb_is_left(parent);
+    __lp_rb_set_color(node,__LP_RB_RED);
     if(node_is_right && parent_is_left)
     {
-        __rb_rotate_left(parent);
+        __lp_rb_rotate_left(parent);
         node = node->left;
     }
     else if(!node_is_right && !parent_is_left)
     {
-        __rb_rotate_right(parent);
+        __lp_rb_rotate_right(parent);
         node = node->right;
     }
 
-    parent = rb_parent(node);
-    __rb_set_color(parent,__rb_black);
-    __rb_set_color(grandparent,__rb_red);
+    parent = lp_rb_parent(node);
+    __lp_rb_set_color(parent,__LP_RB_BLACK);
+    __lp_rb_set_color(grandparent,__LP_RB_RED);
     if(parent_is_left)
-        __rb_rotate_right(grandparent);
+        __lp_rb_rotate_right(grandparent);
     else
-        __rb_rotate_left(grandparent);
+        __lp_rb_rotate_left(grandparent);
 
     return root == grandparent ? parent : root;
 }
 
 
 /**
- * rb_insert_rebalance - performs rebalance procedure in case when parent of the current node is black
+ * lp_rb_insert_rebalance - performs rebalance procedure in case when parent of the current node is black
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * 
  * Returns root of the resulting tree.
  */
-struct rb_node *rb_insert_rebalance(struct rb_node *root, struct rb_node *node)
+lp_rb_node_t *lp_rb_insert_rebalance(lp_rb_node_t *root, lp_rb_node_t *node)
 {
     while(true)
     {
-        struct rb_node *parent = rb_parent(node);
+        lp_rb_node_t *parent = lp_rb_parent(node);
         
         // Case 1
         if(parent == NULL)
-            return __rb_insert_rebalance_c1(root,node);
+            return __lp_rb_insert_rebalance_c1(root,node);
 
         // Case 2
-        if(__rb_color(parent) == __rb_black)
-            return __rb_insert_rebalance_c2(root,node);
+        if(__lp_rb_color(parent) == __LP_RB_BLACK)
+            return __lp_rb_insert_rebalance_c2(root,node);
         
-        struct rb_node *grandparent;
-        struct rb_node *uncle;
-        __rb_grandparent_uncle(node,&grandparent,&uncle);
+        lp_rb_node_t *grandparent;
+        lp_rb_node_t *uncle;
+        __lp_rb_grandparent_uncle(node,&grandparent,&uncle);
         
         // Case 4
-        if(__rb_color(uncle) == __rb_black)
-            return __rb_insert_rebalance_c4(root,node,parent,grandparent);
+        if(__lp_rb_color(uncle) == __LP_RB_BLACK)
+            return __lp_rb_insert_rebalance_c4(root,node,parent,grandparent);
         
         // Case 3
-        __rb_insert_rebalance_c3(node,parent,uncle,grandparent);
+        __lp_rb_insert_rebalance_c3(node,parent,uncle,grandparent);
         node = grandparent;
     }
 }
 
 
 /**
- * __rb_find_relatives - finds **all** relatives, hence, one needs to provide valid pointers
+ * __lp_rb_find_relatives - finds **all** relatives, hence, one needs to provide valid pointers
  * @node:	pointer to the targer node.
  * @parent:	direct parent of the 'node'.
  * @sibling: another child of 'parent'.
@@ -389,9 +389,9 @@ struct rb_node *rb_insert_rebalance(struct rb_node *root, struct rb_node *node)
  * @dist_nephew: child of 'sibling' in the opposite direction as 'node' from 'parent'.
  * 
  */
-static inline void __rb_find_relatives(const struct rb_node *node, struct rb_node **parent, struct rb_node **sibling, struct rb_node **close_nephew, struct rb_node **dist_nephew)
+static inline void __lp_rb_find_relatives(const lp_rb_node_t *node, lp_rb_node_t **parent, lp_rb_node_t **sibling, lp_rb_node_t **close_nephew, lp_rb_node_t **dist_nephew)
 {
-    *parent = rb_parent(node);
+    *parent = lp_rb_parent(node);
     *sibling = NULL;
     *close_nephew = NULL;
     *dist_nephew = NULL;
@@ -417,31 +417,31 @@ static inline void __rb_find_relatives(const struct rb_node *node, struct rb_nod
 
 
 /**
- * __rb_rebalance_leaf - rebalances tree considering that 'node' would be removed
+ * __lp_rb_rebalance_leaf - rebalances tree considering that 'node' would be removed
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct rb_node *node)
+static inline lp_rb_node_t *__lp_rb_rebalance_leaf(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    struct rb_node *parent;
-    struct rb_node *sibling;
-    struct rb_node *close_nephew;
-    struct rb_node *dist_nephew;
+    lp_rb_node_t *parent;
+    lp_rb_node_t *sibling;
+    lp_rb_node_t *close_nephew;
+    lp_rb_node_t *dist_nephew;
     do
     {
-        __rb_find_relatives(node,&parent,&sibling,&close_nephew,&dist_nephew);
+        __lp_rb_find_relatives(node,&parent,&sibling,&close_nephew,&dist_nephew);
 
         if(!parent) // At first iteration parent is not null by implementation
             return root;
 
         #ifdef LOCKPICK_DEBUG
-        assert_parent_child_ref(parent,node,"__rb_rebalance_leaf");
+        __lp_assert_rb_parent_child_ref(parent,node);
         // Sibling must be, otherwise black violation would take place. Though nephews might be nil.
-        assert_node_exists(sibling,"__rb_rebalance_leaf");
+        __lp_assert_rb_node_exists(sibling);
         // Current node must be black by design of rb-tree.
-        assert_node_color_black(node,"__rb_rebalance_leaf");
+        __lp_assert_rb_node_color_black(node);
         #endif // LOCKPICK_DEBUG
 
         /**
@@ -457,13 +457,13 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
          */
         if
         (
-            __rb_color(parent) == __rb_black &&
-            __rb_color(sibling) == __rb_black &&
-            __rb_color(close_nephew) == __rb_black &&
-            __rb_color(dist_nephew) == __rb_black
+            __lp_rb_color(parent) == __LP_RB_BLACK &&
+            __lp_rb_color(sibling) == __LP_RB_BLACK &&
+            __lp_rb_color(close_nephew) == __LP_RB_BLACK &&
+            __lp_rb_color(dist_nephew) == __LP_RB_BLACK
         )
         {
-            __rb_set_color(sibling,__rb_red);
+            __lp_rb_set_color(sibling,__LP_RB_RED);
             node = parent;
             continue;
         }
@@ -480,28 +480,28 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
          * 
          * Remember that branch (*) is short on one black node.
          */
-        if(__rb_color(sibling) == __rb_red)
+        if(__lp_rb_color(sibling) == __LP_RB_RED)
         {
             #ifdef LOCKPICK_DEBUG
             // Check for red violation
-            assert_node_color_black(parent,"__rb_rebalance_leaf");
-            assert_node_color_black(close_nephew,"__rb_rebalance_leaf");
-            assert_node_color_black(dist_nephew,"__rb_rebalance_leaf");
+            __lp_assert_rb_node_color_black(parent);
+            __lp_assert_rb_node_color_black(close_nephew);
+            __lp_assert_rb_node_color_black(dist_nephew);
             // Nephews must be, otherwise black violation would take place
-            assert_node_exists(close_nephew,"__rb_rebalance_leaf");
-            assert_node_exists(dist_nephew,"__rb_rebalance_leaf");
+            __lp_assert_rb_node_exists(close_nephew);
+            __lp_assert_rb_node_exists(dist_nephew);
             #endif // LOCKPICK_DEBUG
 
             if(root == parent)
                 root = sibling;
 
-            __rb_set_color(parent,__rb_red);
-            __rb_set_color(sibling,__rb_black);
-            if(rb_is_left_p(node,parent))
-                __rb_rotate_left(parent);
+            __lp_rb_set_color(parent,__LP_RB_RED);
+            __lp_rb_set_color(sibling,__LP_RB_BLACK);
+            if(lp_rb_is_left_p(node,parent))
+                __lp_rb_rotate_left(parent);
             else
-                __rb_rotate_right(parent);
-            __rb_find_relatives(node,&parent,&sibling,&close_nephew,&dist_nephew);
+                __lp_rb_rotate_right(parent);
+            __lp_rb_find_relatives(node,&parent,&sibling,&close_nephew,&dist_nephew);
         }
 
         /**
@@ -517,18 +517,18 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
          */
         if
         (
-            __rb_color(parent) == __rb_red &&
-            __rb_color(close_nephew) == __rb_black &&
-            __rb_color(dist_nephew) == __rb_black
+            __lp_rb_color(parent) == __LP_RB_RED &&
+            __lp_rb_color(close_nephew) == __LP_RB_BLACK &&
+            __lp_rb_color(dist_nephew) == __LP_RB_BLACK
         )
         {
             #ifdef LOCKPICK_DEBUG
             // Check for red violation
-            assert_node_color_black(sibling,"__rb_rebalance_leaf");
+            __lp_assert_rb_node_color_black(sibling);
             #endif // LOCKPICK_DEBUG
 
-            __rb_set_color(sibling,__rb_red);
-            __rb_set_color(parent,__rb_black);
+            __lp_rb_set_color(sibling,__LP_RB_RED);
+            __lp_rb_set_color(parent,__LP_RB_BLACK);
             return root;
         }
 
@@ -546,23 +546,23 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
          */
         if
         (
-            __rb_color(sibling) == __rb_black &&
-            __rb_color(close_nephew) == __rb_red &&
-            __rb_color(dist_nephew) == __rb_black
+            __lp_rb_color(sibling) == __LP_RB_BLACK &&
+            __lp_rb_color(close_nephew) == __LP_RB_RED &&
+            __lp_rb_color(dist_nephew) == __LP_RB_BLACK
         )
         {
-            __rb_set_color(sibling,__rb_red);
-            __rb_set_color(close_nephew,__rb_black);
-            if(rb_is_left_p(node,parent))
+            __lp_rb_set_color(sibling,__LP_RB_RED);
+            __lp_rb_set_color(close_nephew,__LP_RB_BLACK);
+            if(lp_rb_is_left_p(node,parent))
             {
-                __rb_rotate_right(sibling);
+                __lp_rb_rotate_right(sibling);
                 dist_nephew = sibling;
                 sibling = close_nephew;
                 close_nephew = close_nephew->left;
             }
             else
             {
-                __rb_rotate_left(sibling);
+                __lp_rb_rotate_left(sibling);
                 dist_nephew = sibling;
                 sibling = close_nephew;
                 close_nephew = close_nephew->right;
@@ -571,11 +571,11 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
 
         #ifdef LOCKPICK_DEBUG
         // At this point distant sibling must be red by algorithm design
-        assert_node_color_red(dist_nephew,"__rb_rebalance_leaf");
+        __lp_assert_rb_node_color_red(dist_nephew);
         // Check for red violation
-        assert_node_color_black(sibling,"__rb_rebalance_leaf");
+        __lp_assert_rb_node_color_black(sibling);
         // Sibling must be, otherwise black violation would take place. Though nephews might be nil.
-        assert_node_exists(sibling,"__rb_rebalance_leaf");
+        __lp_assert_rb_node_exists(sibling);
         #endif // LOCKPICK_DEBUG
 
         if(root == parent)
@@ -593,13 +593,13 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
          * Remember that branch (*) is short on one black node.
          */
 
-        __rb_set_color(sibling,__rb_color(parent));
-        __rb_set_color(parent,__rb_black);
-        __rb_set_color(dist_nephew,__rb_black);
-        if(rb_is_left_p(node,parent))
-            __rb_rotate_left(parent);
+        __lp_rb_set_color(sibling,__lp_rb_color(parent));
+        __lp_rb_set_color(parent,__LP_RB_BLACK);
+        __lp_rb_set_color(dist_nephew,__LP_RB_BLACK);
+        if(lp_rb_is_left_p(node,parent))
+            __lp_rb_rotate_left(parent);
         else
-            __rb_rotate_right(parent);
+            __lp_rb_rotate_right(parent);
         
         return root;
 
@@ -608,52 +608,52 @@ static inline struct rb_node *__rb_rebalance_leaf(struct rb_node *root, struct r
 
 
 /**
- * __rb_remove_rebalance_leaf - removes node without children and rebalances tree
+ * __lp_rb_remove_rebalance_leaf - removes node without children and rebalances tree
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_remove_rebalance_leaf(struct rb_node *root, struct rb_node *node)
+static inline lp_rb_node_t *__lp_rb_remove_rebalance_leaf(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    struct rb_node *parent = rb_parent(node);
+    lp_rb_node_t *parent = lp_rb_parent(node);
 
     if(!parent)
         return NULL;
 
-    if(__rb_color(node) == __rb_black)
-        root = __rb_rebalance_leaf(root,node);
+    if(__lp_rb_color(node) == __LP_RB_BLACK)
+        root = __lp_rb_rebalance_leaf(root,node);
 
-     __rb_rebind_child_from_parent(node,NULL,parent);
+     __lp_rb_rebind_child_from_parent(node,NULL,parent);
 
     return root;
 }
 
 
 /**
- * __rb_remove_node_one_child - removes node with one chilren and rebalances tree; this only child must be red
+ * __lp_rb_remove_node_one_child - removes node with one chilren and rebalances tree; this only child must be red
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * @non_nil_child: pointer on the only non-nil child of 'node'.
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_remove_node_one_child(struct rb_node *root, struct rb_node *node, struct rb_node *non_nil_child)
+static inline lp_rb_node_t *__lp_rb_remove_node_one_child(lp_rb_node_t *root, lp_rb_node_t *node, lp_rb_node_t *non_nil_child)
 {
     #ifdef LOCKPICK_DEBUG
     // In case when node has exactly one non-nil child, this node must be black and child's color must be red. Otherwise it would be black violation.
-    assert_node_color_black(node,"__rb_remove_rebalance_one_child");
-    assert_node_color_red(non_nil_child,"__rb_remove_rebalance_one_child");
+    __lp_assert_rb_node_color_black(node);
+    __lp_assert_rb_node_color_red(non_nil_child);
 
-    assert(((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child)) && "__rb_remove_rebalance_one_child: Node must have only one child non-nil child that is equal to 'non_nil_child'.");
+    lp_assert((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child), "Node must have only one child non-nil child that is equal to 'non_nil_child'.");
     #endif // LOCKPICK_DEBUG
 
-    struct rb_node *parent = rb_parent(node);
-    rb_set_parent(non_nil_child,parent);
-    __rb_set_color(non_nil_child,__rb_black);
+    lp_rb_node_t *parent = lp_rb_parent(node);
+    lp_rb_set_parent(non_nil_child,parent);
+    __lp_rb_set_color(non_nil_child,__LP_RB_BLACK);
     if(parent)
     {
-        __rb_rebind_child_from_parent(node,non_nil_child,parent);
+        __lp_rb_rebind_child_from_parent(node,non_nil_child,parent);
         
         return root;
     }
@@ -663,18 +663,18 @@ static inline struct rb_node *__rb_remove_node_one_child(struct rb_node *root, s
 
 
 /**
- * __rb_remove_rebalance - removes node with at most one child and rebalances tree
+ * __lp_rb_remove_rebalance - removes node with at most one child and rebalances tree
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * 
  * Returns root of the resulting tree.
  */
-static inline struct rb_node *__rb_remove_rebalance(struct rb_node *root, struct rb_node *node)
+static inline lp_rb_node_t *__lp_rb_remove_rebalance(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    struct rb_node *non_nil_child = NULL;
+    lp_rb_node_t *non_nil_child = NULL;
 
     #ifdef LOCKPICK_DEBUG
-    assert((!node->left || !node->right) && "__rb_remove_rebalance_one_child: Node must have at least one nil child.");
+    lp_assert(!node->left || !node->right, "Node must have at least one nil child.");
     #endif // LOCKPICK_DEBUG
 
     if(node->left)
@@ -683,75 +683,75 @@ static inline struct rb_node *__rb_remove_rebalance(struct rb_node *root, struct
         non_nil_child = node->right;
 
     if(non_nil_child)
-        return __rb_remove_node_one_child(root,node,non_nil_child);
-    return __rb_remove_rebalance_leaf(root,node);
+        return __lp_rb_remove_node_one_child(root,node,non_nil_child);
+    return __lp_rb_remove_rebalance_leaf(root,node);
 }
 
 
 /**
- * rb_remove - removes node and rebalances tree
+ * lp_rb_remove - removes node and rebalances tree
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * 
  * Returns root of the resulting tree.
  */
-struct rb_node *rb_remove(struct rb_node *root, struct rb_node *node)
+lp_rb_node_t *lp_rb_remove(lp_rb_node_t *root, lp_rb_node_t *node)
 {
     if(node->left != NULL && node->right != NULL)
     {
-        struct rb_node *successor = __rb_get_left_most_child(node->right);
-        struct rb_node *sc_parent = rb_parent(successor);
-        struct rb_node *sc_left = successor->left;
-        struct rb_node *sc_right = successor->right;
-        struct rb_node *node_parent = rb_parent(node);
-        enum __rb_colors sc_color = __rb_color(successor);
+        lp_rb_node_t *successor = __lp_rb_get_left_most_child(node->right);
+        lp_rb_node_t *sc_parent = lp_rb_parent(successor);
+        lp_rb_node_t *sc_left = successor->left;
+        lp_rb_node_t *sc_right = successor->right;
+        lp_rb_node_t *node_parent = lp_rb_parent(node);
+        __lp_rb_color_t sc_color = __lp_rb_color(successor);
 
         if(!node_parent)
             root = successor;
 
-        __rb_set_color(successor,__rb_color(node));
-        __rb_set_color(node,sc_color);
+        __lp_rb_set_color(successor,__lp_rb_color(node));
+        __lp_rb_set_color(node,sc_color);
 
-        rb_set_parent(successor,node_parent);
+        lp_rb_set_parent(successor,node_parent);
         if(node_parent)
-            __rb_rebind_child_from_parent(node,successor,node_parent);
+            __lp_rb_rebind_child_from_parent(node,successor,node_parent);
 
         if(node->left)
-            rb_set_parent(node->left,successor);
+            lp_rb_set_parent(node->left,successor);
         successor->left = node->left;
         // node->right might point on successor
         if(successor == node->right)
         {
             successor->right = node;
-            rb_set_parent(node,successor);
+            lp_rb_set_parent(node,successor);
         }
         else
         {
             if(node->right)
-                rb_set_parent(node->right,successor);
+                lp_rb_set_parent(node->right,successor);
             successor->right = node->right;
-            rb_set_parent(node,sc_parent);
+            lp_rb_set_parent(node,sc_parent);
             // successor is left child by design (if it is not a direct child of node)
             sc_parent->left = node;
         }
 
         if(sc_right)
-            rb_set_parent(sc_right,node);
+            lp_rb_set_parent(sc_right,node);
         node->right = sc_right;
         // successor->left is always null by design
         node->left = sc_left;
     }
 
-    return __rb_remove_rebalance(root,node);
+    return __lp_rb_remove_rebalance(root,node);
 }
 
 
-int __rb_count_black_nodes_one_path(const struct rb_node *root)
+int __lp_rb_count_black_nodes_one_path(const lp_rb_node_t *root)
 {
     int count = 0;
     while(root)
     {
-        count += __rb_color(root) == __rb_black ? 1 : 0;
+        count += __lp_rb_color(root) == __LP_RB_BLACK ? 1 : 0;
         root = root->left;
     }
     
@@ -759,33 +759,33 @@ int __rb_count_black_nodes_one_path(const struct rb_node *root)
 }
 
 
-bool __rb_check_subtree_consistency(const struct rb_node *root, int blacks_required)
+bool __lp_rb_check_subtree_consistency(const lp_rb_node_t *root, int blacks_required)
 {
     if(!root)
         return true;
 
-    struct rb_node *parent = rb_parent(root);
+    lp_rb_node_t *parent = lp_rb_parent(root);
     if(parent && parent->left != root && parent->right != root)
         return false;
 
-    if(__rb_color(root) == __rb_black)
+    if(__lp_rb_color(root) == __LP_RB_BLACK)
         blacks_required -= 1;
     else
     {
-        if(__rb_color(root->left) == __rb_red || __rb_color(root->right) == __rb_red)
+        if(__lp_rb_color(root->left) == __LP_RB_RED || __lp_rb_color(root->right) == __LP_RB_RED)
             return false;
     }
 
     if(blacks_required < 0)
         return false;
 
-    return __rb_check_subtree_consistency(root->left,blacks_required) && __rb_check_subtree_consistency(root->right,blacks_required);
+    return __lp_rb_check_subtree_consistency(root->left,blacks_required) && __lp_rb_check_subtree_consistency(root->right,blacks_required);
 }
 
 
-bool rb_check_consistency(const struct rb_node *root)
+bool lp_rb_check_consistency(const lp_rb_node_t *root)
 {   
-    int blacks_required = __rb_count_black_nodes_one_path(root);
+    int blacks_required = __lp_rb_count_black_nodes_one_path(root);
 
-    return __rb_check_subtree_consistency(root,blacks_required);
+    return __lp_rb_check_subtree_consistency(root,blacks_required);
 }
