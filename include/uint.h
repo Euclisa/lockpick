@@ -6,9 +6,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-/**
- * In this implementation we use uint16_t underlying data type in order to avoid overflows during multiplication.
-*/
 
 typedef uint64_t __lp_uint_word_t;
 
