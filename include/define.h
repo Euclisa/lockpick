@@ -1,6 +1,8 @@
 #ifndef _LOCKPICK_INCLUDE_DEFINE_H
 #define _LOCKPICK_INCLUDE_DEFINE_H
 
+#include <assert.h>
+
 #define LOCKPICK_DEBUG
 
 #define NULL ((void*)0)
