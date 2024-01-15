@@ -71,12 +71,12 @@ inline bool lp_list_push_front(lp_list_t **head, lp_list_t *node)
         return false;
     
     if(!(*head))
-    {
         node->next = node->prev = node;
-        (*head) = node;
-    }
     else
-        __lp_list_insert_between(*head,(*head)->next,node);
+        __lp_list_insert_between((*head)->prev,*head,node);
+    (*head) = node;
+
+    return true;
 }
 
 
@@ -87,12 +87,12 @@ inline bool lp_list_remove(lp_list_t **head, lp_list_t *node)
 
     if(node == *head)
     {
-        if((*head)->next == head)
+        if((*head)->next == (*head))
         {
             *head = NULL;
             return true;
         }
-        *head = node;
+        *head = node->next;
     }
     node->next->prev = node->prev;
     node->prev->next = node->next;
