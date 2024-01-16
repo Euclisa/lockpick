@@ -39,13 +39,13 @@ def gen_single_insert_before_tail(curr_list):
     val = random.randint(0,MAX_VALUE)
     curr_list.insert(len(curr_list)-1,str(val))
     list_str = ' '.join(curr_list)
-    return f"{LIST_INSERT_AFTER_CODE} {max(0,len(curr_list)-1)} {val}", f"{list_str}"
+    return f"{LIST_INSERT_BEFORE_CODE} {max(0,len(curr_list)-2)} {val}", f"{list_str}"
 
 def gen_single_insert_after_tail(curr_list):
     val = random.randint(0,MAX_VALUE)
     curr_list.insert(len(curr_list),str(val))
     list_str = ' '.join(curr_list)
-    return f"{LIST_INSERT_AFTER_CODE} {max(0,len(curr_list)-1)} {val}", f"{list_str}"
+    return f"{LIST_INSERT_AFTER_CODE} {max(0,len(curr_list)-2)} {val}", f"{list_str}"
 
 def gen_single_remove(curr_list):
     if not curr_list:
@@ -53,6 +53,7 @@ def gen_single_remove(curr_list):
     pos = random.randint(0,len(curr_list)-1)
     curr_list.pop(pos)
     list_str = ' '.join(curr_list)
+    list_str = list_str if len(list_str) > 0 else "empty"
     return f"{LIST_REMOVE_CODE} {pos}", f"{list_str}"
 
 
@@ -146,6 +147,7 @@ def gen_cases_all(path,cases_per_test):
 
 
 if __name__ == "__main__":
+    random.seed(0)
 
     arg_parser = argparse.ArgumentParser(description="lp_list test cases generator")
 

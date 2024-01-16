@@ -16,7 +16,9 @@ typedef enum __lp_test_actions
     __LP_TEST_LEAVE,
     __LP_TEST_PASS,
     __LP_TEST_FAIL,
-    __LP_TEST_END
+    __LP_TEST_END,
+    __LP_TEST_STEP_IN,
+    __LP_TEST_STEP_OUT
 } __lp_test_actions_t;
 
 
@@ -36,6 +38,15 @@ void __lp_test_process_action(__lp_test_actions_t action, ...);
 #define __LP_TEST_RUN_DEFAULT(f_call) __LP_TEST_RUN_WITH_DEPTH(f_call,__LP_TEST_MAX_LEVELS)
 
 #define LP_TEST_RUN(...) __LP_TEST_GET_OVERLOADING(__VA_ARGS__,__LP_TEST_RUN_WITH_DEPTH,__LP_TEST_RUN_DEFAULT)(__VA_ARGS__)
+
+#define LP_TEST_STEP_INTO(f_call)   ({                                                  \
+    __lp_test_process_action(__LP_TEST_STEP_IN);                                        \
+    f_call;                                                                             \
+    uint64_t __tests_failed;                                                            \
+    __lp_test_process_action(__LP_TEST_STEP_OUT,&__tests_failed);                       \
+    if(__tests_failed > 0)                                                              \
+        return;                                                                         \
+})
 
 #define LP_TEST_ASSERT(cond,msg,...)  ({                                                \
     __lp_test_actions_t __lpt_asrt_act = (cond) ? __LP_TEST_PASS : __LP_TEST_FAIL;      \

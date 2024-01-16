@@ -118,10 +118,9 @@ char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, 
  * @last_failed_test_call_str:  name of last failed test call
  * @failed_test_msg:            message of last failed test case
  * 
- * Returns boolean flag representing status of printed message:
- * true if it is failure, false if success.
+ * Returns nothing.
 */
-bool __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str, uint64_t tests_failed, uint64_t tests_total, uint64_t cases_passed, uint64_t duration_total_ns, char *last_failed_test_call_str, char *failed_test_msg)
+void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str, uint64_t tests_failed, uint64_t tests_total, uint64_t cases_passed, uint64_t duration_total_ns, char *last_failed_test_call_str, char *failed_test_msg)
 {
     bool failure = false;
     char *space_padding = __create_padding(curr_level);
@@ -159,8 +158,6 @@ bool __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
         printf(" | Details ('%s'): %s",last_failed_test_call_str,failed_test_msg);
 
     printf("\n");
-
-    return failure;
 }
 
 
@@ -190,7 +187,7 @@ void __lp_test_print_end(const char *project_name_str, uint64_t tests_total, uin
  * __lp_test_process_action - processes action of user program towards test session.
  * @action:       action type
  * 
- * Returns nothing.
+ * Returns boolean failure indicator.
  * 
  * This is not supposed to be called by user. One should use predefined macro definitions instead.
 */
@@ -206,7 +203,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
     static uint64_t level_tests_total[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_cases_passed[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_tests_failed[__LP_TEST_MAX_LEVELS] = {0};
-    static bool failure = false;
+    static uint64_t tests_failed_before_step_in = 0;
 
     va_list args;
     va_start(args, action);
@@ -264,7 +261,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 
             if(level_max_print_depth[current_level+1] > 0)
             {
-                bool curr_failure = __lp_test_print_leave_status(
+                __lp_test_print_leave_status(
                     current_level,
                     test_call_str,
                     level_tests_failed[current_level+1],
@@ -272,12 +269,14 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
                     level_cases_passed[current_level+1],
                     duration_total_ns,
                     last_failed_test_call_str,
-                    failed_test_msg);
-                if(curr_failure)
+                    failed_test_msg
+                );
+
+                bool last_test_failed = level_tests_failed[current_level+1] > 0;
+                if(last_test_failed)
                 {
                     strcpy(failed_test_msg,"");
                     strcpy(last_failed_test_call_str,"");
-                    failure = true;
                 }
             }
             break;
@@ -308,7 +307,19 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
                 (session_end_ts.tv_sec-session_init_ts.tv_sec)*__LP_TEST_NANO_DECIMALS +
                 (session_end_ts.tv_nsec-session_init_ts.tv_nsec);
 
-            __lp_test_print_end(project_name_str,level_cases_passed[current_level],duration_total_ns,failure);
+            bool session_failed = level_tests_failed[current_level] > 0;
+            __lp_test_print_end(project_name_str,level_cases_passed[current_level],duration_total_ns,session_failed);
+            break;
+        }
+        case __LP_TEST_STEP_IN:
+        {
+            tests_failed_before_step_in = level_tests_failed[current_level];
+            break;
+        }
+        case __LP_TEST_STEP_OUT:
+        {
+            uint64_t *tests_failed_after_step_in_request = va_arg(args, uint64_t*);
+            *tests_failed_after_step_in_request = level_tests_failed[current_level] - tests_failed_before_step_in;
             break;
         }
         default:

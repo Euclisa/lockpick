@@ -6,3 +6,4 @@ target_include_directories(lockpick_tests PRIVATE ${TEST_INCLUDE_DIR})
 target_include_directories(lockpick_tests PRIVATE ${LOCKPICK_INCLUDE_DIR})
 
 add_subdirectory(uint)
+add_subdirectory(list)
