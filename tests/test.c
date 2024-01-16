@@ -1,6 +1,7 @@
 #include "rb_tree/rb_tree.h"
 #include "uint/uint.h"
-#include "test.h"
+#include "list/list.h"
+#include <lockpick/test.h>
 
 int main()
 {

@@ -1,11 +1,10 @@
-#include <list.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <list.h>
-#include <affirmf.h>
-#include <test.h>
-#include <container_of.h>
 #include <string.h>
+#include <lockpick/list.h>
+#include <lockpick/container_of.h>
+#include <lockpick/affirmf.h>
+#include <lockpick/test.h>
 
 #define LP_TEST_LIST_INSERT_AFTER_CODE 0
 #define LP_TEST_LIST_INSERT_BEFORE_CODE 1

@@ -1,4 +1,4 @@
-#include "uint.h"
+#include <lockpick/uint.h>
 #include <string.h>
 #include <stdlib.h>
 

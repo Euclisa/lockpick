@@ -1,7 +1,7 @@
 #ifndef _LOCKPICK_INCLUDE_LIST_H
 #define _LOCKPICK_INCLUDE_LIST_H
 
-#include "define.h"
+#include <lockpick/define.h>
 #include <stdbool.h>
 
 typedef struct lp_list

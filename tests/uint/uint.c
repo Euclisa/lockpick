@@ -1,10 +1,10 @@
-#include "test.h"
-#include "affirmf.h"
-#include <uint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <lockpick/affirmf.h>
+#include <lockpick/uint.h>
+#include <lockpick/test.h>
 
 
 #define HEXES_PER_WORD (sizeof(uint16_t)*2)

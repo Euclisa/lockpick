@@ -1,8 +1,8 @@
-#include <rb_tree.h>
-#include "test.h"
-#include "container_of.h"
 #include <time.h>
 #include <stdlib.h>
+#include <lockpick/rb_tree.h>
+#include <lockpick/container_of.h>
+#include <lockpick/test.h>
 
 
 #define RBTEST_MAX_ELEMENTS_IN_TREE 1000

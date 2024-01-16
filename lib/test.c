@@ -1,5 +1,5 @@
-#include "test.h"
-#include "affirmf.h"
+#include <lockpick/test.h>
+#include <lockpick/affirmf.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

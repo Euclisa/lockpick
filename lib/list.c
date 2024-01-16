@@ -1,4 +1,4 @@
-#include "list.h"
+#include <lockpick/list.h>
 
 #ifdef LOCKPICK_DEBUG
 

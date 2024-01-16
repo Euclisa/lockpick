@@ -1,4 +1,4 @@
-#include "rb_tree.h"
+#include <lockpick/rb_tree.h>
 #include <stdlib.h>
 
 #ifdef LOCKPICK_DEBUG
