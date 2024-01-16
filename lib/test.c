@@ -227,7 +227,8 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
         }
         case __LP_TEST_ENTER:
         {
-            affirmf(current_level < __LP_TEST_MAX_LEVELS-1, "Max number of test levels in tree exceeded (%d).",__LP_TEST_MAX_LEVELS);
+            affirmf(current_level < __LP_TEST_MAX_LEVELS-1,"Max number of test levels in tree exceeded (%d).",__LP_TEST_MAX_LEVELS);
+            affirmf(!(level_tests_total[current_level] == 1 && level_cases_passed[current_level] > 0),"Can't branch lower level test - current test node is a leaf.");
 
             ++current_level;
             const char *test_call_str = va_arg(args, const char*);
@@ -284,12 +285,15 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
         case __LP_TEST_PASS:
         {
             affirmf(current_level > 0,"Can't call '__LP_TEST_PASS' before '__LP_TEST_ENTER'");
+            affirmf(level_tests_total[current_level] == 1,"Can't assert on the current level - current test is not leaf.");
 
             ++level_cases_passed[current_level];
             break;
         }
         case __LP_TEST_FAIL:
         {
+            affirmf(level_tests_total[current_level] == 1,"Can't assert on the current level - current test is not leaf.");
+
             ++level_tests_failed[current_level];
             const char *format_fail_msg = va_arg(args,const char*);
             vsnprintf(failed_test_msg,sizeof(failed_test_msg)-1,format_fail_msg,args);
@@ -311,15 +315,10 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
             __lp_test_print_end(project_name_str,level_cases_passed[current_level],duration_total_ns,session_failed);
             break;
         }
-        case __LP_TEST_STEP_IN:
-        {
-            tests_failed_before_step_in = level_tests_failed[current_level];
-            break;
-        }
         case __LP_TEST_STEP_OUT:
         {
-            uint64_t *tests_failed_after_step_in_request = va_arg(args, uint64_t*);
-            *tests_failed_after_step_in_request = level_tests_failed[current_level] - tests_failed_before_step_in;
+            bool *leave_test = va_arg(args, bool*);
+            *leave_test = level_tests_total[current_level] == 1 && level_tests_failed[current_level] > 0;
             break;
         }
         default:
