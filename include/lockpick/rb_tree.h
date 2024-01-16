@@ -1,11 +1,11 @@
 #ifndef _LOCKPICK_INCLUDE_RB_TREE_H
 #define _LOCKPICK_INCLUDE_RB_TREE_H
 
-#include <lockpick/define.h>
 #include <stdbool.h>
 #ifdef LOCKPICK_DEBUG
 #include <assert.h>
 #endif // LOCKPICK_DEBUG
+#include <lockpick/define.h>
 
 
 typedef enum __lp_rb_colors
