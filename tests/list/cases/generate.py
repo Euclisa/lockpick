@@ -47,6 +47,20 @@ def gen_single_insert_after_tail(curr_list):
     list_str = ' '.join(curr_list)
     return f"{LIST_INSERT_AFTER_CODE} {max(0,len(curr_list)-2)} {val}", f"{list_str}"
 
+def gen_single_random_insert_before(curr_list):
+    val = random.randint(0,MAX_VALUE)
+    position = random.randint(0,max(0,len(curr_list)-1))
+    curr_list.insert(position,str(val))
+    list_str = ' '.join(curr_list)
+    return f"{LIST_INSERT_BEFORE_CODE} {position} {val}", f"{list_str}"
+
+def gen_single_random_insert_after(curr_list):
+    val = random.randint(0,MAX_VALUE)
+    position = random.randint(0,max(0,len(curr_list)-1))
+    curr_list.insert(position+1,str(val))
+    list_str = ' '.join(curr_list)
+    return f"{LIST_INSERT_AFTER_CODE} {position} {val}", f"{list_str}"
+
 def gen_single_remove(curr_list):
     if not curr_list:
         raise RuntimeError()
@@ -110,9 +124,9 @@ def gen_cases_random(path,cases_per_test):
     with open(f"{path}/list_random.txt",'w') as f:
         for case_i in range(cases_per_test):
             if curr_list:
-                action_code = random.randint(0,6)
+                action_code = random.randint(0,8)
             else:
-                action_code = random.randint(0,5)
+                action_code = random.randint(0,7)
             
             if action_code == 0:
                 sample, res = gen_single_push_back(curr_list)
@@ -127,6 +141,10 @@ def gen_cases_random(path,cases_per_test):
             elif action_code == 5:
                 sample, res = gen_single_insert_after_tail(curr_list)
             elif action_code == 6:
+                sample, res = gen_single_random_insert_before(curr_list)
+            elif action_code == 7:
+                sample, res = gen_single_random_insert_after(curr_list)
+            elif action_code == 8:
                 sample, res = gen_single_remove(curr_list)
 
             f.write(f"{sample}\n{res}\n")
