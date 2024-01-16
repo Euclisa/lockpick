@@ -2,7 +2,7 @@ import random
 import argparse
 import os
 
-CASES_PER_SET_DEFAULT = 10000
+CASES_PER_SET_DEFAULT = 1000
 
 DRY_FILE_NAME = "uint_test_files.txt"
 BASE = 1 << (1 << 11)

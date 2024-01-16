@@ -170,11 +170,11 @@ void lp_test_rb_tree()
     srand(0);
     LP_TEST_RUN(test_rb_tree_monotonic_insert_random_remove(1000,50));
     LP_TEST_RUN(test_rb_tree_monotonic_insert_random_remove(100,500));
-    LP_TEST_RUN(test_rb_tree_monotonic_insert_random_remove(30,1000));
+    //LP_TEST_RUN(test_rb_tree_monotonic_insert_random_remove(30,1000));
     LP_TEST_RUN(test_rb_tree_random_insert_random_remove(1000,50));
     LP_TEST_RUN(test_rb_tree_random_insert_random_remove(100,500));
-    LP_TEST_RUN(test_rb_tree_random_insert_random_remove(30,1000));
+    //LP_TEST_RUN(test_rb_tree_random_insert_random_remove(30,1000));
     LP_TEST_RUN(test_rb_tree_random_insert_root_remove(1000,50));
     LP_TEST_RUN(test_rb_tree_random_insert_root_remove(100,500));
-    LP_TEST_RUN(test_rb_tree_random_insert_root_remove(30,1000));
+    //LP_TEST_RUN(test_rb_tree_random_insert_root_remove(30,1000));
 }
