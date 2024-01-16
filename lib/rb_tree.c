@@ -353,6 +353,9 @@ static inline lp_rb_node_t *__lp_rb_insert_rebalance_c4(lp_rb_node_t *root, lp_r
  */
 lp_rb_node_t *lp_rb_insert_rebalance(lp_rb_node_t *root, lp_rb_node_t *node)
 {
+    if(!node)
+        return_set_errno(NULL,EINVAL);
+
     while(true)
     {
         lp_rb_node_t *parent = lp_rb_parent(node);
@@ -697,6 +700,9 @@ static inline lp_rb_node_t *__lp_rb_remove_rebalance(lp_rb_node_t *root, lp_rb_n
  */
 lp_rb_node_t *lp_rb_remove(lp_rb_node_t *root, lp_rb_node_t *node)
 {
+    if(!node || !root)
+        return_set_errno(NULL,EINVAL);
+
     if(node->left != NULL && node->right != NULL)
     {
         lp_rb_node_t *successor = __lp_rb_get_left_most_child(node->right);
@@ -784,7 +790,7 @@ bool __lp_rb_check_subtree_consistency(const lp_rb_node_t *root, int blacks_requ
 
 
 bool lp_rb_check_consistency(const lp_rb_node_t *root)
-{   
+{
     int blacks_required = __lp_rb_count_black_nodes_one_path(root);
 
     return __lp_rb_check_subtree_consistency(root,blacks_required);

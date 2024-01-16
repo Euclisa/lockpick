@@ -27,7 +27,7 @@ uint8_t __uint_ch2i(char char_hex)
         return char_hex - 'A' + 10;
     if(char_hex >= 'a' && char_hex <= 'f')
         return char_hex - 'a' + 10;
-    return __LP_UINT_BAD_CHAR;
+    return_set_errno(__LP_UINT_BAD_CHAR,EINVAL);
 }
 
 
@@ -55,7 +55,7 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_u
         char curr_char = hex_str[curr_char_i];
         __lp_uint_word_t char_converted = __uint_ch2i(curr_char);
         if(char_converted == __LP_UINT_BAD_CHAR)
-            return -1;
+            return_set_errno(-1,EINVAL);
 
         *result += char_converted << offset;
         --curr_char_i;
@@ -85,7 +85,7 @@ bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t val
         // Parse up to one word and write right away
         int8_t read_hexes = __uint_parse_hex_word_reverse(hex_str, curr_char_i, value+curr_word_i);
         if(read_hexes < 0)
-            return false;
+            return_set_errno(false,EINVAL);
         curr_char_i -= read_hexes;
         ++curr_word_i;
     }
@@ -149,7 +149,7 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool trunca
 int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
 {
     if(!value)
-        return -1;
+        return_set_errno(-1,EINVAL);
 
     // Find first non-zero word (from the end)
     int64_t significant_words_offset = value_size-1;
@@ -201,7 +201,7 @@ int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest,
 inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *src, size_t src_size)
 {
     if(dest == NULL || src == NULL)
-        return false;
+        return_set_errno(false,EINVAL);
     
     size_t src_upper_bound = MIN(dest_size,src_size);
     size_t word_i = 0;
@@ -308,9 +308,9 @@ static inline void __lp_uint_add_left_smaller(const __lp_uint_word_t *a, size_t 
 inline bool __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
-        return false;
+        return_set_errno(false,EINVAL);
     if(a == result || b == result)
-        return false;
+        return_set_errno(false,EINVAL);
 
     if(a_size < b_size)
         __lp_uint_add_left_smaller(a,a_size,b,b_size,result,result_size);
@@ -335,7 +335,7 @@ inline bool __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
-        return false;
+        return_set_errno(false,EINVAL);
 
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -376,9 +376,9 @@ inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
 inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
-        return false;
+        return_set_errno(false,EINVAL);
     if(a == result || b == result)
-        return false;
+        return_set_errno(false,EINVAL);
 
     __uint128_t carry = 0;
     size_t common_upper_bound = MIN(MIN(a_size,b_size),result_size);
@@ -486,7 +486,7 @@ inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
-        return false;
+        return_set_errno(false,EINVAL);
 
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -537,9 +537,9 @@ inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
 inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
-        return false;
+        return_set_errno(false,EINVAL);
     if(a == result || b == result)
-        return false;
+        return_set_errno(false,EINVAL);
 
     for(size_t res_i = 0; res_i < result_size; ++res_i)
         result[res_i] = 0;
@@ -587,7 +587,7 @@ inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
 {
     // Basically, rewritting procedure above taking into account that 'a_size' ('dest_size') is now equal to 'result_size'
     if(!dest || !other)
-        return false;
+        return_set_errno(false,EINVAL);
     
     __lp_uint_word_t *result = (__lp_uint_word_t*)malloc(sizeof(__lp_uint_word_t)*dest_size);
     size_t result_size = dest_size;
@@ -668,7 +668,7 @@ static inline bool __lp_uint_eq_left_smaller(const __lp_uint_word_t *a, size_t a
 inline bool __lp_uint_eq(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
-        return false;
+        return_set_errno(false,EINVAL);
     
     if(a_size < b_size)
         return __lp_uint_eq_left_smaller(a,a_size,b,b_size);
@@ -694,7 +694,7 @@ inline bool __lp_uint_eq(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
 inline lp_uint_3way_t __lp_uint_3way(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     if(!a || !b)
-        return false;
+        return_set_errno(false,EINVAL);
     
     __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
@@ -822,9 +822,9 @@ inline bool __lp_uint_geq(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
-        return false;
+        return_set_errno(false,EINVAL);
     if(a == result || b == result)
-        return false;
+        return_set_errno(false,EINVAL);
     
     size_t upper_bound = MIN(MIN(a_size,b_size),result_size);
     size_t res_i = 0;
@@ -852,7 +852,7 @@ inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
-        return false;
+        return_set_errno(false,EINVAL);
     
     size_t upper_bound = MIN(dest_size,other_size);
     size_t dest_i = 0;
@@ -884,9 +884,9 @@ inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
 inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
-        return false;
+        return_set_errno(false,EINVAL);
     if(a == result || b == result)
-        return false;
+        return_set_errno(false,EINVAL);
     
     __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
@@ -933,7 +933,7 @@ inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
 inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
-        return false;
+        return_set_errno(false,EINVAL);
     
     size_t upper_bound = MIN(dest_size,other_size);
     for(size_t i = 0; i < upper_bound; ++i)
@@ -961,9 +961,9 @@ inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, const
 inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
     if(!a || !b || !result)
-        return false;
+        return_set_errno(false,EINVAL);
     if(a == result || b == result)
-        return false;
+        return_set_errno(false,EINVAL);
     
     __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
@@ -1010,7 +1010,7 @@ inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
 {
     if(!dest || !other)
-        return false;
+        return_set_errno(false,EINVAL);
     
     size_t upper_bound = MIN(dest_size,other_size);
     for(size_t i = 0; i < upper_bound; ++i)

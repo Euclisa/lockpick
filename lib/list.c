@@ -26,7 +26,7 @@ static inline void __lp_list_insert_between(lp_list_t *first, lp_list_t *second,
 inline bool lp_list_insert_before(lp_list_t **head, lp_list_t *position, lp_list_t *node)
 {
     if(!head || !(*head) || !position || !node)
-        return false;
+        return_set_errno(false,EINVAL);
     
     __lp_list_insert_between(position->prev,position,node);
 
@@ -40,7 +40,7 @@ inline bool lp_list_insert_before(lp_list_t **head, lp_list_t *position, lp_list
 inline bool lp_list_insert_after(lp_list_t **head, lp_list_t *position, lp_list_t *node)
 {
     if(!head || !(*head) || !position || !node)
-        return false;
+        return_set_errno(false,EINVAL);
 
     __lp_list_insert_between(position,position->next,node);
     
@@ -51,7 +51,7 @@ inline bool lp_list_insert_after(lp_list_t **head, lp_list_t *position, lp_list_
 inline bool lp_list_push_back(lp_list_t **head, lp_list_t *node)
 {
     if(!head  || !node)
-        return false;
+        return_set_errno(false,EINVAL);
 
     if(!(*head))
     {
@@ -68,7 +68,7 @@ inline bool lp_list_push_back(lp_list_t **head, lp_list_t *node)
 inline bool lp_list_push_front(lp_list_t **head, lp_list_t *node)
 {
     if(!head  || !node)
-        return false;
+        return_set_errno(false,EINVAL);
     
     if(!(*head))
         node->next = node->prev = node;
@@ -83,7 +83,7 @@ inline bool lp_list_push_front(lp_list_t **head, lp_list_t *node)
 inline bool lp_list_remove(lp_list_t **head, lp_list_t *node)
 {
     if(!head || !(*head) || !node)
-        return false;
+        return_set_errno(false,EINVAL);
 
     if(node == *head)
     {

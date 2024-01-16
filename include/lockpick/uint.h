@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <lockpick/define.h>
 
 
 typedef uint64_t __lp_uint_word_t;

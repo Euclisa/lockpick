@@ -7,7 +7,7 @@ lpg_graph_slab_t *lpg_create_graph_slab(size_t size)
     lpg_graph_slab_t *slab = (lpg_graph_slab_t*)malloc(sizeof(lpg_graph_slab_t));
 
     if(!slab)
-        return NULL;
+        return_set_errno(NULL,ENOMEM);
     
     slab->__buffer = (lpg_node_t*)malloc(sizeof(lpg_node_t)*size);
     slab->__fb_head = (__lpg_slab_fb_list_t*)malloc(sizeof(__lpg_slab_fb_list_t));
@@ -25,7 +25,7 @@ lpg_node_t *lpg_nalloc(lpg_graph_slab_t *slab)
     affirmf(slab,"All nodes must be allocated within appropriate graph slab, but null slab ptr was given");
 
     if(!slab->__fb_head)
-        return NULL;
+        return_set_errno(NULL,ENOBUFS);
     
     if(slab->__fb_head->__block_size > 1)
     {
