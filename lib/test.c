@@ -187,7 +187,7 @@ void __lp_test_print_end(const char *project_name_str, uint64_t tests_total, uin
  * __lp_test_process_action - processes action of user program towards test session.
  * @action:       action type
  * 
- * Returns boolean failure indicator.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. One should use predefined macro definitions instead.
 */
