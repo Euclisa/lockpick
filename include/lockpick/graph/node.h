@@ -32,37 +32,7 @@ typedef struct lpg_node_fast
 } lpg_node_fast_t;
 
 
-/**
- * __lpg_slab_fb_list_t - list type for slab free blocks tracking
-*/
-typedef struct __lpg_slab_fb_list
-{
-    lp_list_t __node;
-    uint64_t __block_size;
-    void *__start;
-} __lpg_slab_fb_list_t;
-
-
-typedef struct lpg_graph_slab
-{
-    lpg_node_t *__buffer;
-    __lpg_slab_fb_list_t *__fb_head;
-    size_t __total_size;
-} lpg_graph_slab_t;
-
-typedef struct lpg_graph_slab_fast
-{
-    lpg_node_fast_t *__buffer;
-    __lpg_slab_fb_list_t *__fb_head;
-    size_t __total_size;
-} lpg_graph_slab_fast_t;
-
-
-lpg_graph_slab_t *lpg_create_graph_slab(size_t size);
-
-lpg_node_t *lpg_nalloc(lpg_graph_slab_t *slab);
-
-void lpg_node_init_and(lpg_graph_slab_t *slab, lpg_node_t *node);
+void lpg_node_init_and(lpg_node_t *node);
 void lpg_node_init_or(lpg_node_t *node);
 void lpg_node_init_not(lpg_node_t *node);
 void lpg_node_init_xor(lpg_node_t *node);
