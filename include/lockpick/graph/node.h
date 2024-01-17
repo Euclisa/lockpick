@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <lockpick/list.h>
+#include <lockpick/define.h>
 
 
 typedef enum lpg_node_types
@@ -46,12 +47,14 @@ typedef struct lpg_graph_slab
 {
     lpg_node_t *__buffer;
     __lpg_slab_fb_list_t *__fb_head;
+    size_t __total_size;
 } lpg_graph_slab_t;
 
 typedef struct lpg_graph_slab_fast
 {
     lpg_node_fast_t *__buffer;
     __lpg_slab_fb_list_t *__fb_head;
+    size_t __total_size;
 } lpg_graph_slab_fast_t;
 
 
