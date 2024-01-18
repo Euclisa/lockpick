@@ -55,6 +55,22 @@ void __validate_list_case(lp_list_t *head, const char *list_values_str, FILE *fp
 }
 
 
+void __free_list(lp_list_t *head)
+{
+    if(!head)
+        return;
+
+    lp_list_t *current = head->next;
+    while(current != head)
+    {
+        lp_list_t *to_free = current;
+        current = current->next;
+        free(to_free);
+    }
+    free(head);
+}
+
+
 void test_list_push_back()
 {
     FILE *fp = fopen(LOCKPICK_PROJECT_DIR "/tests/list/cases/list_push_back.txt","r");
@@ -71,6 +87,7 @@ void test_list_push_back()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    __free_list(head);
 }
 
 
@@ -90,6 +107,7 @@ void test_list_push_front()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    __free_list(head);
 }
 
 
@@ -112,6 +130,7 @@ void test_list_insert_before_head()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    __free_list(head);
 }
 
 
@@ -134,6 +153,7 @@ void test_list_insert_after_head()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    __free_list(head);
 }
 
 
@@ -156,6 +176,7 @@ void test_list_insert_before_tail()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    __free_list(head);
 }
 
 
@@ -178,6 +199,7 @@ void test_list_insert_after_tail()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    __free_list(head);
 }
 
 
@@ -204,12 +226,14 @@ void test_list_random()
             }
         }
 
+        uint8_list_t *entry;
         if(mode != LP_TEST_LIST_REMOVE_CODE)
+        {
             affirmf(fscanf(fp,"%d",&value) != EOF, "Failed to parse value from file in case %d",case_i);
+            entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
+            entry->value = value;
+        }
         affirmf(fscanf(fp,"\n") != EOF, "Failed to read new line character from file in case %d",case_i);
-
-        uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
-        entry->value = value;
 
         if(head)
         {
@@ -233,6 +257,7 @@ void test_list_random()
                 
                 case LP_TEST_LIST_REMOVE_CODE:
                     affirmf(lp_list_remove(&head,list_pos),"Failed to push back first value %d in case %d",value,case_i);
+                    free(container_of(list_pos,uint8_list_t,node));
                     break;
 
                 default:
@@ -246,8 +271,10 @@ void test_list_random()
         LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
         ++case_i;
     }
+    lp_list_t *old_head = head;
     affirmf(lp_list_remove(&head,head),"Failed to remove last element from list",value,case_i);
     LP_TEST_ASSERT(!head,"List is not empty after last element removal");
+    free(container_of(old_head,uint8_list_t,node));
 }
 
 void lp_test_list()
