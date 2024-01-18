@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <lockpick/test.h>
 #include <lockpick/slab.h>
 #include <lockpick/affirmf.h>
@@ -25,7 +26,7 @@ static inline bool __validate_slab(const lp_slab_t *slab, size_t expected_free_e
         prev_fb_end = fb_curr->__start + fb_curr->__block_size*slab->__entry_size;
         fb_curr_l = fb_curr_l->next;
         fb_curr = container_of(fb_curr_l,__lp_slab_fb_list_t,__node);
-        if(prev_fb_end > fb_curr->__start)
+        if(prev_fb_end >= fb_curr->__start)
             return false;
         free_entries += fb_curr->__block_size;
     }

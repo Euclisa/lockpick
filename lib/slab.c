@@ -153,6 +153,11 @@ static inline void __lp_slab_fb_list_merge_unit_diff(__lp_slab_fb_list_t **head,
     affirmf(lp_list_insert_after(&old_head,second,&merge_fb->__node),"Failed to insert new node");
     affirmf(lp_list_remove(&old_head,first_l),"Failed to remove first node");
     affirmf(lp_list_remove(&old_head,second_l),"Failed to remove second node");
+
+    free(first);
+    free(second);
+
+    *head = container_of(old_head,__lp_slab_fb_list_t,__node);
 }
 
 
@@ -199,7 +204,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
         __lp_slab_fb_list_t *prev_fb = container_of(current_fb_l->prev,__lp_slab_fb_list_t,__node);
         void *prev_fb_start = prev_fb->__start;
         void *prev_fb_end = prev_fb_start + entry_size*prev_fb->__block_size;
-        if(current_fb_start - prev_fb_end == 1)
+        if(current_fb_start - prev_fb_end == entry_size)
             __lp_slab_fb_list_merge_unit_diff(&slab->__fb_head,prev_fb,current_fb);
         else if(current_fb_start - ptr == entry_size)
         {
