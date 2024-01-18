@@ -6,16 +6,18 @@
 #include <stdlib.h>
 #include <lockpick/list.h>
 #include <lockpick/define.h>
+#include <lockpick/slab.h>
 
 
 typedef enum lpg_node_types
 {
-    LP_NODE_TYPE_AND,
-    LP_NODE_TYPE_OR,
-    LP_NODE_TYPE_NOT,
-    LP_NODE_TYPE_XOR,
-    LP_NODE_TYPE_CONST,
-    LP_NODE_TYPE_VAR
+    LPG_NODE_TYPE_AND,
+    LPG_NODE_TYPE_OR,
+    LPG_NODE_TYPE_NOT,
+    LPG_NODE_TYPE_XOR,
+    LPG_NODE_TYPE_TRUE,
+    LPG_NODE_TYPE_FALSE,
+    LPG_NODE_TYPE_VAR
 } lpg_node_type_t;
 
 
@@ -32,11 +34,13 @@ typedef struct lpg_node_fast
 } lpg_node_fast_t;
 
 
-void lpg_node_init_and(lpg_node_t *node);
-void lpg_node_init_or(lpg_node_t *node);
-void lpg_node_init_not(lpg_node_t *node);
-void lpg_node_init_xor(lpg_node_t *node);
-void lpg_node_init_const(lpg_node_t *node);
-void lpg_node_init_var(lpg_node_t *node);
+lp_slab_t *lpg_node_create_slab(size_t total_entries);
+
+lpg_node_t *lpg_node_and(lp_slab_t *slab, lpg_node_t *a, lpg_node_t *b);
+lpg_node_t *lpg_node_or(lp_slab_t *slab, lpg_node_t *a, lpg_node_t *b);
+lpg_node_t *lpg_node_not(lp_slab_t *slab, lpg_node_t *a);
+lpg_node_t *lpg_node_xor(lp_slab_t *slab, lpg_node_t *a, lpg_node_t *b);
+lpg_node_t *lpg_node_const(lp_slab_t *slab, bool value);
+lpg_node_t *lpg_node_var(lp_slab_t *slab);
 
 #endif // _LOCKPICK_INCLUDE_GRAPH_NODE_H
