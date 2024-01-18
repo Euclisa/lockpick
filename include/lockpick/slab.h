@@ -24,6 +24,9 @@ typedef struct lp_slab
 } lp_slab_t;
 
 
+#define __lp_slab_fb_list_container(ptr)    \
+        container_of(ptr,__lp_slab_fb_list_t,__node)
+
 lp_slab_t *lp_slab_create(size_t total_entries, size_t entry_size);
 void lp_slab_release(lp_slab_t *slab);
 

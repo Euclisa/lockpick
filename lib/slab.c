@@ -10,7 +10,7 @@ static inline bool __lp_slab_fb_list_remove(__lp_slab_fb_list_t **head, __lp_sla
     if(!lp_list_remove(&old_head,&node->__node))
         return_set_errno(false,EINVAL);
 
-    *head = container_of(old_head,__lp_slab_fb_list_t,__node);
+    *head = __lp_slab_fb_list_container(old_head);
 
     return true;
 }
@@ -22,7 +22,7 @@ static inline bool __lp_slab_fb_list_insert_before(__lp_slab_fb_list_t **head, _
     if(!lp_list_insert_before(&old_head,&position->__node,&node->__node))
         return_set_errno(false,EINVAL);
     
-    *head = container_of(old_head,__lp_slab_fb_list_t,__node);
+    *head = __lp_slab_fb_list_container(old_head);
 
     return true;
 }
@@ -34,7 +34,7 @@ static inline bool __lp_slab_fb_list_insert_after(__lp_slab_fb_list_t **head, __
     if(!lp_list_insert_after(&old_head,&position->__node,&node->__node))
         return_set_errno(false,EINVAL);
     
-    *head = container_of(old_head,__lp_slab_fb_list_t,__node);
+    *head = __lp_slab_fb_list_container(old_head);
 
     return true;
 }
@@ -46,7 +46,7 @@ static inline bool __lp_slab_fb_list_push_back(__lp_slab_fb_list_t **head, __lp_
     if(!lp_list_push_back(&old_head,&node->__node))
         return_set_errno(false,EINVAL);
     
-    *head = container_of(old_head,__lp_slab_fb_list_t,__node);
+    *head = __lp_slab_fb_list_container(old_head);
 
     return true;
 }
@@ -72,11 +72,11 @@ void lp_slab_release(lp_slab_t *slab)
 {
     affirmf(slab,"Expected valid slab pointer but null was given");
     free(slab->__buffer);
-    __lp_slab_fb_list_t *current_fb = container_of(slab->__fb_head->__node.next,__lp_slab_fb_list_t,__node);
+    __lp_slab_fb_list_t *current_fb = __lp_slab_fb_list_container(slab->__fb_head->__node.next);
     while(current_fb != slab->__fb_head)
     {
         __lp_slab_fb_list_t *to_free_fb = current_fb;
-        current_fb = container_of(current_fb->__node.next,__lp_slab_fb_list_t,__node);
+        current_fb = __lp_slab_fb_list_container(current_fb->__node.next);
         free(to_free_fb);
     }
     free(slab->__fb_head);
@@ -157,7 +157,7 @@ static inline void __lp_slab_fb_list_merge_unit_diff(__lp_slab_fb_list_t **head,
     free(first);
     free(second);
 
-    *head = container_of(old_head,__lp_slab_fb_list_t,__node);
+    *head = __lp_slab_fb_list_container(old_head);
 }
 
 
@@ -188,7 +188,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
     while(!__lp_check_ptr_before_block(ptr,current_fb_l) && current_fb_l->next != &slab->__fb_head->__node)
         current_fb_l = current_fb_l->next;
     
-    __lp_slab_fb_list_t *current_fb = container_of(current_fb_l,__lp_slab_fb_list_t,__node);
+    __lp_slab_fb_list_t *current_fb = __lp_slab_fb_list_container(current_fb_l);
     void *current_fb_start = current_fb->__start;
     void *current_fb_end = current_fb_start + entry_size*current_fb->__block_size;
 
@@ -201,7 +201,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
     }
     else
     {
-        __lp_slab_fb_list_t *prev_fb = container_of(current_fb_l->prev,__lp_slab_fb_list_t,__node);
+        __lp_slab_fb_list_t *prev_fb = __lp_slab_fb_list_container(current_fb_l->prev);
         void *prev_fb_start = prev_fb->__start;
         void *prev_fb_end = prev_fb_start + entry_size*prev_fb->__block_size;
         if(current_fb_start - prev_fb_end == entry_size)
