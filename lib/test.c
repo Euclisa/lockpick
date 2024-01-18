@@ -232,7 +232,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 
             ++current_level;
             const char *test_call_str = va_arg(args, const char*);
-            strcpy(last_test_call_str,test_call_str);
+            snprintf(last_test_call_str,sizeof(last_test_call_str)-1,"%s",test_call_str);
             uint64_t curr_test_max_print_depth = va_arg(args, uint64_t);
             uint8_t prev_test_max_print_depth = level_max_print_depth[current_level-1] == 0 ? 0 : level_max_print_depth[current_level-1]-1;
             level_max_print_depth[current_level] = MIN(prev_test_max_print_depth,curr_test_max_print_depth);

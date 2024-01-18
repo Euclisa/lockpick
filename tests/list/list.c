@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include <lockpick/list.h>
 #include <lockpick/container_of.h>
 #include <lockpick/affirmf.h>
@@ -96,7 +97,7 @@ void test_list_insert_before_head()
 {
     FILE *fp = fopen(LOCKPICK_PROJECT_DIR "/tests/list/cases/list_insert_before_head.txt","r");
     
-    uint8_t mode,value,position;
+    uint32_t mode,value,position;
     lp_list_t *head = NULL;
     uint32_t case_i = 0;
     while(fscanf(fp,"%d %d %d\n",&mode,&position,&value) != EOF)
