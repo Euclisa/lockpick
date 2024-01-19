@@ -11,8 +11,12 @@ add_definitions(-DLOCKPICK_PROJECT_DIR="${LOCKPICK_PROJECT_DIR}")
 
 include_directories(include)
 
-file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.c" "${CMAKE_SOURCE_DIR}/src/**/*.c")
-file(GLOB LIB_SOURCES "${CMAKE_SOURCE_DIR}/lib/*.c")
+file(GLOB SOURCES CMAKE_CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/src/*.c"
+        "${CMAKE_SOURCE_DIR}/src/graph/*.c"
+        "${CMAKE_SOURCE_DIR}/src/graph/nodes/*.c"
+        "${CMAKE_SOURCE_DIR}/src/graph/functions/*.c")
+file(GLOB LIB_SOURCES CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/lib/*.c")
 
 file(GLOB LOCKPICK_INCLUDE_DIR "${CMAKE_SOURCE_DIR/include}")
 
