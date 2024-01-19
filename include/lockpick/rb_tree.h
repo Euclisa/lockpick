@@ -2,6 +2,7 @@
 #define _LOCKPICK_INCLUDE_RB_TREE_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #ifdef LOCKPICK_DEBUG
 #include <assert.h>
 #endif // LOCKPICK_DEBUG
@@ -17,7 +18,7 @@ typedef enum __lp_rb_colors
 typedef struct lp_rb_node
 {
     struct lp_rb_node *left, *right;
-    unsigned long __parent_color;
+    uintptr_t __parent_color;
 } aligned(2) lp_rb_node_t;
 
 
