@@ -298,6 +298,11 @@ void test_list_foreach()
         LP_TEST_ASSERT(entry->value == entries_values[entry_i],"Values don't match");
         ++entry_i;
     }
+    
+    lp_list_t *empty_head = NULL;
+    lp_list_foreach(empty_head,entry,uint8_list_t,node)
+        LP_TEST_ASSERT(false,"Head is empty but entered foreach body");
+
     __free_list(head);
 }
 
