@@ -1,12 +1,13 @@
 #include <lockpick/list.h>
+#include <lockpick/affirmf.h>
 
 #ifdef LOCKPICK_DEBUG
 
 #define __lp_list_valid_head(head)  \
-        lp_assert((head)->next->prev == (head) && (head)->prev->next == (head), "Invalid head")
+        affirmf((head)->next->prev == (head) && (head)->prev->next == (head), "Invalid head")
 
 #define __lp_list_valid_adj_nodes(first,second)  \
-        lp_assert((first) && (second) && (first)->next == second && (second)->prev == first, "Invalid adjacent nodes")
+        affirmf((first) && (second) && (first)->next == second && (second)->prev == first, "Invalid adjacent nodes")
 
 #endif // LOCKPICK_DEBUG
 

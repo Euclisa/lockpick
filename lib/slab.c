@@ -138,8 +138,8 @@ static inline void __lp_slab_fb_list_insert_unit_after(__lp_slab_fb_list_t **hea
 static inline void __lp_slab_fb_list_merge_unit_diff(__lp_slab_fb_list_t **head, __lp_slab_fb_list_t *first, __lp_slab_fb_list_t *second)
 {
     #ifdef LOCKPICK_DEBUG
-    lp_assert(*head != second,"Attempt to change head during adjacent list entries merge");
-    lp_assert(first->__node.next == second && second->__node.prev == first,"Attempt to merge non-adjacent list entries");
+    affirmf(*head != second,"Attempt to change head during adjacent list entries merge");
+    affirmf(first->__node.next == second && second->__node.prev == first,"Attempt to merge non-adjacent list entries");
     #endif
 
     lp_list_t *first_l = &first->__node;

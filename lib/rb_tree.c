@@ -1,18 +1,19 @@
 #include <lockpick/rb_tree.h>
+#include <lockpick/affirmf.h>
 #include <stdlib.h>
 
 #ifdef LOCKPICK_DEBUG
 #define __lp_assert_rb_parent_child_ref(parent,child)  \
-        lp_assert((parent->left == child) || (parent->right == child), "Node's parent must have reference to that node.");
+        affirmf((parent->left == child) || (parent->right == child), "Node's parent must have reference to that node.");
 
 #define __lp_assert_rb_node_color_red(node)   \
-        lp_assert(__lp_rb_color(node) == __LP_RB_RED, "Node's color must be red in this case.")
+        affirmf(__lp_rb_color(node) == __LP_RB_RED, "Node's color must be red in this case.")
 
 #define __lp_assert_rb_node_color_black(node)   \
-        lp_assert(__lp_rb_color(node) == __LP_RB_BLACK, "Node's color must be black in this case.")
+        affirmf(__lp_rb_color(node) == __LP_RB_BLACK, "Node's color must be black in this case.")
 
 #define __lp_assert_rb_node_exists(node)  \
-        lp_assert(node, "Node must be present in this case.")
+        affirmf(node, "Node must be present in this case.")
 #endif // LOCKPICK_DEBUG
 
 
@@ -25,7 +26,7 @@ inline __lp_rb_color_t __lp_rb_color(const lp_rb_node_t *node)
 inline void __lp_rb_set_color(lp_rb_node_t *node, __lp_rb_color_t color)
 {
     #ifdef LOCKPICK_DEBUG
-    assert(node && "__lp_rb_set_color: Node must be non-null");
+    affirmf(node,"Node must be non-null");
     #endif // LOCKPICK_DEBUG
     node->__parent_color = (node->__parent_color & ~1) | color;
 }
@@ -55,7 +56,7 @@ lp_rb_node_t *lp_rb_uncle(const lp_rb_node_t *node)
         if(grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            lp_assert(parent == grandparent->left || parent == grandparent->right, "Parent must be grandparent's child.");
+            affirmf(parent == grandparent->left || parent == grandparent->right, "Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == grandparent->left)
@@ -80,7 +81,7 @@ void __lp_rb_grandparent_uncle(const lp_rb_node_t *node, lp_rb_node_t **grandpar
         if(*grandparent)
         {
             #ifdef LOCKPICK_DEBUG
-            lp_assert(parent == (*grandparent)->left || parent == (*grandparent)->right, "Parent must be grandparent's child.");
+            affirmf(parent == (*grandparent)->left || parent == (*grandparent)->right, "Parent must be grandparent's child.");
             #endif // LOCKPICK_DEBUG
 
             if(parent == (*grandparent)->left)
@@ -107,7 +108,7 @@ lp_rb_node_t *lp_rb_sibling(const lp_rb_node_t *node)
 void lp_rb_set_parent(lp_rb_node_t *node, const lp_rb_node_t *parent_ptr)
 {
     #ifdef LOCKPICK_DEBUG
-    lp_assert(!((unsigned long)parent_ptr & 1), "'parent_ptr' must be aligned at least to 2 bytes boundary.");
+    affirmf(!((unsigned long)parent_ptr & 1), "'parent_ptr' must be aligned at least to 2 bytes boundary.");
     #endif // LOCKPICK_DEBUG
     node->__parent_color = (unsigned long)parent_ptr | __lp_rb_color(node);
 }
@@ -158,7 +159,7 @@ static inline void __lp_rb_rotate_left(lp_rb_node_t *node)
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        lp_assert(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
+        affirmf(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
         #endif
 
         if(global_parent->left == node)
@@ -189,7 +190,7 @@ static inline void __lp_rb_rotate_right(lp_rb_node_t *node)
     if(global_parent)
     {
         #ifdef LOCKPICK_DEBUG
-        lp_assert(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
+        affirmf(global_parent->left == node || global_parent->right == node, "Node must be a global_parent's child.");
         #endif // LOCKPICK_DEBUG
 
         if(global_parent->left == node)
@@ -285,7 +286,7 @@ static inline lp_rb_node_t *__lp_rb_insert_rebalance_c2(lp_rb_node_t *root, lp_r
 static inline void __lp_rb_insert_rebalance_c3(lp_rb_node_t *node, lp_rb_node_t *parent, lp_rb_node_t *uncle, lp_rb_node_t *grandparent)
 {
     #ifdef LOCKPICK_DEBUG
-    lp_assert(parent && grandparent && node && uncle, "All nodes must be non-null.");
+    affirmf(parent && grandparent && node && uncle, "All nodes must be non-null.");
     #endif // LOCKPICK_DEBUG
     // In this case uncle is red then parent is not root by implementation (otherwise, uncle is null -> is black)
     __lp_rb_set_color(parent,__LP_RB_BLACK);
@@ -316,7 +317,7 @@ static inline void __lp_rb_insert_rebalance_c3(lp_rb_node_t *node, lp_rb_node_t 
 static inline lp_rb_node_t *__lp_rb_insert_rebalance_c4(lp_rb_node_t *root, lp_rb_node_t *node, lp_rb_node_t *parent, lp_rb_node_t *grandparent)
 {
     #ifdef LOCKPICK_DEBUG
-    lp_assert(parent && grandparent && node, "All nodes must be non-null.");
+    affirmf(parent && grandparent && node, "All nodes must be non-null.");
     #endif // LOCKPICK_DEBUG
     bool node_is_right = lp_rb_is_right(node);
     bool parent_is_left = lp_rb_is_left(parent);
@@ -648,7 +649,7 @@ static inline lp_rb_node_t *__lp_rb_remove_node_one_child(lp_rb_node_t *root, lp
     __lp_assert_rb_node_color_black(node);
     __lp_assert_rb_node_color_red(non_nil_child);
 
-    lp_assert((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child), "Node must have only one child non-nil child that is equal to 'non_nil_child'.");
+    affirmf((!node->left && node->right == non_nil_child) || (!node->right && node->left == non_nil_child), "Node must have only one child non-nil child that is equal to 'non_nil_child'.");
     #endif // LOCKPICK_DEBUG
 
     lp_rb_node_t *parent = lp_rb_parent(node);
@@ -677,7 +678,7 @@ static inline lp_rb_node_t *__lp_rb_remove_rebalance(lp_rb_node_t *root, lp_rb_n
     lp_rb_node_t *non_nil_child = NULL;
 
     #ifdef LOCKPICK_DEBUG
-    lp_assert(!node->left || !node->right, "Node must have at least one nil child.");
+    affirmf(!node->left || !node->right, "Node must have at least one nil child.");
     #endif // LOCKPICK_DEBUG
 
     if(node->left)

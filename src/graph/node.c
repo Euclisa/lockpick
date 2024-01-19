@@ -62,7 +62,7 @@ lpg_node_t *__lpg_node_alloc(lp_slab_t *slab)
     if(slab)
     {
         #ifdef LOCKPICK_DEBUG
-        lp_assert(slab->__entry_size == sizeof(lpg_node_t),
+        affirmf(slab->__entry_size == sizeof(lpg_node_t),
             "Got slab with invalid entry size");
         #endif // LOCKPICK_DEBUG
 
