@@ -15,6 +15,8 @@
 
 #define LP_TEST_MAX_LIST_STR_SIZE 512
 
+#define LP_TEST_LIST_FOREACH_ELEMENTS_NUM 1000
+
 
 typedef struct uint8_list
 {
@@ -277,6 +279,29 @@ void test_list_random()
     free(container_of(old_head,uint8_list_t,node));
 }
 
+
+void test_list_foreach()
+{
+    lp_list_t *head = NULL;
+    uint8_t entries_values[LP_TEST_LIST_FOREACH_ELEMENTS_NUM] = {0};
+    srand(1);
+    for(uint32_t entry_i = 0; entry_i < LP_TEST_LIST_FOREACH_ELEMENTS_NUM; ++entry_i)
+    {
+        uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
+        entry->value = entries_values[entry_i] = rand() % 255;
+        affirmf(lp_list_push_back(&head,&entry->node),"Failed to insert entry on init phase.");
+    }
+
+    uint32_t entry_i = 0;
+    lp_list_foreach(head,entry,uint8_list_t,node)
+    {
+        LP_TEST_ASSERT(entry->value == entries_values[entry_i],"Values don't match");
+        ++entry_i;
+    }
+    __free_list(head);
+}
+
+
 void lp_test_list()
 {
     LP_TEST_RUN(test_list_push_back());
@@ -285,5 +310,6 @@ void lp_test_list()
     LP_TEST_RUN(test_list_insert_after_head());
     LP_TEST_RUN(test_list_insert_before_tail());
     LP_TEST_RUN(test_list_insert_after_tail());
+    LP_TEST_RUN(test_list_foreach());
     LP_TEST_RUN(test_list_random());
 }
