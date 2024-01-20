@@ -3,9 +3,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#ifdef LOCKPICK_DEBUG
-#include <assert.h>
-#endif // LOCKPICK_DEBUG
 #include <lockpick/define.h>
 
 

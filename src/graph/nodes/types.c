@@ -63,10 +63,8 @@ lpg_node_t *__lpg_node_alloc(lp_slab_t *slab)
     lpg_node_t *node;
     if(slab)
     {
-        #ifdef LOCKPICK_DEBUG
-        affirmf(slab->__entry_size == sizeof(lpg_node_t),
+        affirmf_debug(slab->__entry_size == sizeof(lpg_node_t),
             "Got slab with invalid entry size");
-        #endif // LOCKPICK_DEBUG
 
         node = (lpg_node_t*)lp_slab_alloc(slab);
         affirmf(node,"Failed to allocate space for node from specified slab");
