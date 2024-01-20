@@ -42,3 +42,11 @@ inline void __lpg_node_set_value(lpg_node_t *node, bool value)
     else
         node->__parents_computed_value &= ~__LPG_NODE_VALUE_MASK;
 }
+
+
+inline void __lpg_add_child(lpg_node_t *node, lpg_node_t *child)
+{
+    ++node->children_size;
+    node->children = realloc(node->children,sizeof(lpg_node_t*)*node->children_size);
+    node->children[node->children_size-1] = child;
+}

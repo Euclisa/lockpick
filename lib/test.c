@@ -42,6 +42,12 @@ char *__lp_test_allocator(size_t size)
 }
 
 
+/**
+ * __get_time_str - acquires current time string in specified format
+ * @format:     format in which current time should be returned
+ * 
+ * Returns pointer on string representing current time.
+*/
 char *__get_time_str(const char *format)
 {
     const uint8_t MAX_TIME_STR_SIZE = 64; 
@@ -57,6 +63,12 @@ char *__get_time_str(const char *format)
 }
 
 
+/**
+ * __lp_test_print_init - prints message on '__LP_TEST_INIT' action (LP_TEST_BEGIN call)
+ * @project_name_str:       string containing name of the project being tested
+ * 
+ * Returns nothing.
+*/
 void __lp_test_print_init(const char *project_name_str)
 {
     char *time_str = __get_time_str("%x %X");
@@ -64,6 +76,12 @@ void __lp_test_print_init(const char *project_name_str)
 }
 
 
+/**
+ * __create_padding - creates padding of spaces and '|' to achieve tree-like output
+ * @curr_level:     level on which test to be padded is
+ * 
+ * Returns pointer on padding string.
+*/
 char *__create_padding(uint8_t curr_level)
 {
     uint16_t pad_size = (curr_level)*2;
@@ -78,6 +96,13 @@ char *__create_padding(uint8_t curr_level)
 }
 
 
+/**
+ * __lp_test_print_enter - prints message on '__LP_TEST_ENTER' action (LP_TEST_RUN call)
+ * @curr_level:     level of test being entered
+ * @test_call_str:  string containing current test function call
+ * 
+ * Return nothing.
+*/
 void __lp_test_print_enter(uint8_t curr_level, const char *test_call_str)
 {
     char *space_padding = __create_padding(curr_level);
@@ -87,6 +112,15 @@ void __lp_test_print_enter(uint8_t curr_level, const char *test_call_str)
 }
 
 
+/**
+ * __lp_test_get_stats_str - render string containing statistics on finished test
+ * @test_call_str:      string containing current test function call
+ * @tests_passed:       number of tests failed (meaning test groups, not cases)
+ * @cases_passed:       total number of cases passed in all groups below
+ * @duration_total_ns:  total duration between current '__LP_TEST_LEAVE' and its corresponding '__LP_TEST_ENTER' events
+ * 
+ * Returns pointer on string containing specified statistics.
+*/
 char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, uint64_t cases_passed, uint64_t duration_total_ns)
 {
     uint64_t duration_total_ms = duration_total_ns/(__LP_TEST_NANO_DECIMALS/__LP_TEST_MILLI_DECIMALS);
@@ -108,13 +142,13 @@ char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, 
 
 
 /**
- * __lp_test_print_leave_status - prints status message on '__LP_TEST_LEAVE' event.
+ * __lp_test_print_leave_status - prints status message on '__LP_TEST_LEAVE' event (end of LP_TEST_RUN call).
  * @curr_level:                 level of current test
  * @test_call_str:              name of test call
  * @tests_failed:               number of tests failed (meaning test groups, not cases)
  * @tests_total:                total number of tests (meaning test groups, not cases)
  * @cases_passed:               total number of cases passed in all groups below
- * @duration_total_ns:          total duration between current '__LP_TEST_LEAVE__LP_TEST_LEAVE' and its corresponding '__LP_TEST_ENTER' events
+ * @duration_total_ns:          total duration between current '__LP_TEST_LEAVE' and its corresponding '__LP_TEST_ENTER' events
  * @last_failed_test_call_str:  name of last failed test call
  * @failed_test_msg:            message of last failed test case
  * 
@@ -162,7 +196,7 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
 
 
 /**
- * __lp_test_print_end - prints status message on '__LP_TEST_END' event.
+ * __lp_test_print_end - prints status message on '__LP_TEST_END' event (LP_TEST_END call).
  * @project_name_str:       name of project corresponding to session
  * @tests_total:            total number of tests in session
  * @duration_total_ns:      total duration of test session

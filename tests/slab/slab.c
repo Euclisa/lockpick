@@ -23,10 +23,10 @@ static inline bool __validate_slab(const lp_slab_t *slab, size_t expected_free_e
     free_entries += fb_curr->__block_size;
     while(fb_curr->__node.next != fb_head_l)
     {
-        prev_fb_end = fb_curr->__start + fb_curr->__block_size*slab->__entry_size;
+        prev_fb_end = fb_curr->__base + fb_curr->__block_size*slab->__entry_size;
         fb_curr_l = fb_curr_l->next;
         fb_curr = container_of(fb_curr_l,__lp_slab_fb_list_t,__node);
-        if(prev_fb_end >= fb_curr->__start)
+        if(prev_fb_end >= fb_curr->__base)
             return false;
         free_entries += fb_curr->__block_size;
     }

@@ -11,7 +11,7 @@ typedef struct __lp_slab_fb_list
 {
     lp_list_t __node;
     size_t __block_size;
-    void *__start;
+    void *__base;
 } __lp_slab_fb_list_t;
 
 

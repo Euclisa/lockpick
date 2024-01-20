@@ -31,6 +31,8 @@ typedef struct lpg_node
 {
     lpg_node_type_t type;
     uintptr_t __parents_computed_value;
+    struct lpg_node **children;
+    uint32_t children_size;
 } lpg_node_t;
 
 
@@ -42,13 +44,6 @@ void __lpg_node_set_computed(lpg_node_t *node, bool computed);
 
 bool lpg_node_value(const lpg_node_t *node);
 inline void __lpg_node_set_value(lpg_node_t *node, bool value);
-
-
-typedef struct lpg_node_fast
-{
-    lpg_node_t node;
-    lpg_node_t **children;
-} lpg_node_fast_t;
 
 
 typedef struct lpg_graph
