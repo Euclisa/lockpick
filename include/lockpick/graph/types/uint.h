@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_GRAPH_TYPES_UINT_H
-#define _LOCKPICK_INCLUDE_GRAPH_TYPES_UINT_H
+#ifndef _LOCKPICK_GRAPH_TYPES_UINT_H
+#define _LOCKPICK_GRAPH_TYPES_UINT_H
 
 #include <lockpick/graph/graph.h>
 
@@ -10,4 +10,4 @@ typedef struct lpg_uint
     size_t width;
 } lpg_uint_t;
 
-#endif // _LOCKPICK_INCLUDE_GRAPH_TYPES_UINT_H
+#endif // _LOCKPICK_GRAPH_TYPES_UINT_H

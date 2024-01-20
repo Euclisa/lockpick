@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_LIST_H
-#define _LOCKPICK_INCLUDE_LIST_H
+#ifndef _LOCKPICK_LIST_H
+#define _LOCKPICK_LIST_H
 
 #include <lockpick/define.h>
 #include <stdbool.h>
@@ -27,4 +27,4 @@ bool lp_list_remove(lp_list_t **head, lp_list_t *entry);
         entry && (!((uintptr_t)entry & 1) || ((entry = (lp_list_t*)((uintptr_t)entry & ~1)) != head));  \
         entry = (lp_list_t*)((uintptr_t)entry->entry_node_memeber.next | 1))
 
-#endif // _LOCKPICK_INCLUDE_LP_TEST_H
+#endif // _LOCKPICK_LP_TEST_H

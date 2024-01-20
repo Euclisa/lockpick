@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_SLAB_H
-#define _LOCKPICK_INCLUDE_SLAB_H
+#ifndef _LOCKPICK_SLAB_H
+#define _LOCKPICK_SLAB_H
 
 #include <lockpick/list.h>
 #include <stddef.h>
@@ -34,4 +34,4 @@ void *lp_slab_alloc(lp_slab_t *slab);
 void lp_slab_free(lp_slab_t *slab, void *node_ptr);
 
 
-#endif // _LOCKPICK_INCLUDE_GRAPH_NODE_H
+#endif // _LOCKPICK_GRAPH_NODE_H

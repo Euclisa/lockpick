@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_AFFIRMF_H
-#define _LOCKPICK_INCLUDE_AFFIRMF_H
+#ifndef _LOCKPICK_AFFIRMF_H
+#define _LOCKPICK_AFFIRMF_H
 
 #include <stdbool.h>
 #include <stdarg.h>
@@ -18,4 +18,4 @@ void __affirmf(bool cond, const char *format, const char *cond_str, const char *
 #define affirmf_debug(cond,format,...)
 #endif  // LOCKPICK_DEBUG
 
-#endif // _LOCKPICK_INCLUDE_AFFIRMF_H
+#endif // _LOCKPICK_AFFIRMF_H

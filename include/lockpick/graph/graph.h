@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_GRAPH_GRAPH_H
-#define _LOCKPICK_INCLUDE_GRAPH_GRAPH_H
+#ifndef _LOCKPICK_GRAPH_GRAPH_H
+#define _LOCKPICK_GRAPH_GRAPH_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -65,4 +65,4 @@ lpg_node_t *lpg_node_xor(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_const(lpg_graph_t *graph, bool value);
 lpg_node_t *lpg_node_var(lpg_graph_t *graph);
 
-#endif // _LOCKPICK_INCLUDE_GRAPH_GRAPH_H
+#endif // _LOCKPICK_GRAPH_GRAPH_H

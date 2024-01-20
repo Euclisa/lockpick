@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_CONTAINER_OF_H
-#define _LOCKPICK_INCLUDE_CONTAINER_OF_H
+#ifndef _LOCKPICK_CONTAINER_OF_H
+#define _LOCKPICK_CONTAINER_OF_H
 
 #include <assert.h>
 #include <stddef.h>
@@ -21,4 +21,4 @@
 		      "pointer type mismatch in container_of()");	        \
 	((type *)(__mptr - offsetof(type, member))); })
 
-#endif // LOCKPICK_INCLUDE_CONTAINER_OF_H
+#endif // _LOCKPICK_CONTAINER_OF_H

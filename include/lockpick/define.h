@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_DEFINE_H
-#define _LOCKPICK_INCLUDE_DEFINE_H
+#ifndef _LOCKPICK_DEFINE_H
+#define _LOCKPICK_DEFINE_H
 
 #include <assert.h>
 #include <errno.h>
@@ -18,4 +18,4 @@
     return ret;                                 \
 })
 
-#endif // LOCKPICK_INCLUDE_STDDEF_H
+#endif // _LOCKPICK_DEFINE_H

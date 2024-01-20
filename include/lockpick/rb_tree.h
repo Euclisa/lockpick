@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_INCLUDE_RB_TREE_H
-#define _LOCKPICK_INCLUDE_RB_TREE_H
+#ifndef _LOCKPICK_RB_TREE_H
+#define _LOCKPICK_RB_TREE_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -42,4 +42,4 @@ lp_rb_node_t *lp_rb_remove(lp_rb_node_t *root, lp_rb_node_t *node);
 
 bool lp_rb_check_consistency(const lp_rb_node_t *root);
 
-#endif // LOCKPICK_INCLUDE_RB_TREE_H
+#endif // _LOCKPICK_RB_TREE_H
