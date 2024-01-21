@@ -125,7 +125,7 @@ TEST_UINT_FROM_TO_HEX(1024)
     char hex_str_result_obt[hex_str_result_len+1];
 
 
-#define CHUNK_INIT_OPS_BINARY_SAMPLES_BUFFERS(N_a,N_b)                                                                             \
+#define CHUNK_INIT_OPS_BINARY_SAMPLES_BUFFERS(N_a,N_b)                                                                      \
     const char *fn_samp = LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b ".txt";                              \
     FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
@@ -293,9 +293,9 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(lp_uint_t(N_a) *a_sample
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_or(a_samples, b_samples));                                           \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_xor(a_samples, b_samples));                                          \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_ops_binary()                                                                           \
+void test_uint_##N_a##_##N_b##_##N_result##_ops_binary()                                                                    \
 {                                                                                                                           \
-    CHUNK_INIT_OPS_BINARY_SAMPLES_BUFFERS(N_a,N_b)                                                                                 \
+    CHUNK_INIT_OPS_BINARY_SAMPLES_BUFFERS(N_a,N_b)                                                                          \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic(a_samples,b_samples));                                \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(a_samples,b_samples));                                   \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_comparison(a_samples,b_samples));                                    \
@@ -304,7 +304,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops_binary()                        
 }
 
 
-#define TEST_UINT_OPS_BINARY_INPLACE(N_a, N_b)                                                                                     \
+#define TEST_UINT_OPS_BINARY_INPLACE(N_a, N_b)                                                                              \
 void test_uint_##N_a##_##N_b##_addition_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
 {                                                                                                                           \
     const char *fn_add =                                                                                                    \
@@ -431,14 +431,31 @@ void test_uint_##N_a##_##N_b##_ops_bitwise_inplace(lp_uint_t(N_a) *a_samples, lp
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_or_inplace(a_samples, b_samples));                                                \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_xor_inplace(a_samples, b_samples));                                               \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_ops_binary_inplace()                                                                                \
+void test_uint_##N_a##_##N_b##_ops_binary_inplace()                                                                         \
 {                                                                                                                           \
-    CHUNK_INIT_OPS_BINARY_SAMPLES_BUFFERS(N_a,N_b)                                                                                 \
+    CHUNK_INIT_OPS_BINARY_SAMPLES_BUFFERS(N_a,N_b)                                                                          \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_ops_arithmetic_inplace(a_samples,b_samples));                                     \
     LP_TEST_RUN(test_uint_##N_a##_##N_b##_ops_bitwise_inplace(a_samples,b_samples));                                        \
     free(a_samples);                                                                                                        \
     free(b_samples);                                                                                                        \
 }
+
+
+#define CHUNK_INIT_OPS_UNARY_SAMPLES_BUFFERS(N_a)                                                                           \
+    const char *fn_samp = LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a ".txt";                                       \
+    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
+    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
+    size_t samples_num = __count_line_in_file(f_samp);                                                                      \
+    lp_uint_t(N_a) *a_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_a))*samples_num);                                \
+    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
+    char hex_str_a[hex_str_a_len+1];                                                                                        \
+    for(size_t samp_i = 0; samp_i < samples_num; ++samp_i)                                                                  \
+    {                                                                                                                       \
+        affirmf(fscanf(f_samp,"%s\n",hex_str_a) != EOF,                                                                     \
+            "Failed to read sample");                                                                                       \
+        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a),                                                              \
+            "Failed to initialize sample from hex string");                                                                 \
+    }
 
 
 #define TEST_UINT_OPS_UNARY(N_a, N_result)                                                                                  \
@@ -496,22 +513,73 @@ void test_uint_##N_a##_##N_result##_rshift(lp_uint_t(N_a) *a_samples)           
 }                                                                                                                           \
 void test_uint_##N_a##_##N_result##_ops_unary()                                                                             \
 {                                                                                                                           \
-    const char *fn_samp = LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a ".txt";                                       \
-    FILE *f_samp = fopen(fn_samp,"r");                                                                                      \
-    affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
-    size_t samples_num = __count_line_in_file(f_samp);                                                                      \
-    lp_uint_t(N_a) *a_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_a))*samples_num);                                \
-    const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
-    char hex_str_a[hex_str_a_len+1];                                                                                        \
-    for(size_t samp_i = 0; samp_i < samples_num; ++samp_i)                                                                  \
-    {                                                                                                                       \
-        affirmf(fscanf(f_samp,"%s\n",hex_str_a) != EOF,                                                                     \
-            "Failed to read sample");                                                                                       \
-        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a),                                                              \
-            "Failed to initialize sample from hex string");                                                                 \
-    }                                                                                                                       \
+    CHUNK_INIT_OPS_UNARY_SAMPLES_BUFFERS(N_a)                                                                               \
     LP_TEST_RUN(test_uint_##N_a##_##N_result##_lshift(a_samples));                                                          \
     LP_TEST_RUN(test_uint_##N_a##_##N_result##_rshift(a_samples));                                                          \
+    free(a_samples);                                                                                                        \
+}
+
+
+#define TEST_UINT_OPS_UNARY_INPLACE(N_a)                                                                                    \
+void test_uint_##N_a##_lshift_inplace(lp_uint_t(N_a) *a_samples)                                                            \
+{                                                                                                                           \
+    const char *fn_shifts =                                                                                                 \
+        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_shifts.txt";                                                  \
+    FILE *f_shifts = fopen(fn_shifts,"r");                                                                                  \
+    affirmf(f_shifts,"Failed to open file '%s'",fn_shifts);                                                                 \
+    const char *fn_lshift =                                                                                                 \
+        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_lshift.txt";                                                  \
+    FILE *f_lshift = fopen(fn_lshift,"r");                                                                                  \
+    affirmf(f_lshift,"Failed to open file '%s'",fn_lshift);                                                                 \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a*2))                                                 \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f_lshift,"%s\n",hex_str_result_true) != EOF)                                                               \
+    {                                                                                                                       \
+        uint64_t shift;                                                                                                     \
+        affirmf(fscanf(f_shifts,"%ld\n",&shift) != EOF,                                                                     \
+            "Failed to read shift from file.");                                                                             \
+        lp_uint_t(N_a) res_obt, res_true;                                                                                   \
+        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
+        affirmf(lp_uint_lshift_ip(res_obt,shift),                                                                           \
+            "Failed to perfrom operation");                                                                                 \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f_lshift);                                                                                                       \
+    fclose(f_shifts);                                                                                                       \
+}                                                                                                                           \
+void test_uint_##N_a##_rshift_inplace(lp_uint_t(N_a) *a_samples)                                                            \
+{                                                                                                                           \
+    const char *fn_shifts =                                                                                                 \
+        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_shifts.txt";                                                  \
+    FILE *f_shifts = fopen(fn_shifts,"r");                                                                                  \
+    affirmf(f_shifts,"Failed to open file '%s'",fn_shifts);                                                                 \
+    const char *fn_rshift =                                                                                                 \
+        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_rshift.txt";                                                  \
+    FILE *f_rshift = fopen(fn_rshift,"r");                                                                                  \
+    affirmf(f_rshift,"Failed to open file '%s'",fn_rshift);                                                                 \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a*2))                                                 \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f_rshift,"%s\n",hex_str_result_true) != EOF)                                                               \
+    {                                                                                                                       \
+        uint64_t shift;                                                                                                     \
+        affirmf(fscanf(f_shifts,"%ld\n",&shift) != EOF,                                                                     \
+            "Failed to read shift from file.");                                                                             \
+        lp_uint_t(N_a) res_obt, res_true;                                                                                   \
+        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
+        affirmf(lp_uint_rshift_ip(res_obt,shift),                                                                           \
+            "Failed to perfrom operation");                                                                                 \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f_rshift);                                                                                                       \
+    fclose(f_shifts);                                                                                                       \
+}                                                                                                                           \
+void test_uint_##N_a##_ops_unary_inplace()                                                                                  \
+{                                                                                                                           \
+    CHUNK_INIT_OPS_UNARY_SAMPLES_BUFFERS(N_a)                                                                               \
+    LP_TEST_RUN(test_uint_##N_a##_lshift_inplace(a_samples));                                                               \
+    LP_TEST_RUN(test_uint_##N_a##_rshift_inplace(a_samples));                                                               \
     free(a_samples);                                                                                                        \
 }
 
@@ -560,13 +628,16 @@ TEST_UINT_OPS_BINARY_INPLACE(1024,1024)
 TEST_UINT_OPS_UNARY(64,64)
 TEST_UINT_OPS_UNARY(64,256)
 TEST_UINT_OPS_UNARY(64,1024)
+TEST_UINT_OPS_UNARY_INPLACE(64)
 
 TEST_UINT_OPS_UNARY(256,64)
 TEST_UINT_OPS_UNARY(256,256)
 TEST_UINT_OPS_UNARY(256,1024)
+TEST_UINT_OPS_UNARY_INPLACE(256)
 
 TEST_UINT_OPS_UNARY(1024,64)
 TEST_UINT_OPS_UNARY(1024,1024)
+TEST_UINT_OPS_UNARY_INPLACE(1024)
 
 
 void lp_test_uint()
@@ -625,11 +696,14 @@ void lp_test_uint()
     LP_TEST_RUN(test_uint_64_64_ops_unary());
     LP_TEST_RUN(test_uint_64_256_ops_unary());
     LP_TEST_RUN(test_uint_64_1024_ops_unary());
+    LP_TEST_RUN(test_uint_64_ops_unary_inplace());
 
     LP_TEST_RUN(test_uint_256_64_ops_unary());
     LP_TEST_RUN(test_uint_256_256_ops_unary());
     LP_TEST_RUN(test_uint_256_1024_ops_unary());
+    LP_TEST_RUN(test_uint_256_ops_unary_inplace());
 
     LP_TEST_RUN(test_uint_1024_64_ops_unary());
     LP_TEST_RUN(test_uint_1024_1024_ops_unary());
+    LP_TEST_RUN(test_uint_1024_ops_unary_inplace());
 }

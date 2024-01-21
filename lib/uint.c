@@ -1018,7 +1018,7 @@ inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
 
 
 /**
- * __lp_uint_lshift - performs bits left shift
+ * __lp_uint_lshift - performs bits left shift storing result in 'result'
  * @a:              pointer on uint buffer
  * @a_size:         size of uint buffer
  * @shift:          shift size
@@ -1074,6 +1074,44 @@ inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
 
 
 /**
+ * __lp_uint_lshift_inplace - performs bits left shift storing result in 'a'
+ * @a:          pointer on destination uint buffer
+ * @a_size:     size of destination uint buffer
+ * @shift:      shift size
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_lshift_ip' macro instead.
+ */
+inline bool __lp_uint_lshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift)
+{
+    if(!a)
+        return_set_errno(false,EINVAL);
+
+    shift = MIN(a_size*__LP_UINT_BITS_PER_WORD,shift);
+    size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
+    size_t shift_bits = shift % __LP_UINT_BITS_PER_WORD;
+
+    int64_t word_i = a_size-1;
+    for(; word_i > shift_words; --word_i)
+    {
+        uint16_t shift_rem = __LP_UINT_BITS_PER_WORD-shift_bits;
+        __lp_uint_word_t remainder = shift_rem == __LP_UINT_BITS_PER_WORD ? 0 : (a[word_i-shift_words-1] >> shift_rem);
+        a[word_i] = (a[word_i-shift_words] << shift_bits) | remainder;
+    }
+
+    if(word_i == shift_words)
+        a[word_i--] = a[0] << shift_bits;
+
+    for(; word_i >= 0; --word_i)
+        a[word_i] = 0;
+
+    
+    return true;
+}
+
+
+/**
  * __lp_uint_rshift - performs bits right shift
  * @a:              pointer on uint buffer
  * @a_size:         size of uint buffer
@@ -1120,6 +1158,47 @@ inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
     
     for(; res_i < result_size; ++res_i)
         result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_rshift_inplace - performs bits right shift storing result in 'a'
+ * @a:          pointer on destination uint buffer
+ * @a_size:     size of destination uint buffer
+ * @shift:      shift size
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_rshift_ip' macro instead.
+ */
+inline bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift)
+{
+    if(!a)
+        return_set_errno(false,EINVAL);
+
+    shift = MIN(a_size*__LP_UINT_BITS_PER_WORD,shift);
+    size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
+    size_t shift_bits = shift % __LP_UINT_BITS_PER_WORD;
+
+    size_t word_i = 0;
+    size_t upper_bound = a_size < shift_words+1 ? 0 : a_size-shift_words-1;
+    for(; word_i < upper_bound; ++word_i)
+    {
+        uint16_t shift_rem = __LP_UINT_BITS_PER_WORD-shift_bits;
+        __lp_uint_word_t remainder = shift_rem == __LP_UINT_BITS_PER_WORD ? 0 : (a[word_i+shift_words+1] << shift_rem);
+        a[word_i] = (a[word_i+shift_words] >> shift_bits) | remainder;
+    }
+    
+    if(word_i+shift_words < a_size)
+    {
+        a[word_i] = a[word_i+shift_words] >> shift_bits;
+        ++word_i;
+    }
+    
+    for(; word_i < a_size; ++word_i)
+        a[word_i] = 0;
     
     return true;
 }

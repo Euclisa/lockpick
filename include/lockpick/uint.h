@@ -119,7 +119,13 @@ bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_
 bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *res, size_t res_size);
 #define lp_uint_lshift(a,shift,result) __lp_uint_lshift((a).__buffer, __array_size((a).__buffer), shift, (result).__buffer, __array_size((result).__buffer))
 
+bool __lp_uint_lshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift);
+#define lp_uint_lshift_ip(a,shift) __lp_uint_lshift_inplace((a).__buffer, __array_size((a).__buffer), shift)
+
 bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *res, size_t res_size);
 #define lp_uint_rshift(a,shift,result) __lp_uint_rshift((a).__buffer, __array_size((a).__buffer), shift, (result).__buffer, __array_size((result).__buffer))
+
+bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift);
+#define lp_uint_rshift_ip(a,shift) __lp_uint_rshift_inplace((a).__buffer, __array_size((a).__buffer), shift)
 
 #endif  // _LOCKPICK_UINT_H
