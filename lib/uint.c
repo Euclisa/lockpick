@@ -954,7 +954,7 @@ inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, const
  * 
  * Returns true on success and false on failure.
  * 
- * This is not supposed to be called by user. Use 'lp_uint_oxr' macro instead.
+ * This is not supposed to be called by user. Use 'lp_uint_xor' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
@@ -1015,6 +1015,114 @@ inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
     size_t upper_bound = MIN(dest_size,other_size);
     for(size_t i = 0; i < upper_bound; ++i)
         dest[i] ^= other[i];
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_lshift - performs bits left shift
+ * @a:              pointer on uint buffer
+ * @a_size:         size of uint buffer
+ * @shift:          shift size
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_lshift' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a'
+ */
+inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !result)
+        return_set_errno(false,EINVAL);
+    if(a == result)
+        return_set_errno(false,EINVAL);
+
+    shift = MIN(result_size*__LP_UINT_BITS_PER_WORD,shift);
+    size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
+    size_t shift_bits = shift % __LP_UINT_BITS_PER_WORD;
+
+    size_t res_i = 0;
+    for(; res_i < shift_words; ++res_i)
+        result[res_i] = 0;
+
+    if(result_size == res_i)
+        return true;
+
+    result[res_i++] = a[0] << shift_bits;
+
+    size_t upper_bound = MIN(result_size,a_size+shift_words);
+    for(; res_i < upper_bound; ++res_i)
+    {
+        uint16_t shift_rem = __LP_UINT_BITS_PER_WORD-shift_bits;
+        __lp_uint_word_t remainder = shift_rem == __LP_UINT_BITS_PER_WORD ? 0 : (a[res_i-shift_words-1] >> shift_rem);
+        result[res_i] = (a[res_i-shift_words] << shift_bits) | remainder;
+    }
+
+    if(result_size == res_i)
+        return true;
+    
+    uint16_t shift_rem = __LP_UINT_BITS_PER_WORD-shift_bits;
+    __lp_uint_word_t remainder = shift_rem == __LP_UINT_BITS_PER_WORD ? 0 : (a[res_i-shift_words-1] >> shift_rem);
+    result[res_i++] = remainder;
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
+    
+    return true;
+}
+
+
+/**
+ * __lp_uint_rshift - performs bits right shift
+ * @a:              pointer on uint buffer
+ * @a_size:         size of uint buffer
+ * @shift:          shift size
+ * @result:         pointer on result uint buffer
+ * @result_size:    size of result uint buffer
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_rshift' macro instead.
+ * 
+ * CAUTION: 'result' can't point on the same memory region as 'a'
+ */
+inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *result, size_t result_size)
+{
+    if(!a || !result)
+        return_set_errno(false,EINVAL);
+    if(a == result)
+        return_set_errno(false,EINVAL);
+
+    shift = MIN(a_size*__LP_UINT_BITS_PER_WORD,shift);
+    size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
+    size_t shift_bits = shift % __LP_UINT_BITS_PER_WORD;
+
+    size_t res_i = 0;
+    size_t upper_bound = MIN(
+        result_size,
+        a_size < shift_words+1 ? 0 : a_size-shift_words-1);
+    for(; res_i < upper_bound; ++res_i)
+    {
+        uint16_t shift_rem = __LP_UINT_BITS_PER_WORD-shift_bits;
+        __lp_uint_word_t remainder = shift_rem == __LP_UINT_BITS_PER_WORD ? 0 : (a[res_i+shift_words+1] << shift_rem);
+        result[res_i] = (a[res_i+shift_words] >> shift_bits) | remainder;
+    }
+
+    if(result_size == res_i)
+        return true;
+    
+    if(res_i+shift_words < a_size)
+    {
+        result[res_i] = a[res_i+shift_words] >> shift_bits;
+        ++res_i;
+    }
+    
+    for(; res_i < result_size; ++res_i)
+        result[res_i] = 0;
     
     return true;
 }

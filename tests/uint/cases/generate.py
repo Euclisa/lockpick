@@ -20,6 +20,9 @@ def gen_single(size):
     
     return uint
 
+def gen_shift(size):
+    return random.randint(0,size)
+
 
 def pad_uint_to_size(uint, size):
     return min(2**size-1,uint)
@@ -29,6 +32,31 @@ def get_pair_fn(first_size, second_size):
 
 def get_pair_addition_fn(first_size, second_size):
     return f"uint_{first_size}_{second_size}_addition.txt"
+
+def gen_unary(size, path, cases_per_test):
+    f_samp = open(f"{path}/uint_{size}.txt", 'w')
+    f_samp_shifts = open(f"{path}/uint_{size}_shifts.txt", 'w')
+    f_lshift = open(f"{path}/uint_{size}_lshift.txt", 'w')
+    f_rshift = open(f"{path}/uint_{size}_rshift.txt", 'w')
+
+    for test_i in range(cases_per_test):
+        uint = gen_single(size)
+        shift = gen_shift(size)
+
+        uint_hex = hex(uint)[2:]
+        res_lshift = uint << shift
+        res_rshift = uint >> shift
+
+        lshift_hex = hex(res_lshift & (BASE-1))[2:]
+        rshift_hex = hex(res_rshift)[2:]
+        f_samp.write(f"{uint_hex}\n")
+        f_samp_shifts.write(f"{shift}\n")
+        f_lshift.write(f"{lshift_hex}\n")
+        f_rshift.write(f"{rshift_hex}\n")
+    
+    f_lshift.close()
+    f_rshift.close()
+
 
 def gen_pairs(first_size, second_size, path, cases_per_test):
     f_samp = open(f"{path}/uint_{first_size}_{second_size}.txt", 'w')
@@ -83,7 +111,7 @@ if __name__ == "__main__":
 
     arg_parser = argparse.ArgumentParser(description="lp_uint(N) test cases generator")
 
-    arg_parser.add_argument('pairs',nargs='*',type=str)
+    arg_parser.add_argument('tests',nargs='*',type=str)
     arg_parser.add_argument('--cases_num','-c',type=int,default=CASES_PER_SET_DEFAULT)
     arg_parser.add_argument('--path','-p',type=str,required=True)
     arg_parser.add_argument('--dry','-d',action="store_true")
@@ -95,15 +123,22 @@ if __name__ == "__main__":
     if not os.path.isdir(path):
         raise RuntimeError(f"No such directory: '{path}'")
 
-    if args.pairs:
+    if args.tests:
         pairs_set = set()
-        for pair in args.pairs:
-            first_size, second_size = pair.split("_")
-            first_size = int(first_size)
-            second_size = int(second_size)
-            if ((first_size & (first_size-1) != 0)) or first_size < 16 or ((second_size & (second_size-1)) != 0) or second_size < 16:
-                raise RuntimeError(f"Invalid argument: {pair}")
-            pairs_set.add((first_size,second_size))
+        unary_set = set()
+        for test in args.tests:
+            if '_' in test:
+                first_size, second_size = test.split("_")
+                first_size = int(first_size)
+                second_size = int(second_size)
+                if ((first_size & (first_size-1) != 0)) or first_size < 16 or ((second_size & (second_size-1)) != 0) or second_size < 16:
+                    raise RuntimeError(f"Invalid argument: {test}")
+                pairs_set.add((first_size,second_size))
+            else:
+                size = int(test)
+                if (size & (size-1) != 0) or size < 16:
+                    raise RuntimeError(f"Invalid argument: {test}")
+                unary_set.add(size)
         if args.dry:
             with open(f"{path}/{DRY_FILE_NAME}",'w') as dry_f:
                 for f,s in pairs_set:
@@ -116,3 +151,5 @@ if __name__ == "__main__":
         else:
             for f,s in pairs_set:
                 gen_pairs(f,s,path,args.cases_num)
+            for size in unary_set:
+                gen_unary(size,path,args.cases_num)
