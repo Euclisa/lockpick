@@ -194,9 +194,9 @@ static inline bool __lp_check_ptr_before_block(const void *ptr, const lp_list_t 
  * @position:       free block entry before which to perfrom insertion of new block
  * @base:           pointer to the base of new block
  * 
- * Returns true on success, false on failure.
+ * Returns nothing.
 */
-static inline bool __lp_slab_fb_list_insert_unit_before(__lp_slab_fb_list_t **head, __lp_slab_fb_list_t *position, void *base)
+static inline void __lp_slab_fb_list_insert_unit_before(__lp_slab_fb_list_t **head, __lp_slab_fb_list_t *position, void *base)
 {
     __lp_slab_fb_list_t *unit_fb = (__lp_slab_fb_list_t*)malloc(sizeof(__lp_slab_fb_list_t));
     unit_fb->__block_size = 1;
@@ -211,7 +211,7 @@ static inline bool __lp_slab_fb_list_insert_unit_before(__lp_slab_fb_list_t **he
  * @position:       free block entry after which to perfrom insertion of new block
  * @base:           pointer to the base of new block
  * 
- * Returns true on success, false on failure.
+ * Returns nothing.
 */
 static inline void __lp_slab_fb_list_insert_unit_after(__lp_slab_fb_list_t **head, __lp_slab_fb_list_t *position, void *base)
 {
@@ -236,7 +236,7 @@ static inline void __lp_slab_fb_list_insert_unit_after(__lp_slab_fb_list_t **hea
 static inline void __lp_slab_fb_list_merge_unit_diff(__lp_slab_fb_list_t **head, __lp_slab_fb_list_t *first, __lp_slab_fb_list_t *second)
 {
     affirmf_debug(*head != second,"Attempt to change head during adjacent list entries merge");
-    affirmf_debug(first->__node.next == second && second->__node.prev == first,"Attempt to merge non-adjacent list entries");
+    affirmf_debug(first->__node.next == &second->__node && second->__node.prev == &first->__node,"Attempt to merge non-adjacent list entries");
 
     lp_list_t *first_l = &first->__node;
     lp_list_t *second_l = &second->__node;
@@ -246,7 +246,7 @@ static inline void __lp_slab_fb_list_merge_unit_diff(__lp_slab_fb_list_t **head,
     merge_fb->__block_size = first->__block_size + second->__block_size + 1;
     merge_fb->__base = first->__base;
 
-    affirmf(lp_list_insert_after(&old_head,second,&merge_fb->__node),"Failed to insert new entry");
+    affirmf(lp_list_insert_after(&old_head,&second->__node,&merge_fb->__node),"Failed to insert new entry");
     affirmf(lp_list_remove(&old_head,first_l),"Failed to remove first entry");
     affirmf(lp_list_remove(&old_head,second_l),"Failed to remove second entry");
 
@@ -302,7 +302,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
         if(ptr == current_fb_end)
             ++current_fb->__block_size;
         else
-            __lp_slab_fb_list_insert_unit_after(&slab->__fb_head,current_fb_l,ptr);
+            __lp_slab_fb_list_insert_unit_after(&slab->__fb_head,current_fb,ptr);
     }
     else
     {
@@ -319,6 +319,6 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
         else if(ptr == prev_fb_end)
             ++prev_fb->__block_size;
         else
-            __lp_slab_fb_list_insert_unit_before(&slab->__fb_head,current_fb_l,ptr);
+            __lp_slab_fb_list_insert_unit_before(&slab->__fb_head,current_fb,ptr);
     }
 }

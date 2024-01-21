@@ -595,10 +595,7 @@ inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
     for(size_t res_i = 0; res_i < result_size; ++res_i)
         result[res_i] = 0;
     
-    size_t dest_last_i = dest_size - 1;
     size_t other_last_i = other_size - 1;
-    size_t effective_res_last_i = dest_last_i+other_last_i;
-    size_t result_upper_bound = MIN(effective_res_last_i,result_size-1);
     size_t res_i = 0;
     for(; res_i < result_size; ++res_i)
     {
@@ -696,7 +693,7 @@ inline lp_uint_3way_t __lp_uint_3way(const __lp_uint_word_t *a, size_t a_size, c
     if(!a || !b)
         return_set_errno(false,EINVAL);
     
-    __lp_uint_word_t *max_term;
+    const __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
@@ -888,7 +885,7 @@ inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
     if(a == result || b == result)
         return_set_errno(false,EINVAL);
     
-    __lp_uint_word_t *max_term;
+    const __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {
@@ -965,7 +962,7 @@ inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_u
     if(a == result || b == result)
         return_set_errno(false,EINVAL);
     
-    __lp_uint_word_t *max_term;
+    const __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
     if(a_size < b_size)
     {

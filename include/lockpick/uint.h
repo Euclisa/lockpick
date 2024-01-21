@@ -23,13 +23,24 @@ extern const uint64_t __LP_UINT_HEXES_PER_WORD;
 
 #define __LP_UINT_MAX_HEX_STR_REPRESENTATION(N) (__LP_UINT_VALIDATE_WIDTH(N) >= 0 ? (int64_t)(N/__LP_UINT_BITS_PER_HEX+1) : (int64_t)-1)
 
-#define lp_uint_t(N)                                              \
-struct                                                          \
+#define lp_uint_typedef(N)                                      \
+typedef struct                                                  \
 {                                                               \
     __lp_uint_word_t __buffer[__LP_UINT_VALIDATE_WIDTH(N)];     \
-}
+} lp_uint##N##_t;
+
+#define lp_uint_t(N) lp_uint##N##_t
 
 #define __array_size(arr) (sizeof(arr) / sizeof(arr[0]))
+
+
+lp_uint_typedef(64);
+lp_uint_typedef(128);
+lp_uint_typedef(256);
+lp_uint_typedef(512);
+lp_uint_typedef(1024);
+lp_uint_typedef(2048);
+
 
 bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size);
 #define lp_uint_from_hex(value,hex_str) __lp_uint_from_hex(hex_str, (value).__buffer, __array_size((value).__buffer))

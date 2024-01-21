@@ -25,10 +25,11 @@ typedef struct uint8_list
 } uint8_list_t;
 
 
-void __validate_list_case(lp_list_t *head, const char *list_values_str, FILE *fp, uint32_t case_i)
+void __validate_list_case(lp_list_t *head, FILE *fp, uint32_t case_i)
 {
     uint32_t value;
     uint32_t list_values_str_offset = 0;
+    char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
     affirmf(fgets(list_values_str,LP_TEST_MAX_LIST_STR_SIZE,fp), "Failed to read list elements from file in case %d",case_i);
     if(strcmp(list_values_str,"empty\n"))
     {
@@ -85,8 +86,7 @@ void test_list_push_back()
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
         affirmf(lp_list_push_back(&head,&entry->entry),"Failed to read push back value %d in case %d",value,case_i);
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     __free_list(head);
@@ -105,8 +105,7 @@ void test_list_push_front()
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
         affirmf(lp_list_push_front(&head,&entry->entry),"Failed to push front value %d in case %d",value,case_i);
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     __free_list(head);
@@ -128,8 +127,7 @@ void test_list_insert_before_head()
             affirmf(lp_list_insert_before(&head,head,&entry->entry),"Failed to insert value %d before head in case %d",value,case_i);
         else
             affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     __free_list(head);
@@ -151,8 +149,7 @@ void test_list_insert_after_head()
             affirmf(lp_list_insert_after(&head,head,&entry->entry),"Failed to insert value %d after head in case %d",value,case_i);
         else
             affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     __free_list(head);
@@ -174,8 +171,7 @@ void test_list_insert_before_tail()
             affirmf(lp_list_insert_before(&head,head->prev,&entry->entry),"Failed to insert value %d before tail in case %d",value,case_i);
         else
             affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     __free_list(head);
@@ -197,8 +193,7 @@ void test_list_insert_after_tail()
             affirmf(lp_list_insert_after(&head,head->prev,&entry->entry),"Failed to insert value %d after tail in case %d",value,case_i);
         else
             affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     __free_list(head);
@@ -228,7 +223,7 @@ void test_list_random()
             }
         }
 
-        uint8_list_t *entry;
+        uint8_list_t *entry = NULL;
         if(mode != LP_TEST_LIST_REMOVE_CODE)
         {
             affirmf(fscanf(fp,"%d",&value) != EOF, "Failed to parse value from file in case %d",case_i);
@@ -263,14 +258,15 @@ void test_list_random()
                     break;
 
                 default:
-                    affirmf(false, "Unexpected mode code: %d",mode);
+                    errorf("Unexpected mode code: %d",mode);
             }
         }
-        else
+        else if(entry)
             affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+        else
+            errorf("Attempt to insert uninitialized entry to list");
 
-        char list_values_str[LP_TEST_MAX_LIST_STR_SIZE];
-        LP_TEST_STEP_INTO(__validate_list_case(head,list_values_str,fp,case_i));
+        LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
     lp_list_t *old_head = head;

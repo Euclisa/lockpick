@@ -133,7 +133,7 @@ char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, 
     char *stats_str = __lp_test_allocator(stats_str_len+1);
     affirmf(stats_str,"Failed to allocate string of length %ld",stats_str_len);
 
-    uint64_t chars_written = snprintf(stats_str,stats_str_len,stats_format,
+    uint64_t chars_written = snprintf(stats_str,stats_str_len+1,stats_format,
         test_call_str,tests_passed,cases_passed,duration_total_ms,duration_per_case_ns);
     affirmf(chars_written > 0, "Failed to write formatted string");
     
@@ -156,7 +156,6 @@ char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, 
 */
 void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str, uint64_t tests_failed, uint64_t tests_total, uint64_t cases_passed, uint64_t duration_total_ns, char *last_failed_test_call_str, char *failed_test_msg)
 {
-    bool failure = false;
     char *space_padding = __create_padding(curr_level);
     char *time_str = __get_time_str("%X");
 
@@ -169,17 +168,16 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
 
     if(cases_passed == 0 && tests_failed == 0)
     {
-        snprintf(status_str,status_str_len,"%sEMPTY%s",__LP_TEST_EMPTY_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
+        snprintf(status_str,status_str_len+1,"%sEMPTY%s",__LP_TEST_EMPTY_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
         print_stats = false;
     }
     else if(tests_failed > 0)
     {
-        snprintf(status_str,status_str_len,"%sFAILED%s",__LP_TEST_FAILED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
+        snprintf(status_str,status_str_len+1,"%sFAILED%s",__LP_TEST_FAILED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
         print_details = last_failed_test_call_str[0] != '\0';
-        failure = true;
     }
     else
-        snprintf(status_str,status_str_len,"%sPASSED%s",__LP_TEST_PASSED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
+        snprintf(status_str,status_str_len+1,"%sPASSED%s",__LP_TEST_PASSED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
     
     printf("%s|-+-> [%s] %s ",space_padding,time_str,status_str);
 
@@ -237,7 +235,6 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
     static uint64_t level_tests_total[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_cases_passed[__LP_TEST_MAX_LEVELS] = {0};
     static uint64_t level_tests_failed[__LP_TEST_MAX_LEVELS] = {0};
-    static uint64_t tests_failed_before_step_in = 0;
 
     va_list args;
     va_start(args, action);
@@ -266,7 +263,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 
             ++current_level;
             const char *test_call_str = va_arg(args, const char*);
-            snprintf(last_test_call_str,sizeof(last_test_call_str)-1,"%s",test_call_str);
+            snprintf(last_test_call_str,sizeof(last_test_call_str),"%s",test_call_str);
             uint64_t curr_test_max_print_depth = va_arg(args, uint64_t);
             uint8_t prev_test_max_print_depth = level_max_print_depth[current_level-1] == 0 ? 0 : level_max_print_depth[current_level-1]-1;
             level_max_print_depth[current_level] = MIN(prev_test_max_print_depth,curr_test_max_print_depth);
@@ -330,8 +327,8 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 
             ++level_tests_failed[current_level];
             const char *format_fail_msg = va_arg(args,const char*);
-            vsnprintf(failed_test_msg,sizeof(failed_test_msg)-1,format_fail_msg,args);
-            snprintf(last_failed_test_call_str,sizeof(last_failed_test_call_str)-1,"%s",last_test_call_str);
+            vsnprintf(failed_test_msg,sizeof(failed_test_msg),format_fail_msg,args);
+            snprintf(last_failed_test_call_str,sizeof(last_failed_test_call_str),"%s",last_test_call_str);
             break;
         }
         case __LP_TEST_END:
@@ -357,7 +354,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
         }
         default:
         {
-            affirmf(false,"Invalid action (%d)",(uint16_t)action);
+            errorf("Invalid action (%d)",(uint16_t)action);
             break;
         }
     }

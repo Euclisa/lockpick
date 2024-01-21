@@ -22,9 +22,10 @@ bool lp_list_push_front(lp_list_t **head, lp_list_t *entry);
 
 bool lp_list_remove(lp_list_t **head, lp_list_t *entry);
 
-#define lp_list_foreach(head,entry,entry_type,entry_node_memeber)                                       \
-        for(entry_type *entry = (head ? container_of(head,entry_type,entry_node_memeber) : NULL);       \
-        entry && (!((uintptr_t)entry & 1) || ((entry = (lp_list_t*)((uintptr_t)entry & ~1)) != head));  \
-        entry = (lp_list_t*)((uintptr_t)entry->entry_node_memeber.next | 1))
+#define lp_list_foreach(head,entry,entry_type,entry_node_memeber)                                                               \
+        for(entry_type *entry = (head ? container_of(head,entry_type,entry_node_memeber) : NULL);                               \
+        entry && (!((uintptr_t)entry & 1) || (&(entry = (entry_type*)((uintptr_t)entry & ~1))->entry_node_memeber != head));    \
+        entry = (entry_type*)container_of((lp_list_t*)((uintptr_t)entry->entry_node_memeber.next | 1),                          \
+                            entry_type,entry_node_memeber))
 
 #endif // _LOCKPICK_LP_TEST_H

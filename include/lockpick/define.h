@@ -3,10 +3,7 @@
 
 #include <assert.h>
 #include <errno.h>
-
-#define LOCKPICK_DEBUG
-
-#define NULL ((void*)0)
+#include <stddef.h>
 
 #define aligned(N) __attribute__((aligned(N)))
 

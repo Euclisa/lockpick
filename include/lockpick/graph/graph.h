@@ -43,7 +43,7 @@ bool lpg_node_computed(const lpg_node_t *node);
 void __lpg_node_set_computed(lpg_node_t *node, bool computed);
 
 bool lpg_node_value(const lpg_node_t *node);
-inline void __lpg_node_set_value(lpg_node_t *node, bool value);
+//inline void __lpg_node_set_value(lpg_node_t *node, bool value);
 
 
 typedef struct lpg_graph

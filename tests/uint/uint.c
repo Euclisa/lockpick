@@ -131,7 +131,7 @@ TEST_UINT_FROM_TO_HEX(1024)
     affirmf(f_samp,"Failed to open file '%s'",fn_samp);                                                                     \
     size_t samples_num = __count_line_in_file(f_samp);                                                                      \
     lp_uint_t(N_a) *a_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_a))*samples_num);                                \
-    lp_uint_t(N_b) *b_samples = (lp_uint_t(N_a)*)malloc(sizeof(lp_uint_t(N_b))*samples_num);                                \
+    lp_uint_t(N_b) *b_samples = (lp_uint_t(N_b)*)malloc(sizeof(lp_uint_t(N_b))*samples_num);                                \
     const size_t hex_str_a_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a);                                                 \
     char hex_str_a[hex_str_a_len+1];                                                                                        \
     const size_t hex_str_b_len = __LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b);                                                 \

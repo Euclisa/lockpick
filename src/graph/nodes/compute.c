@@ -37,12 +37,12 @@ static inline void __lp_node_stack_pop(__lp_node_stack_t **stack)
 bool lpg_node_compute(lpg_node_t *node)
 {
     __lp_node_stack_t *stack = NULL;
-    __lp_node_stack_push(&stack,node),"Failed to push to node computing stack";
+    __lp_node_stack_push(&stack,node);
     
     while(stack)
     {
         lpg_node_t *curr_node = stack->node;
-        __lp_node_stack_pop(&stack->__list);
+        __lp_node_stack_pop(&stack);
 
         uint16_t curr_node_operands_num = lpg_node_type_operands_num[curr_node->type];
         lpg_node_t **curr_node_parents = lpg_node_parents(curr_node);
@@ -50,7 +50,7 @@ bool lpg_node_compute(lpg_node_t *node)
         for(uint16_t parent_i = 0; parent_i < curr_node_operands_num; ++parent_i)
         {
             lpg_node_t *parent = curr_node_parents[parent_i];
-            if(!lpg_node_computed(parent_i))
+            if(!lpg_node_computed(parent))
             {
                 curr_node_ready = false;
                 __lp_node_stack_push(&stack,parent);
@@ -102,7 +102,9 @@ bool lpg_node_compute(lpg_node_t *node)
                 return curr_val;
 
             default:
-                affirmf(false,"Invalid operation type: %d",node->type);
+                errorf("Invalid operation type: %d",node->type);
         }
     }
+
+    return false;
 }

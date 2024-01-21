@@ -47,13 +47,13 @@ void __lpg_node_init_xor(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 
 void __lpg_node_init_const(lpg_node_t *node, bool value)
 {
-    node->__parents_computed_value = NULL;
+    node->__parents_computed_value = 0;
     node->type = value ? LPG_NODE_TYPE_TRUE : LPG_NODE_TYPE_FALSE;
 }
 
 void __lpg_node_init_var(lpg_node_t *node)
 {
-    node->__parents_computed_value = NULL;
+    node->__parents_computed_value = 0;
     node->type = LPG_NODE_TYPE_VAR;
 }
 
