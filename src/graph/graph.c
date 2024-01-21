@@ -1,6 +1,7 @@
 #include <lockpick/graph/graph.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/container_of.h>
+#include <string.h>
 
 
 lp_slab_t *__lpg_node_create_slab(size_t total_entries)
@@ -18,7 +19,9 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
     lpg_graph_t *graph = (lpg_graph_t*)malloc(sizeof(lpg_graph_t));
     affirmf(graph,"Failed to allocate space for graph '%s'",name);
 
-    graph->name = name;
+    size_t name_str_len = strlen(name);
+    graph->name = (char*)malloc(name_str_len+1);
+    strcpy(graph->name,name);
 
     graph->slab = __lpg_node_create_slab(max_nodes);
     affirmf(graph->slab,"Failed to create slab for %ld nodes",max_nodes);
@@ -35,4 +38,15 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
         graph->inputs[in_i] = lpg_node_var(graph);
 
     return graph;
+}
+
+
+void lpg_graph_release(lpg_graph_t *graph)
+{
+    affirmf(graph,"Expected valid pointer on graph structure but null was given");
+    lp_slab_release(graph->slab);
+    free(graph->name);
+    free(graph->inputs);
+    free(graph->outputs);
+    free(graph);
 }

@@ -13,13 +13,13 @@ const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / __LP_UINT_BI
 
 
 /**
- * __uint_ch2i - converts hex characters to unsigned integer
+ * __lp_uint_ch2i - converts hex characters to unsigned integer
  * @char_hex:	hex character ([0-9a-fA-F])
  * 
  * Returns unsigned integer corresponding to the given character.
- * BAD_CHAR if 'char_hex' is invalid.
+ * __LP_UINT_BAD_CHAR if 'char_hex' is invalid.
  */
-uint8_t __uint_ch2i(char char_hex)
+uint8_t __lp_uint_ch2i(char char_hex)
 {
     if(char_hex >= '0' && char_hex <= '9')
         return char_hex - '0';
@@ -32,7 +32,7 @@ uint8_t __uint_ch2i(char char_hex)
 
 
 /**
- * __uint_parse_hex_word_reverse - parses up to one word in reverse order starting at given position
+ * __lp_uint_parse_hex_word_reverse - parses up to one word in reverse order starting at given position
  * @hex_str:	string containing hex number
  * @start:      index of the character to start from
  * @result:     pointer on a word where to put the result
@@ -40,7 +40,7 @@ uint8_t __uint_ch2i(char char_hex)
  * Returns number of character parsed.
  * -1 if invalid character was found.
  */
-int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_uint_word_t *result)
+int8_t __lp_uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_uint_word_t *result)
 {
     *result = 0;
     int64_t curr_char_i = start;
@@ -53,7 +53,7 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_u
             break;
 
         char curr_char = hex_str[curr_char_i];
-        __lp_uint_word_t char_converted = __uint_ch2i(curr_char);
+        __lp_uint_word_t char_converted = __lp_uint_ch2i(curr_char);
         if(char_converted == __LP_UINT_BAD_CHAR)
             return_set_errno(-1,EINVAL);
 
@@ -77,13 +77,16 @@ int8_t __uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __lp_u
  */
 bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size)
 {
+    if(!hex_str || !value)
+        return_set_errno(false,EINVAL);
+
     size_t hex_str_len = strlen(hex_str);
     int64_t curr_char_i = hex_str_len-1;
     size_t curr_word_i = 0;
     while(curr_word_i < value_size && curr_char_i >= 0)
     {
         // Parse up to one word and write right away
-        int8_t read_hexes = __uint_parse_hex_word_reverse(hex_str, curr_char_i, value+curr_word_i);
+        int8_t read_hexes = __lp_uint_parse_hex_word_reverse(hex_str, curr_char_i, value+curr_word_i);
         if(read_hexes < 0)
             return_set_errno(false,EINVAL);
         curr_char_i -= read_hexes;
@@ -146,19 +149,19 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool trunca
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
-int64_t __lp_uint_to_hex(__lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
+int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
 {
     if(!value)
         return_set_errno(-1,EINVAL);
 
-    // Find first non-zero word (from the end)
+    // Find highest non-zero word
     int64_t significant_words_offset = value_size-1;
     for(; significant_words_offset >= 0 && value[significant_words_offset] == 0; --significant_words_offset);
 
     // If all words == 0
     if(significant_words_offset < 0)
     {
-        if(n > 0 && dest != NULL)
+        if(n > 0 && dest)
         {
             dest[0] = '0';
             dest[1] = '\0';

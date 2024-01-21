@@ -1,0 +1,6 @@
+#ifndef _LOCKPICK_TESTS_GRAPH_TYPES_UINT_H
+#define _LOCKPICK_TESTS_GRAPH_TYPES_UINT_H
+
+void lp_test_graph_uint();
+
+#endif  // _LOCKPICK_TESTS_GRAPH_TYPES_UINT_H

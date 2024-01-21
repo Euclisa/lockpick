@@ -48,7 +48,7 @@ bool lpg_node_value(const lpg_node_t *node);
 
 typedef struct lpg_graph
 {
-    const char *name;
+    char *name;
     lp_slab_t *slab;
     lpg_node_t **inputs;
     size_t inputs_size;
@@ -57,6 +57,8 @@ typedef struct lpg_graph
 } lpg_graph_t;
 
 lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outputs_size, size_t max_nodes);
+
+void lpg_graph_release(lpg_graph_t *graph);
 
 lpg_node_t *lpg_node_and(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_or(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);

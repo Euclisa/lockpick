@@ -2,13 +2,35 @@
 #include <lockpick/affirmf.h>
 
 
+static inline bool __lpg_node_is_child_of(const lpg_node_t *node, const lpg_node_t *parent)
+{
+    for(size_t child_i = 0; child_i < parent->children_size; ++child_i)
+        if(parent->children[child_i] == node)
+            return true;
+    return false;
+}
+
+
+void __lpg_node_record_child(lpg_node_t *node, lpg_node_t *child)
+{
+    affirmf_debug(__lpg_node_is_child_of(child,node),"Specified node is already a child of this node");
+
+    node->children = (lpg_node_t**)realloc(node->children,node->children_size+1);
+    affirmf(node->children,"Failed to allocate space for a new child");
+    node->children[node->children_size] = child;
+    ++node->children_size;
+}
+
+
 void __lpg_node_init_and(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 {
     lpg_node_t **parents_ptr = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*2);
     __lpg_node_set_parents(node,parents_ptr);
 
     lpg_node_parents(node)[0] = a;
+    __lpg_node_record_child(a,node);
     lpg_node_parents(node)[1] = b;
+    __lpg_node_record_child(b,node);
 
     node->type = LPG_NODE_TYPE_AND;
 }
@@ -19,7 +41,9 @@ void __lpg_node_init_or(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
     __lpg_node_set_parents(node,parents_ptr);
 
     lpg_node_parents(node)[0] = a;
+    __lpg_node_record_child(a,node);
     lpg_node_parents(node)[1] = b;
+    __lpg_node_record_child(b,node);
 
     node->type = LPG_NODE_TYPE_OR;
 }
@@ -30,6 +54,7 @@ void __lpg_node_init_not(lpg_node_t *node, lpg_node_t* a)
     __lpg_node_set_parents(node,parents_ptr);
 
     lpg_node_parents(node)[0] = a;
+    __lpg_node_record_child(a,node);
 
     node->type = LPG_NODE_TYPE_NOT;
 }
@@ -40,7 +65,9 @@ void __lpg_node_init_xor(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
     __lpg_node_set_parents(node,parents_ptr);
 
     lpg_node_parents(node)[0] = a;
+    __lpg_node_record_child(a,node);
     lpg_node_parents(node)[1] = b;
+    __lpg_node_record_child(b,node);
 
     node->type = LPG_NODE_TYPE_XOR;
 }
