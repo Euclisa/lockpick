@@ -1,6 +1,7 @@
 #include <lockpick/graph/types/uint.h>
 #include <lockpick/affirmf.h>
 #include <string.h>
+#include <stdio.h>
 
 #define __LPG_UINT_BAD_CHAR 255
 
@@ -70,6 +71,9 @@ bool lpg_uint_from_hex(lpg_graph_t *graph, const char *hex_str, lpg_uint_t *valu
         }
     }
     end_for:
+
+    for(size_t node_i = upper_bound; node_i < value->width; ++node_i)
+        value->nodes[node_i] = lpg_node_const(graph,false);
 
     return true;
 }

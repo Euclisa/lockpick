@@ -103,8 +103,8 @@ lp_slab_t *lp_slab_create(size_t total_entries, size_t entry_size)
     affirmf(slab,"Failed to allocate memory for slab structure");
 
     size_t total_size = total_entries*entry_size;
-    slab->__buffer = malloc(total_size);
-    affirmf(slab->__buffer,"Failed to allocate memory for slab buffer of size %ld bytes",total_size);
+    int32_t memalign_status = posix_memalign(&slab->__buffer,entry_size,total_size);
+    affirmf(memalign_status == 0,"Failed to allocate memory for slab buffer of size %ld bytes",total_size);
 
     slab->__entry_size = entry_size;
     slab->__total_entries = total_entries;

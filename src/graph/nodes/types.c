@@ -22,10 +22,26 @@ void __lpg_node_record_child(lpg_node_t *node, lpg_node_t *child)
 }
 
 
+void __lpg_node_general_init(lpg_node_t *node, size_t parents_num)
+{
+    lpg_node_t **parents_ptr;
+    if(parents_num > 0)
+        parents_ptr = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*parents_num);
+    else
+        parents_ptr = NULL;
+
+    __lpg_node_set_parents(node,parents_ptr);
+    __lpg_node_set_computed(node,false);
+    __lpg_node_set_value(node,false);
+
+    node->children_size = 0;
+    node->children = NULL;
+}
+
+
 void __lpg_node_init_and(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 {
-    lpg_node_t **parents_ptr = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*2);
-    __lpg_node_set_parents(node,parents_ptr);
+    __lpg_node_general_init(node,2);
 
     lpg_node_parents(node)[0] = a;
     __lpg_node_record_child(a,node);
@@ -37,8 +53,7 @@ void __lpg_node_init_and(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 
 void __lpg_node_init_or(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 {
-    lpg_node_t **parents_ptr = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*2);
-    __lpg_node_set_parents(node,parents_ptr);
+    __lpg_node_general_init(node,2);
 
     lpg_node_parents(node)[0] = a;
     __lpg_node_record_child(a,node);
@@ -50,8 +65,7 @@ void __lpg_node_init_or(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 
 void __lpg_node_init_not(lpg_node_t *node, lpg_node_t* a)
 {
-    lpg_node_t **parents_ptr = (lpg_node_t**)malloc(sizeof(lpg_node_t*));
-    __lpg_node_set_parents(node,parents_ptr);
+    __lpg_node_general_init(node,1);
 
     lpg_node_parents(node)[0] = a;
     __lpg_node_record_child(a,node);
@@ -61,8 +75,7 @@ void __lpg_node_init_not(lpg_node_t *node, lpg_node_t* a)
 
 void __lpg_node_init_xor(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 {
-    lpg_node_t **parents_ptr = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*2);
-    __lpg_node_set_parents(node,parents_ptr);
+    __lpg_node_general_init(node,2);
 
     lpg_node_parents(node)[0] = a;
     __lpg_node_record_child(a,node);
@@ -74,13 +87,15 @@ void __lpg_node_init_xor(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
 
 void __lpg_node_init_const(lpg_node_t *node, bool value)
 {
-    node->__parents_computed_value = 0;
+    __lpg_node_general_init(node,0);
+
     node->type = value ? LPG_NODE_TYPE_TRUE : LPG_NODE_TYPE_FALSE;
 }
 
 void __lpg_node_init_var(lpg_node_t *node)
 {
-    node->__parents_computed_value = 0;
+    __lpg_node_general_init(node,0);
+
     node->type = LPG_NODE_TYPE_VAR;
 }
 

@@ -12,7 +12,7 @@ inline lpg_node_t **lpg_node_parents(const lpg_node_t *node)
 inline void __lpg_node_set_parents(lpg_node_t *node, lpg_node_t **parents)
 {
     node->__parents_computed_value = (uintptr_t)parents | 
-            (node->__parents_computed_value | (__LPG_NODE_COMPUTED_MASK | __LPG_NODE_VALUE_MASK));
+            (node->__parents_computed_value & (__LPG_NODE_COMPUTED_MASK | __LPG_NODE_VALUE_MASK));
 }
 
 

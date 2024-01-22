@@ -20,17 +20,20 @@ static inline size_t pow2(size_t pow)
 }
 
 
-static inline void __rand_hex_str(char *dest, size_t width)
+static inline void __rand_hex_str(char *dest, size_t width, size_t overflow)
 {
     static const char hexes[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     size_t hexes_num = (width-1)/BITS_PER_HEX + 1;
     size_t bits_remainder = width % BITS_PER_HEX;
     bits_remainder = bits_remainder == 0 ? BITS_PER_HEX : bits_remainder;
-    dest[hexes_num] = '\0';
+    dest[hexes_num+overflow] = '\0';
 
-    dest[0] = hexes[rand()%pow2(bits_remainder)];
-    for(size_t hex_i = 1; hex_i < hexes_num; ++hex_i)
+    for(size_t of_hex_i = 0; of_hex_i < overflow; ++of_hex_i)
+        dest[of_hex_i] = '0';
+
+    dest[overflow] = hexes[rand()%pow2(bits_remainder)];
+    for(size_t hex_i = overflow+1; hex_i < hexes_num+overflow; ++hex_i)
         dest[hex_i] = hexes[rand()%sizeof(hexes)];
 }
 
@@ -89,7 +92,7 @@ void test_graph_uint_from_to_hex(size_t width)
     lpg_uint_t *val = lpg_uint_create(width);
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
     {
-        __rand_hex_str(original_hex_str,width);
+        __rand_hex_str(original_hex_str,width,0);
         lpg_uint_from_hex(graph,original_hex_str,val);
         affirmf(lpg_uint_to_hex(val,converted_hex_str,hexes_num) > 0,
             "Failed to convert value to hex string");
@@ -108,20 +111,25 @@ void test_graph_uint_from_to_hex_overflow(size_t width)
 {
     srand(0);
     const uint32_t tests_num = 1000;
-    lpg_graph_t *graph = lpg_graph_create("test",1,1,width);
+    lpg_graph_t *graph = lpg_graph_create("test",1,1,(width+1)*tests_num);
     size_t hexes_num = (width-1)/__LPG_UINT_BITS_PER_HEX + 1;
-    char *original_hex_str = (char*)malloc(hexes_num+1);
-    char *converted_hex_str = (char*)malloc(hexes_num+1);
+    size_t max_overflow = width/__LPG_UINT_BITS_PER_HEX*4 + 1;
+    size_t max_hex_str_len = hexes_num+max_overflow;
+    char *original_hex_str = (char*)malloc(max_hex_str_len+1);
+    char *converted_hex_str = (char*)malloc(max_hex_str_len+1);
+    lpg_uint_t *val = lpg_uint_create(width);
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
     {
-        lpg_uint_t *val = lpg_uint_create(width);
-        __rand_hex_str(original_hex_str,hexes_num);
+        size_t hexes_overflowed = rand()%max_overflow;
+        __rand_hex_str(original_hex_str,hexes_num,hexes_overflowed);
         lpg_uint_from_hex(graph,original_hex_str,val);
-        affirmf(lpg_uint_to_hex(val,converted_hex_str,hexes_num) > 0,
+        affirmf(lpg_uint_to_hex(val,converted_hex_str,max_hex_str_len) > 0,
             "Failed to convert value to hex string");
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),
             "Expected: %s, got: %s",original_hex_str,converted_hex_str);
     }
+    lpg_graph_release(graph);
+    lpg_uint_release(val);
     free(original_hex_str);
     free(converted_hex_str);
 }
@@ -130,5 +138,8 @@ void test_graph_uint_from_to_hex_overflow(size_t width)
 void lp_test_graph_uint()
 {
     for(size_t width = 1; width <= 64; ++width)
+    {
         LP_TEST_RUN(test_graph_uint_from_to_hex(width),0);
+        LP_TEST_RUN(test_graph_uint_from_to_hex_overflow(width),0);
+    }
 }
