@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-static inline void __attribute__((noreturn)) __verrorf(const char *format, const char *file_str, uint64_t line_num, const char *func_str, va_list args)
+static inline void __no_return __verrorf(const char *format, const char *file_str, uint64_t line_num, const char *func_str, va_list args)
 {
     char msg[__LP_MAX_AFFIRMF_MSG_SIZE+1] = {0};
     if(format)

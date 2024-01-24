@@ -16,7 +16,7 @@ typedef struct lp_rb_node
 {
     struct lp_rb_node *left, *right;
     uintptr_t __parent_color;
-} aligned(2) lp_rb_node_t;
+} __aligned(2) lp_rb_node_t;
 
 
 __lp_rb_color_t __lp_rb_color(const lp_rb_node_t *node);

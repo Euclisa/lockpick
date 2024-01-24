@@ -27,13 +27,14 @@ extern const uint16_t lpg_node_type_operands_num[];
 #define __LPG_NODE_COMPUTED_MASK ((uintptr_t)(0b10))
 #define __LPG_NODE_VALUE_MASK ((uintptr_t)(0b1))
 
+
 typedef struct lpg_node
 {
     lpg_node_type_t type;
     uintptr_t __parents_computed_value;
     struct lpg_node **children;
     uint32_t children_size;
-} lpg_node_t;
+} __aligned(4) lpg_node_t;
 
 
 lpg_node_t **lpg_node_parents(const lpg_node_t *node);

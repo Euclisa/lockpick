@@ -1,13 +1,14 @@
 #ifndef _LOCKPICK_AFFIRMF_H
 #define _LOCKPICK_AFFIRMF_H
 
+#include <lockpick/define.h>
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdint.h>
 
 #define __LP_MAX_AFFIRMF_MSG_SIZE 256
 
-void __errorf(const char *format, const char *file_str, uint64_t line_num, const char *func_str, ...) __attribute__((noreturn));
+void __no_return __errorf(const char *format, const char *file_str, uint64_t line_num, const char *func_str, ...);
 
 void __affirmf(bool cond, const char *format, const char *cond_str, const char *file_str, uint64_t line_num, const char *func_str, ...);
 
