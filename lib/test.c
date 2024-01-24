@@ -1,5 +1,6 @@
 #include <lockpick/test.h>
 #include <lockpick/affirmf.h>
+#include <lockpick/define.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,9 +18,6 @@
 
 #define __LP_TEST_ALLOCATOR_CLEAR ((size_t)-1)
 #define __LP_TEST_ALLOCATOR_BUFF_SIZE 1024
-
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
 
 
 char *__lp_test_allocator(size_t size)

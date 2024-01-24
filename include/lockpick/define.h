@@ -18,4 +18,9 @@
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
+#define __POSIX_MEMALIGN_MIN_ALIGNMENT (sizeof(void*))
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 #endif // _LOCKPICK_DEFINE_H

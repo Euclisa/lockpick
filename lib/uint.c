@@ -4,9 +4,6 @@
 
 #define __LP_UINT_BAD_CHAR 255
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-
 const __uint128_t __LP_UINT_BASE = ((__uint128_t)1 << (__LP_UINT_BITS_PER_WORD));
 const __lp_uint_word_t __LP_UINT_MAX_WORD = (__lp_uint_word_t)-1;
 const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / __LP_UINT_BITS_PER_HEX;
