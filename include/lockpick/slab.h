@@ -34,4 +34,7 @@ void *lp_slab_alloc(lp_slab_t *slab);
 void lp_slab_free(lp_slab_t *slab, void *node_ptr);
 
 
+#define lp_slab_foreach_fb(slab,fb)     \
+        lp_list_foreach(&(slab)->__fb_head->__node,fb,__lp_slab_fb_list_t,__node);
+
 #endif // _LOCKPICK_GRAPH_NODE_H

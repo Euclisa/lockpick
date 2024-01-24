@@ -1205,3 +1205,37 @@ inline bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t 
     
     return true;
 }
+
+
+inline bool __lp_uint_rand(__lp_uint_word_t *a, size_t a_size, size_t width_high)
+{
+    if(!a)
+        return_set_errno(false,EINVAL);
+    
+    width_high = MIN(width_high,a_size*__LP_UINT_BITS_PER_WORD);
+
+    size_t whole_words = width_high / __LP_UINT_BITS_PER_WORD;
+    size_t whole_words_bytes = sizeof(__lp_uint_word_t)*whole_words;
+    arc4random_buf(a,whole_words_bytes);
+
+    size_t rem_bits = width_high % __LP_UINT_BITS_PER_WORD;
+
+    if(rem_bits > 0)
+    {
+        __lp_uint_word_t rem_bits_last_bit = (__lp_uint_word_t)1 << (rem_bits-1);
+        __lp_uint_word_t rem_bits_mask = (rem_bits_last_bit - 1) | rem_bits_last_bit;
+
+        #define __ARC4_OUTPUT_WIDTH 32
+
+        a[whole_words] = arc4random() & rem_bits_mask;
+        if(rem_bits >= __ARC4_OUTPUT_WIDTH)
+            a[whole_words] |= ((__lp_uint_word_t)arc4random() << __ARC4_OUTPUT_WIDTH) & rem_bits_mask;
+    }
+    else
+        a[whole_words] = 0;
+
+    for(size_t word_i = whole_words+1; word_i < a_size; ++word_i)
+        a[word_i] = 0;
+
+    return true;
+}

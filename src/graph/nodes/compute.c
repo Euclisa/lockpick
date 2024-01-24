@@ -11,7 +11,7 @@ typedef struct __lp_node_stack
 } __lp_node_stack_t;
 
 
-static inline bool __lp_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *node)
+static inline bool __lpg_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *node)
 {
     __lp_node_stack_t *entry = (__lp_node_stack_t*)malloc(sizeof(__lp_node_stack_t));
     entry->node = node;
@@ -23,7 +23,7 @@ static inline bool __lp_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *n
     return true;
 }
 
-static inline void __lp_node_stack_pop(__lp_node_stack_t **stack)
+static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 {
     lp_list_t *old_head = &(*stack)->__list;
     __lp_node_stack_t *top = (*stack);
@@ -34,15 +34,15 @@ static inline void __lp_node_stack_pop(__lp_node_stack_t **stack)
 }
 
 
-bool lpg_node_compute(lpg_node_t *node)
+void lpg_node_compute(lpg_node_t *node)
 {
     __lp_node_stack_t *stack = NULL;
-    __lp_node_stack_push(&stack,node);
+    __lpg_node_stack_push(&stack,node);
     
     while(stack)
     {
         lpg_node_t *curr_node = stack->node;
-        __lp_node_stack_pop(&stack);
+        __lpg_node_stack_pop(&stack);
 
         uint16_t curr_node_operands_num = lpg_node_type_operands_num[curr_node->type];
         lpg_node_t **curr_node_parents = lpg_node_parents(curr_node);
@@ -52,59 +52,60 @@ bool lpg_node_compute(lpg_node_t *node)
             lpg_node_t *parent = curr_node_parents[parent_i];
             if(!lpg_node_computed(parent))
             {
-                curr_node_ready = false;
-                __lp_node_stack_push(&stack,parent);
+                if(curr_node_ready)
+                {
+                    __lpg_node_stack_push(&stack,curr_node);
+                    curr_node_ready = false;
+                }
+
+                __lpg_node_stack_push(&stack,parent);
             }
         }
-        if(!curr_node_ready)
-        {
-            __lp_node_stack_push(&stack,curr_node);
-            continue;
-        }
 
+        bool curr_node_value;
         switch(curr_node->type)
         {
             case LPG_NODE_TYPE_AND:
             {
                 bool a_val = lpg_node_value(curr_node_parents[0]);
                 bool b_val = lpg_node_value(curr_node_parents[1]);
-                return a_val && b_val;
+                curr_node_value = a_val && b_val;
+                break;
             }
             case LPG_NODE_TYPE_OR:
             {
                 bool a_val = lpg_node_value(curr_node_parents[0]);
                 bool b_val = lpg_node_value(curr_node_parents[1]);
-                return a_val || b_val;
+                curr_node_value = a_val || b_val;
+                break;
             }
             case LPG_NODE_TYPE_NOT:
             {
                 bool a_val = lpg_node_value(curr_node_parents[0]);
-                return !a_val;
+                curr_node_value = !a_val;
+                break;
             }
             case LPG_NODE_TYPE_XOR:
             {
                 bool a_val = lpg_node_value(curr_node_parents[0]);
                 bool b_val = lpg_node_value(curr_node_parents[1]);
-                return a_val ^ b_val;
+                curr_node_value = a_val ^ b_val;
+                break;
             }
-            case LPG_NODE_TYPE_TRUE:
-                return true;
-
-            case LPG_NODE_TYPE_FALSE:
-                return false;
-
             case LPG_NODE_TYPE_VAR:
+            {
                 affirmf(lpg_node_computed(curr_node),
-                    "Failed to compute node:"
-                    "nodes of type 'LPG_NODE_TYPE_VAR' must have 'computed' falg set in order to fetch their value.");
+                    "Failed to compute node: "
+                    "nodes of type 'LPG_NODE_TYPE_VAR' must have 'computed' flag set in order to be treated as constants");
 
-                bool curr_val = lpg_node_value(curr_node);
-                return curr_val;
-
+                curr_node_value = lpg_node_value(curr_node);
+                break;
+            }
             default:
                 errorf("Invalid operation type: %d",node->type);
         }
-    }
 
-    return false;
+        __lpg_node_set_value(curr_node,curr_node_value);
+        __lpg_node_set_computed(curr_node,true);
+    }
 }

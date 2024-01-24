@@ -8,6 +8,7 @@
 #include <lockpick/define.h>
 
 
+// One can set any word type up to 64 bit width
 typedef uint64_t __lp_uint_word_t;
 
 extern const __uint128_t __LP_UINT_BASE;
@@ -127,5 +128,9 @@ bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __
 
 bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift);
 #define lp_uint_rshift_ip(a,shift) __lp_uint_rshift_inplace((a).__buffer, __array_size((a).__buffer), shift)
+
+
+bool __lp_uint_rand(__lp_uint_word_t *a, size_t a_size, size_t width_high);
+#define lp_uint_rand(a,width_high) __lp_uint_rand((a).__buffer, __array_size((a).__buffer), width_high)
 
 #endif  // _LOCKPICK_UINT_H

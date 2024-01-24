@@ -12,7 +12,7 @@ inline lpg_node_t **lpg_node_parents(const lpg_node_t *node)
 inline void __lpg_node_set_parents(lpg_node_t *node, lpg_node_t **parents)
 {
     node->__parents_computed_value = (uintptr_t)parents | 
-            (node->__parents_computed_value & (__LPG_NODE_COMPUTED_MASK | __LPG_NODE_VALUE_MASK));
+            (node->__parents_computed_value & (~__LPG_NODE_PARENTS_MASK));
 }
 
 
@@ -49,4 +49,22 @@ inline void __lpg_add_child(lpg_node_t *node, lpg_node_t *child)
     ++node->children_size;
     node->children = realloc(node->children,sizeof(lpg_node_t*)*node->children_size);
     node->children[node->children_size-1] = child;
+}
+
+
+static inline bool __lpg_node_belongs_to_graph(const lpg_graph_t *graph, const lpg_node_t *node)
+{
+    lpg_node_t *graph_slab_base = graph->slab->__buffer;
+    lpg_node_t *graph_slab_end = graph_slab_base+graph->slab->__entry_size*sizeof(lpg_node_t);
+
+    return node >= graph_slab_base && node < graph_slab_end;
+}
+
+
+inline bool lpg_node_validate_fetch(const lpg_graph_t *graph, const lpg_node_t *node)
+{
+    affirmf(__lpg_node_belongs_to_graph(graph,node),"Specified node does not belong to the given graph");
+    affirmf(lpg_node_computed(node),"Attempt to read value of node that had not been computed before");
+    
+    return lpg_node_value(node);
 }

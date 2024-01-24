@@ -13,9 +13,9 @@ static inline bool __lpg_node_is_child_of(const lpg_node_t *node, const lpg_node
 
 void __lpg_node_record_child(lpg_node_t *node, lpg_node_t *child)
 {
-    affirmf_debug(__lpg_node_is_child_of(child,node),"Specified node is already a child of this node");
+    affirmf_debug(!__lpg_node_is_child_of(child,node),"Specified node is already a child of this node");
 
-    node->children = (lpg_node_t**)realloc(node->children,node->children_size+1);
+    node->children = (lpg_node_t**)realloc(node->children,(node->children_size+1)*sizeof(lpg_node_t*));
     affirmf(node->children,"Failed to allocate space for a new child");
     node->children[node->children_size] = child;
     ++node->children_size;
@@ -32,7 +32,6 @@ void __lpg_node_general_init(lpg_node_t *node, size_t parents_num)
 
     __lpg_node_set_parents(node,parents_ptr);
     __lpg_node_set_computed(node,false);
-    __lpg_node_set_value(node,false);
 
     node->children_size = 0;
     node->children = NULL;
@@ -48,6 +47,8 @@ void __lpg_node_init_and(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
     lpg_node_parents(node)[1] = b;
     __lpg_node_record_child(b,node);
 
+    __lpg_node_set_computed(node,false);
+
     node->type = LPG_NODE_TYPE_AND;
 }
 
@@ -60,6 +61,8 @@ void __lpg_node_init_or(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
     lpg_node_parents(node)[1] = b;
     __lpg_node_record_child(b,node);
 
+    __lpg_node_set_computed(node,false);
+
     node->type = LPG_NODE_TYPE_OR;
 }
 
@@ -69,6 +72,8 @@ void __lpg_node_init_not(lpg_node_t *node, lpg_node_t* a)
 
     lpg_node_parents(node)[0] = a;
     __lpg_node_record_child(a,node);
+
+    __lpg_node_set_computed(node,false);
 
     node->type = LPG_NODE_TYPE_NOT;
 }
@@ -82,6 +87,8 @@ void __lpg_node_init_xor(lpg_node_t *node, lpg_node_t* a, lpg_node_t* b)
     lpg_node_parents(node)[1] = b;
     __lpg_node_record_child(b,node);
 
+    __lpg_node_set_computed(node,false);
+
     node->type = LPG_NODE_TYPE_XOR;
 }
 
@@ -89,12 +96,17 @@ void __lpg_node_init_const(lpg_node_t *node, bool value)
 {
     __lpg_node_general_init(node,0);
 
-    node->type = value ? LPG_NODE_TYPE_TRUE : LPG_NODE_TYPE_FALSE;
+    __lpg_node_set_computed(node,true);
+    __lpg_node_set_value(node,value);
+
+    node->type = LPG_NODE_TYPE_VAR;
 }
 
 void __lpg_node_init_var(lpg_node_t *node)
 {
     __lpg_node_general_init(node,0);
+
+    __lpg_node_set_computed(node,false);
 
     node->type = LPG_NODE_TYPE_VAR;
 }
