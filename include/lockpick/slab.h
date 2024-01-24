@@ -33,6 +33,7 @@ void lp_slab_release(lp_slab_t *slab);
 void *lp_slab_alloc(lp_slab_t *slab);
 void lp_slab_free(lp_slab_t *slab, void *node_ptr);
 
+void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr));
 
 #define lp_slab_foreach_fb(slab,fb)     \
         lp_list_foreach(&(slab)->__fb_head->__node,fb,__lp_slab_block_list_t,__node);

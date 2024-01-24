@@ -322,3 +322,36 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
             __lp_slab_block_list_insert_unit_before(&slab->__fb_head,current_fb,ptr);
     }
 }
+
+
+void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr))
+{
+    affirmf(slab,"Expected valid graph pointer but null was given");
+
+    size_t entry_size = slab->__entry_size;
+    size_t total_entries = slab->__total_entries;
+
+    __lp_slab_block_list_t *curr_fb = slab->__fb_head;
+    void *curr_entry = slab->__buffer;
+    void *end_slab = slab->__buffer + total_entries*entry_size;
+
+    if(likely(curr_fb))
+    {
+        while(curr_entry != end_slab)
+        {
+            if(curr_entry == curr_fb->__base)
+            {
+                curr_entry += curr_fb->__block_size*entry_size;
+                continue;
+            }
+            
+            callback(curr_entry);
+            curr_entry += entry_size;
+        }
+    }
+    else
+    {
+        for(; curr_entry != end_slab; curr_entry += entry_size)
+            callback(curr_entry);
+    }
+}

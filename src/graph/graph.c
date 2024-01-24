@@ -41,9 +41,22 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
 }
 
 
+static inline void __lpg_graph_release_slab_callback(void *ptr)
+{
+    lpg_node_t *node = (lpg_node_t*)ptr;
+    lpg_node_t **parents = lpg_node_parents(node);
+
+    if(parents)
+        free(parents);
+    
+    if(node->children)
+        free(node->children);
+}
+
 void lpg_graph_release(lpg_graph_t *graph)
 {
     affirmf(graph,"Expected valid pointer on graph structure but null was given");
+    lp_slab_exec(graph->slab,__lpg_graph_release_slab_callback);
     lp_slab_release(graph->slab);
     free(graph->name);
     free(graph->inputs);
@@ -51,36 +64,19 @@ void lpg_graph_release(lpg_graph_t *graph)
     free(graph);
 }
 
+static inline void __lpg_graph_reset_slab_callback(void *ptr)
+{
+    lpg_node_t *node = (lpg_node_t*)ptr;
+
+    if(node->type != LPG_NODE_TYPE_VAR)
+        __lpg_node_set_computed(node,false);
+}
 
 inline void lpg_graph_reset(lpg_graph_t *graph)
 {
     affirmf(graph,"Expected valid graph pointer but null was given");
 
-    __lp_slab_block_list_t *curr_fb = graph->slab->__fb_head;
-    lpg_node_t *curr_entry = graph->slab->__buffer;
-    lpg_node_t *end_slab = graph->slab->__buffer + graph->slab->__total_entries*sizeof(lpg_node_t);
-
-    if(likely(curr_fb))
-    {
-        while(curr_entry != end_slab)
-        {
-            if(curr_entry == curr_fb->__base)
-            {
-                curr_entry += curr_fb->__block_size;
-                continue;
-            }
-            if(curr_entry->type != LPG_NODE_TYPE_VAR)
-                __lpg_node_set_computed(curr_entry,false);
-            
-            ++curr_entry;
-        }
-    }
-    else
-    {
-        for(; curr_entry != end_slab; ++curr_entry)
-            if(curr_entry->type != LPG_NODE_TYPE_VAR)
-                __lpg_node_set_computed(curr_entry,false);
-    }
+    lp_slab_exec(graph->slab,__lpg_graph_reset_slab_callback);    
 }
 
 

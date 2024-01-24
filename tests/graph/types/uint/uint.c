@@ -160,7 +160,11 @@ void test_graph_uint_addition(size_t a_width, size_t b_width, size_t res_width)
 
         lpg_graph_reset(graph);
     }
+
     lpg_graph_release(graph);
+    lpg_uint_release(graph_a);
+    lpg_uint_release(graph_b);
+    lpg_uint_release(graph_res_obt);
     free(original_hex_str);
     free(converted_hex_str);
 }
