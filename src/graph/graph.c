@@ -56,7 +56,7 @@ inline void lpg_graph_reset(lpg_graph_t *graph)
 {
     affirmf(graph,"Expected valid graph pointer but null was given");
 
-    __lp_slab_fb_list_t *curr_fb = graph->slab->__fb_head;
+    __lp_slab_block_list_t *curr_fb = graph->slab->__fb_head;
     lpg_node_t *curr_entry = graph->slab->__buffer;
     lpg_node_t *end_slab = graph->slab->__buffer + graph->slab->__total_entries*sizeof(lpg_node_t);
 

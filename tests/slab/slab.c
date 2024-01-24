@@ -14,7 +14,7 @@
 static inline bool __validate_slab(const lp_slab_t *slab, size_t expected_free_entries)
 {
     size_t free_entries = 0;
-    __lp_slab_fb_list_t *fb_curr = slab->__fb_head;
+    __lp_slab_block_list_t *fb_curr = slab->__fb_head;
     if(!fb_curr)
         return free_entries == expected_free_entries;
     lp_list_t *fb_curr_l = &fb_curr->__node;
@@ -25,7 +25,7 @@ static inline bool __validate_slab(const lp_slab_t *slab, size_t expected_free_e
     {
         prev_fb_end = fb_curr->__base + fb_curr->__block_size*slab->__entry_size;
         fb_curr_l = fb_curr_l->next;
-        fb_curr = container_of(fb_curr_l,__lp_slab_fb_list_t,__node);
+        fb_curr = container_of(fb_curr_l,__lp_slab_block_list_t,__node);
         if(prev_fb_end >= fb_curr->__base)
             return false;
         free_entries += fb_curr->__block_size;
