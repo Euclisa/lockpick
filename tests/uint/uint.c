@@ -9,6 +9,7 @@
 
 #define HEXES_PER_WORD (sizeof(uint16_t)*2)
 #define BITS_PER_WORD (sizeof(uint16_t)*8)
+#define __LP_TEST_UINT_MAX_WIDTH 2048
 
 
 static inline void __rand_hex_str(char *dest, size_t hexes_num)
@@ -145,59 +146,53 @@ TEST_UINT_FROM_TO_HEX(1024)
     }
 
 
+#define TEST_UINT_BINARY_OP(N_a, N_b, N_result, op_type)                                                                    \
+void test_uint_##N_a##_##N_b##_##N_result##_##op_type(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                 \
+{                                                                                                                           \
+    const char *fn = LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_" #op_type ".txt";                      \
+    FILE *f = fopen(fn,"r");                                                                                                \
+    affirmf(f,"Failed to open file '%s'",fn);                                                                               \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_TEST_UINT_MAX_WIDTH)                                                                    \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f,"%s\n",hex_str_result_true) != EOF)                                                                      \
+    {                                                                                                                       \
+        lp_uint_t(N_result) res_obt, res_true;                                                                              \
+        affirmf(lp_uint_##op_type(a_samples[samp_i],b_samples[samp_i],res_obt),                                             \
+            "Failed to perfrom operation");                                                                                 \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f);                                                                                                              \
+}
+
+#define TEST_UINT_BINARY_OP_INPLACE(N_a, N_b, op_type)                                                                      \
+void test_uint_##N_a##_##N_b##_##op_type##_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                    \
+{                                                                                                                           \
+    const char *fn =                                                                                                        \
+        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_" #op_type ".txt";                                   \
+    FILE *f = fopen(fn,"r");                                                                                                \
+    affirmf(f,"Failed to open file '%s'",fn);                                                                               \
+    CHUNK_INIT_HEX_STR_RESULTS(__LP_TEST_UINT_MAX_WIDTH)                                                                    \
+    size_t samp_i = 0;                                                                                                      \
+    while(fscanf(f,"%s\n",hex_str_result_true) != EOF)                                                                      \
+    {                                                                                                                       \
+        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
+        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
+        affirmf(lp_uint_##op_type##_ip(res_obt,b_samples[samp_i]),                                                          \
+            "Failed to perfrom operation");                                                                                 \
+        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
+        ++samp_i;                                                                                                           \
+    }                                                                                                                       \
+    fclose(f);                                                                                                              \
+}
+
 #define TEST_UINT_OPS_BINARY(N_a, N_b, N_result)                                                                            \
-void test_uint_##N_a##_##N_b##_##N_result##_addition(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                  \
-{                                                                                                                           \
-    const char *fn_add = LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt";                      \
-    FILE *f_add = fopen(fn_add,"r");                                                                                        \
-    affirmf(f_add,"Failed to open file '%s'",fn_add);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_add,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_add(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_add);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_subtraction(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)               \
-{                                                                                                                           \
-    const char *fn_sub = LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_subtraction.txt";                   \
-    FILE *f_sub = fopen(fn_sub,"r");                                                                                        \
-    affirmf(f_sub,"Failed to open file '%s'",fn_sub);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(2048))                                                  \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_sub,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_sub(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_sub);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_multiplication(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)            \
-{                                                                                                                           \
-    const char *fn_mul =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_multiplication.txt";                                 \
-    FILE *f_mul = fopen(fn_mul,"r");                                                                                        \
-    affirmf(f_mul,"Failed to open file '%s'",fn_mul);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_mul,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_mul(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_mul);                                                                                                          \
-}                                                                                                                           \
+TEST_UINT_BINARY_OP(N_a,N_b,N_result,add)                                                                                   \
+TEST_UINT_BINARY_OP(N_a,N_b,N_result,sub)                                                                                   \
+TEST_UINT_BINARY_OP(N_a,N_b,N_result,mul)                                                                                   \
+TEST_UINT_BINARY_OP(N_a,N_b,N_result,and)                                                                                   \
+TEST_UINT_BINARY_OP(N_a,N_b,N_result,or)                                                                                    \
+TEST_UINT_BINARY_OP(N_a,N_b,N_result,xor)                                                                                   \
 void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                \
 {                                                                                                                           \
     const char *fn_comp =                                                                                                   \
@@ -227,65 +222,11 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint_t(N_a) *a_samples
     }                                                                                                                       \
     fclose(f_comp);                                                                                                         \
 }                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_and(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
-{                                                                                                                           \
-    const char *fn_and =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_and.txt";                                            \
-    FILE *f_and = fopen(fn_and,"r");                                                                                        \
-    affirmf(f_and,"Failed to open file '%s'",fn_and);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_and,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_and(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_and);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_or(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                        \
-{                                                                                                                           \
-    const char *fn_or =                                                                                                     \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_or.txt";                                             \
-    FILE *f_or = fopen(fn_or,"r");                                                                                          \
-    affirmf(f_or,"Failed to open file '%s'",fn_or);                                                                         \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_or,"%s\n",hex_str_result_true) != EOF)                                                                   \
-    {                                                                                                                       \
-        lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_or(a_samples[samp_i],b_samples[samp_i],res_obt),                                                    \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_or);                                                                                                           \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_##N_result##_xor(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
-{                                                                                                                           \
-    const char *fn_xor =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_xor.txt";                                            \
-    FILE *f_xor = fopen(fn_xor,"r");                                                                                        \
-    affirmf(f_xor,"Failed to open file '%s'",fn_xor);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_xor,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_xor(a_samples[samp_i],b_samples[samp_i],res_obt),                                                   \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_xor);                                                                                                          \
-}                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)            \
 {                                                                                                                           \
-    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_addition(a_samples, b_samples));                                     \
-    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_subtraction(a_samples, b_samples));                                  \
-    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_multiplication(a_samples, b_samples));                               \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_add(a_samples, b_samples));                                          \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_sub(a_samples, b_samples));                                          \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_##N_result##_mul(a_samples, b_samples));                                          \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_ops_bitwise(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)               \
 {                                                                                                                           \
@@ -305,125 +246,17 @@ void test_uint_##N_a##_##N_b##_##N_result##_ops_binary()                        
 
 
 #define TEST_UINT_OPS_BINARY_INPLACE(N_a, N_b)                                                                              \
-void test_uint_##N_a##_##N_b##_addition_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                       \
-{                                                                                                                           \
-    const char *fn_add =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_addition.txt";                                       \
-    FILE *f_add = fopen(fn_add,"r");                                                                                        \
-    affirmf(f_add,"Failed to open file '%s'",fn_add);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_add,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
-        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_add_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_add);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_subtraction_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                    \
-{                                                                                                                           \
-    const char *fn_sub =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_subtraction.txt";                                    \
-    FILE *f_sub = fopen(fn_sub,"r");                                                                                        \
-    affirmf(f_sub,"Failed to open file '%s'",fn_sub);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(2048))                                                  \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_sub,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
-        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_sub_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_sub);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_multiplication_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                 \
-{                                                                                                                           \
-    const char *fn_mul =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_multiplication.txt";                                 \
-    FILE *f_mul = fopen(fn_mul,"r");                                                                                        \
-    affirmf(f_mul,"Failed to open file '%s'",fn_mul);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_mul,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
-        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_mul_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_mul);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_and_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                            \
-{                                                                                                                           \
-    const char *fn_and =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_and.txt";                                            \
-    FILE *f_and = fopen(fn_and,"r");                                                                                        \
-    affirmf(f_and,"Failed to open file '%s'",fn_and);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_and,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
-        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_and_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_and);                                                                                                          \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_or_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                             \
-{                                                                                                                           \
-    const char *fn_or =                                                                                                     \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_or.txt";                                             \
-    FILE *f_or = fopen(fn_or,"r");                                                                                          \
-    affirmf(f_or,"Failed to open file '%s'",fn_or);                                                                         \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_or,"%s\n",hex_str_result_true) != EOF)                                                                   \
-    {                                                                                                                       \
-        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
-        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_or_ip(res_obt,b_samples[samp_i]),                                                                   \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_or);                                                                                                           \
-}                                                                                                                           \
-void test_uint_##N_a##_##N_b##_xor_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                            \
-{                                                                                                                           \
-    const char *fn_xor =                                                                                                    \
-        LOCKPICK_PROJECT_DIR "/tests/uint/cases/uint_" #N_a "_" #N_b "_xor.txt";                                            \
-    FILE *f_xor = fopen(fn_xor,"r");                                                                                        \
-    affirmf(f_xor,"Failed to open file '%s'",fn_xor);                                                                       \
-    CHUNK_INIT_HEX_STR_RESULTS(__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_a)+__LP_UINT_MAX_HEX_STR_REPRESENTATION(N_b))         \
-    size_t samp_i = 0;                                                                                                      \
-    while(fscanf(f_xor,"%s\n",hex_str_result_true) != EOF)                                                                  \
-    {                                                                                                                       \
-        lp_uint_t(N_a) res_true, res_obt;                                                                                   \
-        lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_xor_ip(res_obt,b_samples[samp_i]),                                                                  \
-            "Failed to perfrom operation");                                                                                 \
-        CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-        ++samp_i;                                                                                                           \
-    }                                                                                                                       \
-    fclose(f_xor);                                                                                                          \
-}                                                                                                                           \
+TEST_UINT_BINARY_OP_INPLACE(N_a,N_b,add)                                                                                    \
+TEST_UINT_BINARY_OP_INPLACE(N_a,N_b,sub)                                                                                    \
+TEST_UINT_BINARY_OP_INPLACE(N_a,N_b,mul)                                                                                    \
+TEST_UINT_BINARY_OP_INPLACE(N_a,N_b,and)                                                                                    \
+TEST_UINT_BINARY_OP_INPLACE(N_a,N_b,or)                                                                                     \
+TEST_UINT_BINARY_OP_INPLACE(N_a,N_b,xor)                                                                                    \
 void test_uint_##N_a##_##N_b##_ops_arithmetic_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                 \
 {                                                                                                                           \
-    LP_TEST_RUN(test_uint_##N_a##_##N_b##_addition_inplace(a_samples, b_samples));                                          \
-    LP_TEST_RUN(test_uint_##N_a##_##N_b##_subtraction_inplace(a_samples, b_samples));                                       \
-    LP_TEST_RUN(test_uint_##N_a##_##N_b##_multiplication_inplace(a_samples, b_samples));                                    \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_add_inplace(a_samples, b_samples));                                               \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_sub_inplace(a_samples, b_samples));                                               \
+    LP_TEST_RUN(test_uint_##N_a##_##N_b##_mul_inplace(a_samples, b_samples));                                               \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_ops_bitwise_inplace(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)                    \
 {                                                                                                                           \

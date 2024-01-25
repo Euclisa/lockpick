@@ -8,13 +8,6 @@
 #include <lockpick/test.h>
 
 
-#define HEXES_PER_WORD (sizeof(uint16_t)*2)
-#define BITS_PER_WORD (sizeof(uint16_t)*8)
-#define BITS_PER_HEX 4
-
-#define __LPG_TEST_UINT_MAX_WIDTH 256
-
-
 static inline bool __hexcmp(const char *a, const char *b)
 {
     size_t leading_zeros_offset_a = 0;
