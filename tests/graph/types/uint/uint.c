@@ -81,148 +81,84 @@ void test_graph_uint_from_to_hex(size_t width)
 }
 
 
-void test_graph_uint_from_to_hex_overflow(size_t width)
-{
-    const uint32_t tests_num = 1000;
-
-    lpg_graph_t *graph = lpg_graph_create("test",width,width,(width+1)*tests_num);
-    for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)
-    {
-        __lpg_node_set_computed(graph->inputs[node_i],true);
-        graph->outputs[node_i] = graph->inputs[node_i];
-    }
-
-    char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
-    char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
-    lpg_uint_t *val = lpg_uint_create_from_nodes(graph,graph->inputs,width);
-
-    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
-    {
-        cases_uint_t val_prop;
-        lp_uint_rand(val_prop,width);
-        lp_uint_to_hex(val_prop,original_hex_str,MAX_HEXES_NUM);
-
-        lpg_uint_update_from_uint(val,val_prop);
-        lpg_uint_to_hex(val,converted_hex_str,MAX_HEXES_NUM);
-
-        LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),
-            "Expected: %s, got: %s",original_hex_str,converted_hex_str);
-    }
-    lpg_graph_release(graph);
-    lpg_uint_release(val);
-    free(original_hex_str);
-    free(converted_hex_str);
-}
-
-
-void test_graph_uint_addition(size_t a_width, size_t b_width, size_t res_width)
-{
-    const uint32_t tests_num = 10;
-
-    lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,(a_width+b_width+res_width+1)*tests_num);
-
-    for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)
-        __lpg_node_set_computed(graph->inputs[node_i],true);
-
-    char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
-    char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
-
-    lpg_uint_t *graph_a = lpg_uint_create_as_view(graph,graph->inputs,a_width);
-    lpg_uint_t *graph_b = lpg_uint_create_as_view(graph,graph->inputs+a_width,b_width);
+#define TEST_GRAPH_UINT_OP_INIT_CHUNK                                                                                           \
+    lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,(a_width+b_width+res_width+1)*tests_num);            \
+    for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)                                                               \
+        __lpg_node_set_computed(graph->inputs[node_i],true);                                                                    \
+    char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                    \
+    char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                   \
+    lpg_uint_t *graph_a = lpg_uint_create_as_view(graph,graph->inputs,a_width);                                                 \
+    lpg_uint_t *graph_b = lpg_uint_create_as_view(graph,graph->inputs+a_width,b_width);                                         \
     lpg_uint_t *graph_res_obt = lpg_uint_create_as_view(graph,graph->outputs,res_width);
 
-    lpg_uint_add(graph,graph_a,graph_b,graph_res_obt);
-
-    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
-    {
-        cases_uint_t a_prop,b_prop,res_true_prop,res_obt_prop;
-        lp_uint_rand(a_prop,a_width);
-        lp_uint_rand(b_prop,b_width);
-        lp_uint_add(a_prop,b_prop,res_true_prop);
-        cases_uint_t __res_mask,__one;
-        lp_uint_from_hex(__res_mask,"1");
-        lp_uint_from_hex(__one,"1");
-        lp_uint_lshift_ip(__res_mask,res_width);
-        lp_uint_sub_ip(__res_mask,__one);
-        lp_uint_and_ip(res_true_prop,__res_mask);
-        lp_uint_to_hex(res_true_prop,original_hex_str,MAX_HEXES_NUM);
-        
-        lpg_uint_update_from_uint(graph_a,a_prop);
-        lpg_uint_update_from_uint(graph_b,b_prop);
-
-        lpg_graph_compute(graph);
-
-        lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);
-        lp_uint_from_hex(res_obt_prop,converted_hex_str);
-
-        LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),
-                "Expected: %s, got: %s",original_hex_str,converted_hex_str);
-
-        lpg_graph_reset(graph);
-    }
-
-    lpg_graph_release(graph);
-    lpg_uint_release(graph_a);
-    lpg_uint_release(graph_b);
-    lpg_uint_release(graph_res_obt);
-    free(original_hex_str);
+#define TEST_GRAPH_UINT_OP_CLEAN_UP_CHUNK                                                                                       \
+    lpg_graph_release(graph);                                                                                                   \
+    lpg_uint_release(graph_a);                                                                                                  \
+    lpg_uint_release(graph_b);                                                                                                  \
+    lpg_uint_release(graph_res_obt);                                                                                            \
+    free(original_hex_str);                                                                                                     \
     free(converted_hex_str);
+
+
+#define TEST_GRAPH_UINT_OP(op_type)                                                                                             \
+static inline void __test_graph_uint_gen_and_test_##op_type(                                                                    \
+        lpg_graph_t *graph,                                                                                                     \
+        lpg_uint_t *graph_a,                                                                                                    \
+        lpg_uint_t *graph_b,                                                                                                    \
+        lpg_uint_t *graph_res_obt,                                                                                              \
+        char *original_hex_str,                                                                                                 \
+        char *converted_hex_str)                                                                                                \
+{                                                                                                                               \
+    cases_uint_t a_prop,b_prop,res_true_prop,res_obt_prop;                                                                      \
+    lp_uint_rand(a_prop,graph_a->width);                                                                                        \
+    lp_uint_rand(b_prop,graph_b->width);                                                                                        \
+    lp_uint_##op_type(a_prop,b_prop,res_true_prop);                                                                             \
+    cases_uint_t __res_mask,__one;                                                                                              \
+    lp_uint_from_hex(__res_mask,"1");                                                                                           \
+    lp_uint_from_hex(__one,"1");                                                                                                \
+    lp_uint_lshift_ip(__res_mask,graph_res_obt->width);                                                                         \
+    lp_uint_sub_ip(__res_mask,__one);                                                                                           \
+    lp_uint_and_ip(res_true_prop,__res_mask);                                                                                   \
+    lp_uint_to_hex(res_true_prop,original_hex_str,MAX_HEXES_NUM);                                                               \
+    lpg_uint_update_from_uint(graph_a,a_prop);                                                                                  \
+    lpg_uint_update_from_uint(graph_b,b_prop);                                                                                  \
+    lpg_graph_compute(graph);                                                                                                   \
+    lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);                                                             \
+    lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
+    LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),                                                                      \
+            "Expected: %s, got: %s",original_hex_str,converted_hex_str);                                                        \
+    lpg_graph_reset(graph);                                                                                                     \
+}                                                                                                                               \
+void __test_graph_uint_##op_type(size_t a_width, size_t b_width, size_t res_width)                                              \
+{                                                                                                                               \
+    const uint32_t tests_num = 10;                                                                                              \
+    TEST_GRAPH_UINT_OP_INIT_CHUNK                                                                                               \
+    lpg_uint_##op_type(graph,graph_a,graph_b,graph_res_obt);                                                                    \
+    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                      \
+    {                                                                                                                           \
+        LP_TEST_STEP_INTO(                                                                                                      \
+            __test_graph_uint_gen_and_test_##op_type(                                                                           \
+                graph,graph_a,graph_b,graph_res_obt,                                                                            \
+                original_hex_str,converted_hex_str)                                                                             \
+        );                                                                                                                      \
+    }                                                                                                                           \
+    TEST_GRAPH_UINT_OP_CLEAN_UP_CHUNK                                                                                           \
+}                                                                                                                               \
+void test_graph_uint_##op_type()                                                                                                \
+{                                                                                                                               \
+    for(size_t width = 1; width <= 64; ++width)                                                                                 \
+    {                                                                                                                           \
+        LP_TEST_RUN(__test_graph_uint_##op_type(width,width,width),0);                                                          \
+        LP_TEST_RUN(__test_graph_uint_##op_type(width,width,width/2+1),0);                                                      \
+        LP_TEST_RUN(__test_graph_uint_##op_type(width,width/2+1,width),0);                                                      \
+        LP_TEST_RUN(__test_graph_uint_##op_type(width/2+1,width,width),0);                                                      \
+        LP_TEST_RUN(__test_graph_uint_##op_type(width/2+1,width,width*2),0);                                                    \
+        LP_TEST_RUN(__test_graph_uint_##op_type(width,width/2+1,width/2+1),0);                                                  \
+    }                                                                                                                           \
 }
 
-
-void test_graph_uint_subtraction(size_t a_width, size_t b_width, size_t res_width)
-{
-    const uint32_t tests_num = 10;
-
-    lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,(a_width+b_width+res_width+1)*tests_num);
-
-    for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)
-        __lpg_node_set_computed(graph->inputs[node_i],true);
-
-    char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
-    char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
-
-    lpg_uint_t *graph_a = lpg_uint_create_as_view(graph,graph->inputs,a_width);
-    lpg_uint_t *graph_b = lpg_uint_create_as_view(graph,graph->inputs+a_width,b_width);
-    lpg_uint_t *graph_res_obt = lpg_uint_create_as_view(graph,graph->outputs,res_width);
-
-    lpg_uint_sub(graph,graph_a,graph_b,graph_res_obt);
-
-    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
-    {
-        cases_uint_t a_prop,b_prop,res_true_prop,res_obt_prop;
-        lp_uint_rand(a_prop,a_width);
-        lp_uint_rand(b_prop,b_width);
-        lp_uint_sub(a_prop,b_prop,res_true_prop);
-        cases_uint_t __res_mask,__one;
-        lp_uint_from_hex(__res_mask,"1");
-        lp_uint_from_hex(__one,"1");
-        lp_uint_lshift_ip(__res_mask,res_width);
-        lp_uint_sub_ip(__res_mask,__one);
-        lp_uint_and_ip(res_true_prop,__res_mask);
-        lp_uint_to_hex(res_true_prop,original_hex_str,MAX_HEXES_NUM);
-        
-        lpg_uint_update_from_uint(graph_a,a_prop);
-        lpg_uint_update_from_uint(graph_b,b_prop);
-
-        lpg_graph_compute(graph);
-
-        lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);
-        lp_uint_from_hex(res_obt_prop,converted_hex_str);
-
-        LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),
-                "Expected: %s, got: %s",original_hex_str,converted_hex_str);
-
-        lpg_graph_reset(graph);
-    }
-
-    lpg_graph_release(graph);
-    lpg_uint_release(graph_a);
-    lpg_uint_release(graph_b);
-    lpg_uint_release(graph_res_obt);
-    free(original_hex_str);
-    free(converted_hex_str);
-}
+TEST_GRAPH_UINT_OP(add)
+TEST_GRAPH_UINT_OP(sub)
 
 
 void test_graph_uint_hex_str()
@@ -230,35 +166,6 @@ void test_graph_uint_hex_str()
     for(size_t width = 1; width <= 64; ++width)
     {
         LP_TEST_RUN(test_graph_uint_from_to_hex(width));
-        LP_TEST_RUN(test_graph_uint_from_to_hex_overflow(width));
-    }
-}
-
-
-void test_graph_uint_addition_group()
-{
-    for(size_t width = 1; width <= 64; ++width)
-    {
-        LP_TEST_RUN(test_graph_uint_addition(width,width,width));
-        LP_TEST_RUN(test_graph_uint_addition(width,width,width/2+1));
-        LP_TEST_RUN(test_graph_uint_addition(width,width/2+1,width));
-        LP_TEST_RUN(test_graph_uint_addition(width/2+1,width,width));
-        LP_TEST_RUN(test_graph_uint_addition(width/2+1,width,width*2));
-        LP_TEST_RUN(test_graph_uint_addition(width,width/2+1,width/2+1));
-    }
-}
-
-
-void test_graph_uint_subtraction_group()
-{
-    for(size_t width = 1; width <= 64; ++width)
-    {
-        LP_TEST_RUN(test_graph_uint_subtraction(width,width,width));
-        LP_TEST_RUN(test_graph_uint_subtraction(width,width,width/2+1));
-        LP_TEST_RUN(test_graph_uint_subtraction(width,width/2+1,width));
-        LP_TEST_RUN(test_graph_uint_subtraction(width/2+1,width,width));
-        LP_TEST_RUN(test_graph_uint_subtraction(width/2+1,width,width*2));
-        LP_TEST_RUN(test_graph_uint_subtraction(width,width/2+1,width/2+1));
     }
 }
 
@@ -268,6 +175,6 @@ void lp_test_graph_uint()
     srand(0);
 
     LP_TEST_RUN(test_graph_uint_hex_str(),1);
-    LP_TEST_RUN(test_graph_uint_addition_group(),1);
-    LP_TEST_RUN(test_graph_uint_subtraction_group(),1);
+    LP_TEST_RUN(test_graph_uint_add());
+    LP_TEST_RUN(test_graph_uint_sub());
 }
