@@ -589,10 +589,10 @@ void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
     lpg_node_t **result_nodes = lpg_uint_nodes(result);
 
     int64_t node_i = result->width-1;
-    for(; node_i >= a->width+shift; --node_i)
+    for(; node_i >= (int64_t)(a->width+shift); --node_i)
         result_nodes[node_i] = lpg_node_const(graph,false);
 
-    for(; node_i >= shift; --node_i)
+    for(; node_i >= (int64_t)shift; --node_i)
         result_nodes[node_i] = a_nodes[node_i-shift];
     
     for(; node_i >= 0; --node_i)
@@ -635,7 +635,8 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
     for(size_t node_i = 0; node_i < result->width; ++node_i)
         result_nodes[node_i] = lpg_node_const(graph,false);
 
-    for(size_t node_i = 0; node_i < b->width; ++node_i)
+    size_t upper_bound = MIN(result->width,b->width);
+    for(size_t node_i = 0; node_i < upper_bound; ++node_i)
     {
         lpg_uint_t *a_shifted = lpg_uint_create_empty(graph,result->width);
         lpg_uint_t *b_mask = lpg_uint_create_fill_with_single(graph,b_nodes[node_i],result->width);
@@ -643,8 +644,11 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
         lpg_uint_t *a_masked = lpg_uint_create_empty(graph,result->width);
         lpg_uint_and(a_shifted,b_mask,a_masked);
         if(__likely(node_i > 0))
-            lpg_uint_add_ip(result,a_shifted);
+            lpg_uint_add_ip(result,a_masked);
         else
-            lpg_uint_copy(result,a_shifted);
+            lpg_uint_copy(result,a_masked);
+        lpg_uint_release(a_shifted);
+        lpg_uint_release(b_mask);
+        lpg_uint_release(a_masked);
     }
 }
