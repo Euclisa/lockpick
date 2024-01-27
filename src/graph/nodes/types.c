@@ -11,14 +11,17 @@ static inline bool __lpg_node_is_child_of(const lpg_node_t *node, const lpg_node
 }
 
 
-void __lpg_node_record_child(lpg_node_t *node, lpg_node_t *child)
+void __lpg_node_record_child(lpg_node_t *parent, lpg_node_t *child)
 {
-    affirmf_debug(!__lpg_node_is_child_of(child,node),"Specified node is already a child of this node");
+    affirmf(parent,"Null parent node provided."
+                    "All parent nodes must be initialized before being connected to child nodes."
+                    "Please verify all parent node pointers are populated prior to this operation.");
+    affirmf_debug(!__lpg_node_is_child_of(child,parent),"Specified node is already a child of this parent node");
 
-    node->children = (lpg_node_t**)realloc(node->children,(node->children_size+1)*sizeof(lpg_node_t*));
-    affirmf(node->children,"Failed to allocate space for a new child");
-    node->children[node->children_size] = child;
-    ++node->children_size;
+    parent->children = (lpg_node_t**)realloc(parent->children,(parent->children_size+1)*sizeof(lpg_node_t*));
+    affirmf(parent->children,"Failed to allocate space for a new child");
+    parent->children[parent->children_size] = child;
+    ++parent->children_size;
 }
 
 

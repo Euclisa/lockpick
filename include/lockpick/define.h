@@ -16,8 +16,8 @@
     return ret;                                 \
 })
 
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#define __likely(x) __builtin_expect(!!(x), 1)
+#define __unlikely(x) __builtin_expect(!!(x), 0)
 
 #define __POSIX_MEMALIGN_MIN_ALIGNMENT (sizeof(void*))
 

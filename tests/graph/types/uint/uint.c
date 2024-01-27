@@ -7,6 +7,7 @@
 #include <lockpick/uint.h>
 #include <lockpick/test.h>
 
+#define __LPG_TEST_UINT_MAX_GRAPH_NODES 100000
 
 static inline bool __hexcmp(const char *a, const char *b)
 {
@@ -38,6 +39,7 @@ static inline bool __hexcmp(const char *a, const char *b)
 
 typedef lp_uint_t(1024) cases_uint_t;
 const size_t MAX_HEXES_NUM = sizeof(cases_uint_t)*2;
+const size_t MAX_WIDTH = sizeof(cases_uint_t)*8;
 
 
 void test_graph_uint_from_to_hex(size_t width)
@@ -74,8 +76,8 @@ void test_graph_uint_from_to_hex(size_t width)
 }
 
 
-#define TEST_GRAPH_UINT_OP_INIT_CHUNK                                                                                           \
-    lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,(a_width+b_width+res_width+1)*tests_num);            \
+#define TEST_GRAPH_UINT_OP_INIT_CHUNK(res_width)                                                                                \
+    lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,__LPG_TEST_UINT_MAX_GRAPH_NODES);                    \
     for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)                                                               \
         __lpg_node_set_computed(graph->inputs[node_i],true);                                                                    \
     char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                    \
@@ -103,18 +105,23 @@ static inline void __test_graph_uint_gen_and_test_##op_type(                    
         char *converted_hex_str)                                                                                                \
 {                                                                                                                               \
     cases_uint_t a_prop,b_prop,res_true_prop,res_obt_prop;                                                                      \
+    /* Generate samples */                                                                                                      \
     lp_uint_rand(a_prop,graph_a->width);                                                                                        \
     lp_uint_rand(b_prop,graph_b->width);                                                                                        \
     lp_uint_##op_type(a_prop,b_prop,res_true_prop);                                                                             \
+    /* Build mask for truncating result to appropriate width */                                                                 \
     cases_uint_t __res_mask,__one;                                                                                              \
     lp_uint_from_hex(__res_mask,"1");                                                                                           \
     lp_uint_from_hex(__one,"1");                                                                                                \
     lp_uint_lshift_ip(__res_mask,graph_res_obt->width);                                                                         \
     lp_uint_sub_ip(__res_mask,__one);                                                                                           \
+    /* Mask result and convert to hex string for printing error info */                                                         \
     lp_uint_and_ip(res_true_prop,__res_mask);                                                                                   \
     lp_uint_to_hex(res_true_prop,original_hex_str,MAX_HEXES_NUM);                                                               \
+    /* Update graph uint operand values from previously generated ones */                                                       \
     lpg_uint_update_from_uint(graph_a,a_prop);                                                                                  \
     lpg_uint_update_from_uint(graph_b,b_prop);                                                                                  \
+    /* Compute new graph value and convert it to uint */                                                                        \
     lpg_graph_compute(graph);                                                                                                   \
     lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);                                                             \
     lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
@@ -125,8 +132,8 @@ static inline void __test_graph_uint_gen_and_test_##op_type(                    
 void __test_graph_uint_##op_type(size_t a_width, size_t b_width, size_t res_width)                                              \
 {                                                                                                                               \
     const uint32_t tests_num = 10;                                                                                              \
-    TEST_GRAPH_UINT_OP_INIT_CHUNK                                                                                               \
-    lpg_uint_##op_type(graph,graph_a,graph_b,graph_res_obt);                                                                    \
+    TEST_GRAPH_UINT_OP_INIT_CHUNK(res_width)                                                                                               \
+    lpg_uint_##op_type(graph_a,graph_b,graph_res_obt);                                                                          \
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                      \
     {                                                                                                                           \
         LP_TEST_STEP_INTO(                                                                                                      \
@@ -150,8 +157,77 @@ void test_graph_uint_##op_type()                                                
     }                                                                                                                           \
 }
 
+
+#define TEST_GRAPH_UINT_OP_INPLACE(op_type)                                                                                     \
+static inline void __test_graph_uint_gen_and_test_##op_type##_inplace(                                                          \
+        lpg_graph_t *graph,                                                                                                     \
+        lpg_uint_t *graph_a,                                                                                                    \
+        lpg_uint_t *graph_b,                                                                                                    \
+        lpg_uint_t *graph_res_obt,                                                                                              \
+        char *original_hex_str,                                                                                                 \
+        char *converted_hex_str)                                                                                                \
+{                                                                                                                               \
+    cases_uint_t a_prop,b_prop,res_true_prop,res_obt_prop;                                                                      \
+    /* Generate samples */                                                                                                      \
+    lp_uint_rand(a_prop,graph_a->width);                                                                                        \
+    lp_uint_rand(b_prop,graph_b->width);                                                                                        \
+    lp_uint_##op_type(a_prop,b_prop,res_true_prop);                                                                             \
+    /* Build mask for truncating result to appropriate width */                                                                 \
+    cases_uint_t __res_mask,__one;                                                                                              \
+    lp_uint_from_hex(__res_mask,"1");                                                                                           \
+    lp_uint_from_hex(__one,"1");                                                                                                \
+    lp_uint_lshift_ip(__res_mask,graph_res_obt->width);                                                                         \
+    lp_uint_sub_ip(__res_mask,__one);                                                                                           \
+    /* Mask result and convert to hex string for printing error info */                                                         \
+    lp_uint_and_ip(res_true_prop,__res_mask);                                                                                   \
+    lp_uint_to_hex(res_true_prop,original_hex_str,MAX_HEXES_NUM);                                                               \
+    /* Update graph uint operand values from previously generated ones */                                                       \
+    lpg_uint_update_from_uint(graph_a,a_prop);                                                                                  \
+    lpg_uint_update_from_uint(graph_b,b_prop);                                                                                  \
+    /* Compute new graph value and convert it to uint */                                                                        \
+    lpg_graph_compute(graph);                                                                                                   \
+    lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);                                                             \
+    lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
+    LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),                                                                      \
+            "Expected: %s, got: %s",original_hex_str,converted_hex_str);                                                        \
+    lpg_graph_reset(graph);                                                                                                     \
+}                                                                                                                               \
+void __test_graph_uint_##op_type##_inplace(size_t a_width, size_t b_width)                                                      \
+{                                                                                                                               \
+    const uint32_t tests_num = 10;                                                                                              \
+    TEST_GRAPH_UINT_OP_INIT_CHUNK(a_width)                                                                                               \
+    lpg_uint_copy(graph_res_obt,graph_a);                                                                                       \
+    lpg_uint_##op_type##_ip(graph_res_obt,graph_b);                                                                             \
+    for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                      \
+    {                                                                                                                           \
+        LP_TEST_STEP_INTO(                                                                                                      \
+            __test_graph_uint_gen_and_test_##op_type##_inplace(                                                                 \
+                graph,graph_a,graph_b,graph_res_obt,                                                                            \
+                original_hex_str,converted_hex_str)                                                                             \
+        );                                                                                                                      \
+    }                                                                                                                           \
+    TEST_GRAPH_UINT_OP_CLEAN_UP_CHUNK                                                                                           \
+}                                                                                                                               \
+void test_graph_uint_##op_type##_inplace()                                                                                      \
+{                                                                                                                               \
+    for(size_t width = 1; width <= 64; ++width)                                                                                 \
+    {                                                                                                                           \
+        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width,width),0);                                                      \
+        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width,width/2+1),0);                                                  \
+        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width/2+1,width),0);                                                  \
+        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width*2+1,width),0);                                                  \
+        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width,width*2),0);                                                    \
+    }                                                                                                                           \
+}
+
 TEST_GRAPH_UINT_OP(add)
+TEST_GRAPH_UINT_OP_INPLACE(add)
 TEST_GRAPH_UINT_OP(sub)
+TEST_GRAPH_UINT_OP(mul)
+
+TEST_GRAPH_UINT_OP(and)
+TEST_GRAPH_UINT_OP(or)
+TEST_GRAPH_UINT_OP(xor)
 
 
 void test_graph_uint_hex_str()
@@ -169,5 +245,11 @@ void lp_test_graph_uint()
 
     LP_TEST_RUN(test_graph_uint_hex_str(),1);
     LP_TEST_RUN(test_graph_uint_add());
+    LP_TEST_RUN(test_graph_uint_add_inplace());
     LP_TEST_RUN(test_graph_uint_sub());
+    LP_TEST_RUN(test_graph_uint_mul());
+
+    LP_TEST_RUN(test_graph_uint_and());
+    LP_TEST_RUN(test_graph_uint_or());
+    LP_TEST_RUN(test_graph_uint_xor());
 }

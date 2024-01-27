@@ -55,7 +55,7 @@ inline void __lpg_add_child(lpg_node_t *node, lpg_node_t *child)
 static inline bool __lpg_node_belongs_to_graph(const lpg_graph_t *graph, const lpg_node_t *node)
 {
     lpg_node_t *graph_slab_base = graph->slab->__buffer;
-    lpg_node_t *graph_slab_end = graph_slab_base+graph->slab->__entry_size*sizeof(lpg_node_t);
+    lpg_node_t *graph_slab_end = graph_slab_base+graph->slab->__total_entries*sizeof(lpg_node_t);
 
     return node >= graph_slab_base && node < graph_slab_end;
 }

@@ -66,6 +66,63 @@ lpg_uint_t *lpg_uint_create_from_nodes(lpg_graph_t *graph, lpg_node_t **nodes, s
 }
 
 
+lpg_uint_t *lpg_uint_create_fill_with_single(lpg_graph_t *graph, lpg_node_t *node, size_t width)
+{
+    affirmf(graph && node,"Expected valid pointer but null was given");
+
+    lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
+
+    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
+    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
+    __lpg_uint_set_nodes(_uint,nodes_buff);
+    __lpg_uint_set_own(_uint,true);
+
+    for(size_t node_i = 0; node_i < width; ++node_i)
+        nodes_buff[node_i] = node;
+    
+    return _uint;
+}
+
+
+lpg_uint_t *lpg_uint_create_empty(lpg_graph_t *graph, size_t width)
+{
+    affirmf(graph,"Expected valid pointer but null was given");
+
+    lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
+
+    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
+    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
+    __lpg_uint_set_nodes(_uint,nodes_buff);
+    __lpg_uint_set_own(_uint,true);
+
+    for(size_t node_i = 0; node_i < width; ++node_i)
+        nodes_buff[node_i] = NULL;
+    
+    return _uint;
+}
+
+
+lpg_uint_t *lpg_uint_create_as_copy(lpg_uint_t *src)
+{
+    affirmf(src,"Expected valid pointer but null was given");
+
+    lpg_node_t **src_nodes = lpg_uint_nodes(src);
+    affirmf(src->graph && src_nodes,"Provided source has invalid fields");
+
+    lpg_uint_t *_uint = __lpg_uint_general_init(src->graph,src->width);
+
+    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*src->width);
+    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
+    __lpg_uint_set_nodes(_uint,nodes_buff);
+    __lpg_uint_set_own(_uint,true);
+
+    for(size_t node_i = 0; node_i < src->width; ++node_i)
+        nodes_buff[node_i] = src_nodes[node_i];
+    
+    return _uint;
+}
+
+
 lpg_uint_t *lpg_uint_create_from_hex_str(lpg_graph_t *graph, const char *hex_str, size_t width)
 {
     affirmf(graph,"Expected valid pointer but null was given");
@@ -95,9 +152,8 @@ lpg_uint_t *lpg_uint_create_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size
 
     lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
 
-    __lpg_uint_set_own(_uint,false);
-
     __lpg_uint_set_nodes(_uint,nodes);
+    __lpg_uint_set_own(_uint,false);
 
     return _uint;
 }
@@ -252,8 +308,38 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
 }
 
 
-static inline void __lpg_uint_add_left_smaller(lpg_graph_t *graph, lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+#define __lpg_uint_validate_operands_graphs_binary(a,b)                                     \
+        affirmf_debug((a)->graph && (b)->graph,"Found operand with no associated graph");   \
+        affirmf((a)->graph == (b)->graph,"Operands bounded to different graphs");
+
+#define __lpg_uint_validate_operands_graphs_unary(a)                                        \
+        affirmf_debug((a)->graph,"Found operand with no associated graph");
+
+
+void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src)
 {
+    affirmf(dest && src,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(dest,src);
+
+    lpg_graph_t *graph = dest->graph;
+
+    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
+    lpg_node_t **src_nodes = lpg_uint_nodes(src);
+
+    size_t upper_bound = MIN(dest->width,src->width);
+    size_t node_i = 0;
+    for(; node_i < upper_bound; ++node_i)
+        dest_nodes[node_i] = src_nodes[node_i];
+    
+    for(; node_i < dest->width; ++node_i)
+        dest_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+static inline void __lpg_uint_add_left_smaller(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    lpg_graph_t *graph = a->graph;
+
     lpg_node_t **a_nodes = lpg_uint_nodes(a);
     lpg_node_t **b_nodes = lpg_uint_nodes(b);
     lpg_node_t **result_nodes = lpg_uint_nodes(result);
@@ -295,20 +381,57 @@ static inline void __lpg_uint_add_left_smaller(lpg_graph_t *graph, lpg_uint_t *a
 }
 
 
-void lpg_uint_add(lpg_graph_t *graph, lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(graph && a && b && result,"Expected valid pointer but null was given");
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
     
     if(a->width < b->width)
-        __lpg_uint_add_left_smaller(graph,a,b,result);
+        __lpg_uint_add_left_smaller(a,b,result);
     else
-        __lpg_uint_add_left_smaller(graph,b,a,result);
+        __lpg_uint_add_left_smaller(b,a,result);
 }
 
 
-void lpg_uint_sub(lpg_graph_t *graph, lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(graph && a && b && result,"Expected valid pointer but null was given");
+    affirmf(dest && other,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(dest,other);
+
+    lpg_graph_t *graph = dest->graph;
+
+    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
+    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+
+    lpg_node_t *carry = lpg_node_const(graph,false);
+    size_t upper_bound = MIN(dest->width,other->width);
+    size_t node_i = 0;
+    for(; node_i < upper_bound; ++node_i)
+    {
+        lpg_node_t *terms_part = lpg_node_xor(graph,dest_nodes[node_i],other_nodes[node_i]);
+        lpg_node_t *terms_conj = lpg_node_and(graph,dest_nodes[node_i],other_nodes[node_i]);
+        dest_nodes[node_i] = lpg_node_xor(graph,terms_part,carry);
+        carry = lpg_node_or(graph,
+                    lpg_node_and(graph,terms_part,carry),
+                    terms_conj
+                );
+    }
+
+    for(; node_i < dest->width; ++node_i)
+    {
+        lpg_node_t *saved_dest = dest_nodes[node_i];
+        dest_nodes[node_i] = lpg_node_xor(graph,dest_nodes[node_i],carry);
+        carry = lpg_node_and(graph,saved_dest,carry);
+    }
+}
+
+
+void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
+
+    lpg_graph_t *graph = a->graph;
 
     lpg_node_t **a_nodes = lpg_uint_nodes(a);
     lpg_node_t **b_nodes = lpg_uint_nodes(b);
@@ -357,4 +480,171 @@ void lpg_uint_sub(lpg_graph_t *graph, lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *
 
     for(; node_i < result->width; ++node_i)
         result_nodes[node_i] = carry;
+}
+
+
+void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    size_t upper_bound = MIN(MIN(a->width,b->width),result->width);
+    size_t node_i = 0;
+    for(; node_i < upper_bound; ++node_i)
+        result_nodes[node_i] = lpg_node_and(graph,a_nodes[node_i],b_nodes[node_i]);
+    
+    for(; node_i < result->width; ++node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+void lpg_uint_or(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_uint_t *min_term,*max_term;
+    if(a->width < b->width)
+    {
+        min_term = a;
+        max_term = b;
+    }
+    else
+    {
+        min_term = b;
+        max_term = a;
+    }
+
+    lpg_node_t **min_term_nodes = lpg_uint_nodes(min_term);
+    lpg_node_t **max_term_nodes = lpg_uint_nodes(max_term);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    size_t min_upper_bound = MIN(min_term->width,result->width);
+    size_t node_i = 0;
+    for(; node_i < min_upper_bound; ++node_i)
+        result_nodes[node_i] = lpg_node_or(graph,min_term_nodes[node_i],max_term_nodes[node_i]);
+    
+    size_t max_upper_bound = MIN(max_term->width,result->width);
+    for(; node_i < max_upper_bound; ++node_i)
+        result_nodes[node_i] = max_term_nodes[node_i];
+    
+    for(; node_i < result->width; ++node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_uint_t *min_term,*max_term;
+    if(a->width < b->width)
+    {
+        min_term = a;
+        max_term = b;
+    }
+    else
+    {
+        min_term = b;
+        max_term = a;
+    }
+
+    lpg_node_t **min_term_nodes = lpg_uint_nodes(min_term);
+    lpg_node_t **max_term_nodes = lpg_uint_nodes(max_term);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    size_t min_upper_bound = MIN(min_term->width,result->width);
+    size_t node_i = 0;
+    for(; node_i < min_upper_bound; ++node_i)
+        result_nodes[node_i] = lpg_node_xor(graph,min_term_nodes[node_i],max_term_nodes[node_i]);
+    
+    size_t max_upper_bound = MIN(max_term->width,result->width);
+    for(; node_i < max_upper_bound; ++node_i)
+        result_nodes[node_i] = max_term_nodes[node_i];
+    
+    for(; node_i < result->width; ++node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
+{
+    affirmf(a && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_unary(a);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    int64_t node_i = result->width-1;
+    for(; node_i >= a->width+shift; --node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+
+    for(; node_i >= shift; --node_i)
+        result_nodes[node_i] = a_nodes[node_i-shift];
+    
+    for(; node_i >= 0; --node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
+{
+    affirmf(a && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_unary(a);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    shift = MIN(a->width,shift);
+
+    size_t node_i = 0;
+    size_t upper_bound = MIN(a->width-shift,result->width);
+    for(; node_i < upper_bound; ++node_i)
+        result_nodes[node_i] = a_nodes[node_i+shift];
+    
+    for(; node_i < result->width; ++node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    for(size_t node_i = 0; node_i < result->width; ++node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+
+    for(size_t node_i = 0; node_i < b->width; ++node_i)
+    {
+        lpg_uint_t *a_shifted = lpg_uint_create_empty(graph,result->width);
+        lpg_uint_t *b_mask = lpg_uint_create_fill_with_single(graph,b_nodes[node_i],result->width);
+        lpg_uint_lshift(a,node_i,a_shifted);
+        lpg_uint_t *a_masked = lpg_uint_create_empty(graph,result->width);
+        lpg_uint_and(a_shifted,b_mask,a_masked);
+        if(__likely(node_i > 0))
+            lpg_uint_add_ip(result,a_shifted);
+        else
+            lpg_uint_copy(result,a_shifted);
+    }
 }

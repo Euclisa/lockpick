@@ -336,7 +336,7 @@ void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr))
     void *curr_entry = slab->__buffer;
     void *end_slab = slab->__buffer + total_entries*entry_size;
 
-    if(likely(curr_fb))
+    if(__likely(curr_fb))
     {
         while(curr_entry != end_slab)
         {
