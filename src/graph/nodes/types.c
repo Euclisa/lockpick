@@ -13,8 +13,8 @@ static inline bool __lpg_node_is_child_of(const lpg_node_t *node, const lpg_node
 
 void __lpg_node_record_child(lpg_node_t *parent, lpg_node_t *child)
 {
-    affirmf(parent,"Null parent node provided."
-                    "All parent nodes must be initialized before being connected to child nodes."
+    affirmf(parent,"Null parent node provided. "
+                    "All parent nodes must be initialized before being connected to child nodes. "
                     "Please verify all parent node pointers are populated prior to this operation.");
     affirmf_debug(!__lpg_node_is_child_of(child,parent),"Specified node is already a child of this parent node");
 

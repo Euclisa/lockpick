@@ -6,6 +6,7 @@
 
 #define __LPG_UINT_BITS_PER_HEX 4
 
+#define __LPG_UINT_KARATSUBA_BOUND 100
 
 typedef struct lpg_uint
 {
@@ -18,7 +19,8 @@ typedef struct lpg_uint
 lpg_node_t **lpg_uint_nodes(const lpg_uint_t *value);
 
 lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width);
-lpg_uint_t *lpg_uint_allocate_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width);
+lpg_uint_t *lpg_uint_allocate_as_buffer_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width);
+lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *other, size_t offset, size_t width);
 
 void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes);
 void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node);

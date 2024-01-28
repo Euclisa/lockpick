@@ -24,4 +24,6 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+#define LP_NPOS ((size_t)-1)
+
 #endif // _LOCKPICK_DEFINE_H

@@ -1,6 +1,7 @@
 #include <lockpick/graph/types/uint.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/define.h>
+#include <lockpick/math.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -41,6 +42,7 @@ static inline lpg_uint_t *__lpg_uint_general_init(lpg_graph_t *graph, size_t wid
     lpg_uint_t *_uint = (lpg_uint_t*)malloc(sizeof(lpg_uint_t));
     affirmf(_uint,"Failed to allocate space for 'lpg_uint_t' object");
 
+    _uint->__nodes_own = 0;
     _uint->graph = graph;
     _uint->width = width;
 
@@ -67,7 +69,7 @@ lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width)
 }
 
 
-lpg_uint_t *lpg_uint_allocate_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width)
+lpg_uint_t *lpg_uint_allocate_as_buffer_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width)
 {
     affirmf(graph,"Expected valid graph pointer but null was given");
     affirmf(nodes,"Expected valid pointer on nodes buffer but null was given");
@@ -81,13 +83,37 @@ lpg_uint_t *lpg_uint_allocate_as_view(lpg_graph_t *graph, lpg_node_t **nodes, si
 }
 
 
+lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *other, size_t offset, size_t width)
+{
+    affirmf(graph,"Expected valid graph pointer but null was given");
+    affirmf(other,"Expected valid pointer on 'lpg_uint_t' object but null was given");
+    affirmf(offset <= other->width && (width == LP_NPOS || other->width >= (width+offset)),
+        "Can't set view on specified 'lpg_uint_t' with requested offset and width");
+    
+    if(width == LP_NPOS)
+        width = other->width-offset;
+
+    lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
+
+    if(width > 0)
+    {
+        lpg_node_t **other_nodes = lpg_uint_nodes(other);
+        __lpg_uint_set_nodes(_uint,other_nodes+offset);
+    }
+    else
+        __lpg_uint_set_nodes(_uint,NULL);
+
+    __lpg_uint_set_own(_uint,false);
+
+    return _uint;
+}
+
+
 static inline bool __lpg_uint_is_valid_uint(const lpg_uint_t *value)
 {
     if(!value)
         return false;
     if(!value->graph)
-        return false;
-    if(!lpg_uint_nodes(value))
         return false;
     return true;
 }
@@ -154,10 +180,22 @@ void lpg_uint_release(lpg_uint_t *_uint)
     if(own_buffer)
     {
         lpg_node_t **nodes_buff = lpg_uint_nodes(_uint);
-        free(nodes_buff);
+        if(nodes_buff)
+            free(nodes_buff);
     }
 
     free(_uint);
+}
+
+
+void lpg_uint_compute(lpg_uint_t *value)
+{
+    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+
+    lpg_node_t **value_nodes = lpg_uint_nodes(value);
+
+    for(size_t node_i = 0; node_i < value->width; ++node_i)
+        lpg_node_compute(value_nodes[node_i]);
 }
 
 /**
@@ -325,7 +363,7 @@ void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src)
 }
 
 
-static inline void __lpg_uint_add_left_smaller(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+static inline void __lpg_uint_add_right_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
     lpg_graph_t *graph = a->graph;
 
@@ -376,9 +414,9 @@ void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
     __lpg_uint_validate_operands_graphs_binary(a,b);
     
     if(a->width < b->width)
-        __lpg_uint_add_left_smaller(a,b,result);
+        __lpg_uint_add_right_wider(a,b,result);
     else
-        __lpg_uint_add_left_smaller(b,a,result);
+        __lpg_uint_add_right_wider(b,a,result);
 }
 
 
@@ -665,11 +703,8 @@ void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
 }
 
 
-void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+void __lpg_uint_mul_school(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
-
     lpg_graph_t *graph = a->graph;
 
     lpg_node_t **b_nodes = lpg_uint_nodes(b);
@@ -681,18 +716,143 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
     size_t upper_bound = MIN(result->width,b->width);
     lpg_uint_t *a_shifted = lpg_uint_allocate(graph,result->width);
     lpg_uint_t *b_mask = lpg_uint_allocate(graph,result->width);
-    lpg_uint_t *a_masked = lpg_uint_allocate(graph,result->width);
     for(size_t node_i = 0; node_i < upper_bound; ++node_i)
     {
         lpg_uint_update_fill_with_single(b_mask,b_nodes[node_i]);
         lpg_uint_lshift(a,node_i,a_shifted);
-        lpg_uint_and(a_shifted,b_mask,a_masked);
+        lpg_uint_and_ip(a_shifted,b_mask);
         if(__likely(node_i > 0))
-            lpg_uint_add_ip(result,a_masked);
+            lpg_uint_add_ip(result,a_shifted);
         else
-            lpg_uint_copy(result,a_masked);
+            lpg_uint_copy(result,a_shifted);
     }
     lpg_uint_release(a_shifted);
     lpg_uint_release(b_mask);
-    lpg_uint_release(a_masked);
+}
+
+
+static inline size_t __lpg_uint_mul_ops_width(size_t a_width, size_t b_width)
+{
+    size_t min_ops_width = MIN(a_width,b_width);
+    size_t max_ops_width = MAX(a_width,b_width);
+    if(min_ops_width == 0)
+        return 0;
+    if(min_ops_width == 1)
+        return max_ops_width;
+    return min_ops_width+max_ops_width;
+}
+
+static inline size_t __lpg_uint_add_ops_width(size_t a_width, size_t b_width)
+{
+    size_t min_ops_width = MIN(a_width,b_width);
+    size_t max_ops_width = MAX(a_width,b_width);
+
+    return max_ops_width + !!min_ops_width;
+}
+
+
+void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
+    lpg_node_t **result_nodes = lpg_uint_nodes(result);
+
+    size_t a_tr_width = MIN(result->width,a->width);
+    lpg_uint_t *a_tr = lpg_uint_allocate_as_buffer_view(graph,a_nodes,a_tr_width);
+    size_t b_tr_width = MIN(result->width,b->width);
+    lpg_uint_t *b_tr = lpg_uint_allocate_as_buffer_view(graph,b_nodes,b_tr_width);
+
+    for(size_t node_i = 0; node_i < result->width; ++node_i)
+        result_nodes[node_i] = lpg_node_const(graph,false);
+
+    size_t middle = lp_ceil_div_u(a_tr_width,2);
+
+    size_t a0_width = middle;
+    lpg_uint_t *a0 = lpg_uint_allocate_as_uint_view(graph,a_tr,0,a0_width);
+    lpg_uint_t *a1 = lpg_uint_allocate_as_uint_view(graph,a_tr,a0_width,LP_NPOS);
+
+    size_t b0_width = MIN(middle,b_tr_width);
+    lpg_uint_t *b0 = lpg_uint_allocate_as_uint_view(graph,b_tr,0,b0_width);
+    lpg_uint_t *b1 = lpg_uint_allocate_as_uint_view(graph,b_tr,b0_width,LP_NPOS);
+
+    size_t z0_width = __lpg_uint_mul_ops_width(a0->width,b0->width);
+    lpg_uint_t *z0 = lpg_uint_allocate(graph,z0_width);
+    lpg_uint_mul(a0,b0,z0);
+
+    size_t z2_width = __lpg_uint_mul_ops_width(a1->width,b1->width);
+    lpg_uint_t *z2 = lpg_uint_allocate(graph,z2_width);
+    lpg_uint_mul(a1,b1,z2);
+
+    size_t a_sum_width = __lpg_uint_add_ops_width(a0->width,a1->width);
+    lpg_uint_t *a_sum = lpg_uint_allocate(graph,a_sum_width);
+    lpg_uint_add(a0,a1,a_sum);
+
+    size_t b_sum_width = __lpg_uint_add_ops_width(b0->width,b1->width);
+    lpg_uint_t *b_sum = lpg_uint_allocate(graph,b_sum_width);
+    if(b1->width > 0)
+        lpg_uint_add(b0,b1,b_sum);
+    else
+        lpg_uint_copy(b_sum,b0);
+
+    size_t z1_width = __lpg_uint_mul_ops_width(a_sum_width,b_sum_width);
+    lpg_uint_t *p1 = lpg_uint_allocate(graph,z1_width);
+    lpg_uint_mul(a_sum,b_sum,p1);
+
+    lpg_uint_t *p2;
+    if(b1->width > 0)
+    {
+        p2 = lpg_uint_allocate(graph,z1_width);
+        lpg_uint_sub(p1,z2,p2);
+    }
+    else
+        p2 = p1;
+
+    lpg_uint_t *z1 = lpg_uint_allocate(graph,z1_width);
+    lpg_uint_sub(p2,z0,z1);
+
+    size_t result_v0_width = MIN(z0_width,result->width);
+    lpg_uint_t *result_v0 = lpg_uint_allocate_as_uint_view(graph,result,0,result_v0_width);
+    size_t result_v1_width = MIN(z1_width,result->width-middle);
+    lpg_uint_t *result_v1 = lpg_uint_allocate_as_uint_view(graph,result,middle,result_v1_width);
+    size_t result_v2_offset = MIN(z0_width,result->width);
+    lpg_uint_t *result_v2 = lpg_uint_allocate_as_uint_view(graph,result,result_v2_offset,LP_NPOS);
+
+    lpg_uint_add_ip(result_v0,z0);
+    lpg_uint_add_ip(result_v1,z1);
+    lpg_uint_add_ip(result_v2,z2);
+
+    lpg_uint_release(a0);
+    lpg_uint_release(a1);
+    lpg_uint_release(b0);
+    lpg_uint_release(b1);
+    lpg_uint_release(a_sum);
+    lpg_uint_release(b_sum);
+    lpg_uint_release(p1);
+    lpg_uint_release(z0);
+    lpg_uint_release(z1);
+}
+
+
+void __lpg_uint_mul_karatsuba(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a->width > 1 && b->width > 1,"Can't run Karatsuba multiplication on such narrow numbers.");
+    if(a->width > b->width)
+        __lpg_uint_mul_karatsuba_left_wider(a,b,result);
+    else
+        __lpg_uint_mul_karatsuba_left_wider(b,a,result);
+}
+
+
+void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
+{
+    affirmf(a && b && result,"Expected valid pointer but null was given");
+    __lpg_uint_validate_operands_graphs_binary(a,b);
+
+    size_t width_product = a->width*b->width;
+    if(width_product < __LPG_UINT_KARATSUBA_BOUND)
+        __lpg_uint_mul_school(a,b,result);
+    else
+        __lpg_uint_mul_karatsuba(a,b,result);
 }
