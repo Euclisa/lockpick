@@ -17,16 +17,17 @@ typedef struct lpg_uint
 
 lpg_node_t **lpg_uint_nodes(const lpg_uint_t *value);
 
-lpg_uint_t *lpg_uint_create_from_nodes(lpg_graph_t *graph, lpg_node_t **nodes, size_t width);
-lpg_uint_t *lpg_uint_create_fill_with_single(lpg_graph_t *graph, lpg_node_t *node, size_t width);
-lpg_uint_t *lpg_uint_create_empty(lpg_graph_t *graph, size_t width);
-lpg_uint_t *lpg_uint_create_as_copy(lpg_uint_t *src);
-lpg_uint_t *lpg_uint_create_from_hex_str(lpg_graph_t *graph, const char *hex_str, size_t width);
-lpg_uint_t *lpg_uint_create_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width);
+lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width);
+lpg_uint_t *lpg_uint_allocate_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width);
+
+void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes);
+void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node);
+void lpg_uint_update_empty(lpg_uint_t *value);
+void lpg_uint_update_from_hex_str(lpg_uint_t *value, const char *hex_str);
 
 void lpg_uint_release(lpg_uint_t *_uint);
 
-void lpg_uint_update_from_hex(const char *hex_str, lpg_uint_t *value);
+void lpg_uint_assign_from_hex_str(const char *hex_str, lpg_uint_t *value);
 
 void __lpg_uint_update_from_uint(lpg_uint_t *value, const __lp_uint_word_t *uint_value, size_t uint_value_size);
 #define lpg_uint_update_from_uint(value,uint_value) __lpg_uint_update_from_uint((value),(uint_value).__buffer,__array_size((uint_value).__buffer))

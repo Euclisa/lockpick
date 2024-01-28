@@ -48,107 +48,29 @@ static inline lpg_uint_t *__lpg_uint_general_init(lpg_graph_t *graph, size_t wid
 }
 
 
-lpg_uint_t *lpg_uint_create_from_nodes(lpg_graph_t *graph, lpg_node_t **nodes, size_t width)
+lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width)
 {
-    affirmf(graph && nodes,"Expected valid pointer but null was given");
+    affirmf(graph,"Expected valid graph pointer but null was given");
 
     lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
 
-    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
-    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
-    __lpg_uint_set_nodes(_uint,nodes_buff);
-    __lpg_uint_set_own(_uint,true);
+    lpg_node_t **nodes = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
+    affirmf(nodes,"Failed to allocate buffer for nodes");
 
     for(size_t node_i = 0; node_i < width; ++node_i)
-        nodes_buff[node_i] = nodes[node_i];
+        nodes[node_i] = NULL;
 
-    return _uint;
-}
-
-
-lpg_uint_t *lpg_uint_create_fill_with_single(lpg_graph_t *graph, lpg_node_t *node, size_t width)
-{
-    affirmf(graph && node,"Expected valid pointer but null was given");
-
-    lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
-
-    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
-    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
-    __lpg_uint_set_nodes(_uint,nodes_buff);
+    __lpg_uint_set_nodes(_uint,nodes);
     __lpg_uint_set_own(_uint,true);
 
-    for(size_t node_i = 0; node_i < width; ++node_i)
-        nodes_buff[node_i] = node;
-    
     return _uint;
 }
 
 
-lpg_uint_t *lpg_uint_create_empty(lpg_graph_t *graph, size_t width)
+lpg_uint_t *lpg_uint_allocate_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width)
 {
-    affirmf(graph,"Expected valid pointer but null was given");
-
-    lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
-
-    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
-    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
-    __lpg_uint_set_nodes(_uint,nodes_buff);
-    __lpg_uint_set_own(_uint,true);
-
-    for(size_t node_i = 0; node_i < width; ++node_i)
-        nodes_buff[node_i] = NULL;
-    
-    return _uint;
-}
-
-
-lpg_uint_t *lpg_uint_create_as_copy(lpg_uint_t *src)
-{
-    affirmf(src,"Expected valid pointer but null was given");
-
-    lpg_node_t **src_nodes = lpg_uint_nodes(src);
-    affirmf(src->graph && src_nodes,"Provided source has invalid fields");
-
-    lpg_uint_t *_uint = __lpg_uint_general_init(src->graph,src->width);
-
-    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*src->width);
-    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
-    __lpg_uint_set_nodes(_uint,nodes_buff);
-    __lpg_uint_set_own(_uint,true);
-
-    for(size_t node_i = 0; node_i < src->width; ++node_i)
-        nodes_buff[node_i] = src_nodes[node_i];
-    
-    return _uint;
-}
-
-
-lpg_uint_t *lpg_uint_create_from_hex_str(lpg_graph_t *graph, const char *hex_str, size_t width)
-{
-    affirmf(graph,"Expected valid pointer but null was given");
-
-    lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
-
-    lpg_node_t **nodes_buff = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*width);
-    affirmf(nodes_buff,"Failed to allocate buffer for nodes");
-    __lpg_uint_set_nodes(_uint,nodes_buff);
-    __lpg_uint_set_own(_uint,true);
-
-    for(size_t node_i = 0; node_i < width; ++node_i)
-    {
-        nodes_buff[node_i] = lpg_node_var(graph);
-        __lpg_node_set_computed(nodes_buff[node_i],true);
-    }
-    
-    lpg_uint_update_from_hex(hex_str,_uint);
-
-    return _uint;
-}
-
-
-lpg_uint_t *lpg_uint_create_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width)
-{
-    affirmf(graph && nodes,"Expected valid pointer but null was given");
+    affirmf(graph,"Expected valid graph pointer but null was given");
+    affirmf(nodes,"Expected valid pointer on nodes buffer but null was given");
 
     lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
 
@@ -156,6 +78,73 @@ lpg_uint_t *lpg_uint_create_as_view(lpg_graph_t *graph, lpg_node_t **nodes, size
     __lpg_uint_set_own(_uint,false);
 
     return _uint;
+}
+
+
+static inline bool __lpg_uint_is_valid_uint(const lpg_uint_t *value)
+{
+    if(!value)
+        return false;
+    if(!value->graph)
+        return false;
+    if(!lpg_uint_nodes(value))
+        return false;
+    return true;
+}
+
+
+void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes)
+{
+    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+    affirmf(nodes,"Expected valid pointer on nodes buffer but null was given");
+    affirmf(__lpg_uint_is_valid_uint(value),"Specified 'lpg_uint_t' object is invalid");
+
+    lpg_node_t **value_nodes = lpg_uint_nodes(value);
+
+    for(size_t node_i = 0; node_i < value->width; ++node_i)
+    {
+        affirmf(__lpg_node_belongs_to_graph(value->graph,nodes[node_i]),
+        "Node inside buffer at index '%ld' does not belong to the graph given value bounded with");
+        value_nodes[node_i] = nodes[node_i];
+    }
+}
+
+
+void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node)
+{
+    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+    affirmf(node,"Expected valid pointer but null was given");
+    affirmf(__lpg_node_belongs_to_graph(value->graph,node),"Specified node does not belong to the graph given value bounded with");
+
+    lpg_node_t **value_nodes = lpg_uint_nodes(value);
+
+    for(size_t node_i = 0; node_i < value->width; ++node_i)
+        value_nodes[node_i] = node;
+}
+
+
+void lpg_uint_update_empty(lpg_uint_t *value)
+{
+    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+
+    lpg_node_t **value_nodes = lpg_uint_nodes(value);
+
+    for(size_t node_i = 0; node_i < value->width; ++node_i)
+        value_nodes[node_i] = NULL;
+}
+
+
+void lpg_uint_update_from_hex_str(lpg_uint_t *value, const char *hex_str)
+{
+    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+    affirmf(hex_str,"Expected valid pointer on hex string but null was given");
+
+    lpg_node_t **value_nodes = lpg_uint_nodes(value);
+
+    for(size_t node_i = 0; node_i < value->width; ++node_i)
+        value_nodes[node_i] = lpg_node_const(value->graph,false);
+    
+    lpg_uint_assign_from_hex_str(hex_str,value);
 }
 
 
@@ -190,7 +179,7 @@ uint8_t __lpg_uint_ch2i(char char_hex)
 }
 
 
-void lpg_uint_update_from_hex(const char *hex_str, lpg_uint_t *value)
+void lpg_uint_assign_from_hex_str(const char *hex_str, lpg_uint_t *value)
 {
     affirmf(hex_str && value,"Expected valid pointer but null was given");
 
@@ -636,19 +625,20 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
         result_nodes[node_i] = lpg_node_const(graph,false);
 
     size_t upper_bound = MIN(result->width,b->width);
+    lpg_uint_t *a_shifted = lpg_uint_allocate(graph,result->width);
+    lpg_uint_t *b_mask = lpg_uint_allocate(graph,result->width);
+    lpg_uint_t *a_masked = lpg_uint_allocate(graph,result->width);
     for(size_t node_i = 0; node_i < upper_bound; ++node_i)
     {
-        lpg_uint_t *a_shifted = lpg_uint_create_empty(graph,result->width);
-        lpg_uint_t *b_mask = lpg_uint_create_fill_with_single(graph,b_nodes[node_i],result->width);
+        lpg_uint_update_fill_with_single(b_mask,b_nodes[node_i]);
         lpg_uint_lshift(a,node_i,a_shifted);
-        lpg_uint_t *a_masked = lpg_uint_create_empty(graph,result->width);
         lpg_uint_and(a_shifted,b_mask,a_masked);
         if(__likely(node_i > 0))
             lpg_uint_add_ip(result,a_masked);
         else
             lpg_uint_copy(result,a_masked);
-        lpg_uint_release(a_shifted);
-        lpg_uint_release(b_mask);
-        lpg_uint_release(a_masked);
     }
+    lpg_uint_release(a_shifted);
+    lpg_uint_release(b_mask);
+    lpg_uint_release(a_masked);
 }

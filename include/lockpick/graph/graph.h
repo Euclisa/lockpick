@@ -48,6 +48,8 @@ void __lpg_node_set_value(lpg_node_t *node, bool value);
 
 bool lpg_node_validate_fetch(const lpg_graph_t *graph, const lpg_node_t *node);
 
+bool __lpg_node_belongs_to_graph(const lpg_graph_t *graph, const lpg_node_t *node);
+
 lpg_node_t *lpg_node_and(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_or(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_not(lpg_graph_t *graph, lpg_node_t *a);
