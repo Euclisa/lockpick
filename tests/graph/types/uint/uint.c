@@ -198,8 +198,11 @@ TEST_GRAPH_UINT_OP(sub,64,10)
 TEST_GRAPH_UINT_OP(mul,32,3)
 
 TEST_GRAPH_UINT_OP(and,64,10)
+TEST_GRAPH_UINT_OP_INPLACE(and,64,10)
 TEST_GRAPH_UINT_OP(or,64,10)
+TEST_GRAPH_UINT_OP_INPLACE(or,64,10)
 TEST_GRAPH_UINT_OP(xor,64,10)
+TEST_GRAPH_UINT_OP_INPLACE(xor,64,10)
 
 
 void test_graph_uint_hex_str()
@@ -222,6 +225,9 @@ void lp_test_graph_uint()
     LP_TEST_RUN(test_graph_uint_mul());
 
     LP_TEST_RUN(test_graph_uint_and());
+    LP_TEST_RUN(test_graph_uint_and_inplace());
     LP_TEST_RUN(test_graph_uint_or());
+    LP_TEST_RUN(test_graph_uint_or_inplace());
     LP_TEST_RUN(test_graph_uint_xor());
+    LP_TEST_RUN(test_graph_uint_xor_inplace());
 }
