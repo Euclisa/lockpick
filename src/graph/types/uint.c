@@ -800,14 +800,11 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     lpg_uint_t *p1 = lpg_uint_allocate(graph,z1_width);
     lpg_uint_mul(a_sum,b_sum,p1);
 
-    lpg_uint_t *p2;
+    lpg_uint_t *p2 = lpg_uint_allocate(graph,z1_width);
     if(b1->width > 0)
-    {
-        p2 = lpg_uint_allocate(graph,z1_width);
         lpg_uint_sub(p1,z2,p2);
-    }
     else
-        p2 = p1;
+        lpg_uint_copy(p2,p1);
 
     lpg_uint_t *z1 = lpg_uint_allocate(graph,z1_width);
     lpg_uint_sub(p2,z0,z1);
@@ -823,6 +820,8 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     lpg_uint_add_ip(result_v1,z1);
     lpg_uint_add_ip(result_v2,z2);
 
+    lpg_uint_release(a_tr);
+    lpg_uint_release(b_tr);
     lpg_uint_release(a0);
     lpg_uint_release(a1);
     lpg_uint_release(b0);
@@ -830,8 +829,13 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     lpg_uint_release(a_sum);
     lpg_uint_release(b_sum);
     lpg_uint_release(p1);
+    lpg_uint_release(p2);
     lpg_uint_release(z0);
     lpg_uint_release(z1);
+    lpg_uint_release(z2);
+    lpg_uint_release(result_v0);
+    lpg_uint_release(result_v1);
+    lpg_uint_release(result_v2);
 }
 
 
