@@ -34,6 +34,8 @@ void lpg_uint_assign_from_hex_str(const char *hex_str, lpg_uint_t *value);
 void __lpg_uint_update_from_uint(lpg_uint_t *value, const __lp_uint_word_t *uint_value, size_t uint_value_size);
 #define lpg_uint_update_from_uint(value,uint_value) __lpg_uint_update_from_uint((value),(uint_value).__buffer,__array_size((uint_value).__buffer))
 
+void lpg_uint_compute(lpg_uint_t *value);
+
 size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n);
 
 void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src);

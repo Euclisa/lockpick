@@ -342,6 +342,7 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 
             bool session_failed = level_tests_failed[current_level] > 0;
             __lp_test_print_end(project_name_str,level_cases_passed[current_level],duration_total_ns,session_failed);
+            exit(level_tests_failed[current_level]);
             break;
         }
         case __LP_TEST_STEP_OUT:
