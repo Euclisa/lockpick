@@ -11,7 +11,6 @@ lp_slab_t *__lpg_node_create_slab(size_t total_entries)
     return slab;
 }
 
-
 lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outputs_size, size_t max_nodes)
 {
     affirmf(name,"Expected valid pointer on graph name str");
@@ -41,22 +40,17 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
 }
 
 
-static inline void __lpg_graph_release_slab_callback(void *ptr)
+static inline void __lpg_graph_release_slab_callback(void *entry_ptr, void *args)
 {
-    lpg_node_t *node = (lpg_node_t*)ptr;
-    lpg_node_t **parents = lpg_node_parents(node);
-
-    if(parents)
-        free(parents);
+    lpg_node_t *node = (lpg_node_t*)entry_ptr;
     
-    if(node->children)
-        free(node->children);
+    __lpg_node_release(node);
 }
 
 void lpg_graph_release(lpg_graph_t *graph)
 {
     affirmf(graph,"Expected valid pointer on graph structure but null was given");
-    lp_slab_exec(graph->slab,__lpg_graph_release_slab_callback);
+    lp_slab_exec(graph->slab,__lpg_graph_release_slab_callback,NULL);
     lp_slab_release(graph->slab);
     free(graph->name);
     free(graph->inputs);
@@ -64,9 +58,20 @@ void lpg_graph_release(lpg_graph_t *graph)
     free(graph);
 }
 
-static inline void __lpg_graph_reset_slab_callback(void *ptr)
+
+void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node)
 {
-    lpg_node_t *node = (lpg_node_t*)ptr;
+    affirmf(graph,"Expected valid pointer on graph structure but null was given");
+    affirmf(node,"Expected valid node pointer but null was given");
+    affirmf(__lpg_node_belongs_to_graph(graph,node),"Specified node does not belong to the given graph");
+    lp_slab_free(graph->slab,node);
+    __lpg_node_release(node);
+}
+
+
+static inline void __lpg_graph_reset_slab_callback(void *entry_ptr, void *args)
+{
+    lpg_node_t *node = (lpg_node_t*)entry_ptr;
 
     if(node->type != LPG_NODE_TYPE_VAR)
         __lpg_node_set_computed(node,false);
@@ -76,18 +81,5 @@ inline void lpg_graph_reset(lpg_graph_t *graph)
 {
     affirmf(graph,"Expected valid graph pointer but null was given");
 
-    lp_slab_exec(graph->slab,__lpg_graph_reset_slab_callback);    
-}
-
-
-inline void lpg_graph_compute(lpg_graph_t *graph)
-{
-    affirmf(graph,"Expected valid graph pointer but null was given");
-
-    for(size_t node_i = 0; node_i < graph->outputs_size; ++node_i)
-    {
-        affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %ld."
-                                    "Is graph assembled properly?",node_i);
-        lpg_node_compute(graph->outputs[node_i]);
-    }
+    lp_slab_exec(graph->slab,__lpg_graph_reset_slab_callback,NULL);    
 }

@@ -109,3 +109,16 @@ void lpg_node_compute(lpg_node_t *node)
         __lpg_node_set_computed(curr_node,true);
     }
 }
+
+
+inline void lpg_graph_compute(lpg_graph_t *graph)
+{
+    affirmf(graph,"Expected valid graph pointer but null was given");
+
+    for(size_t node_i = 0; node_i < graph->outputs_size; ++node_i)
+    {
+        affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %ld."
+                                    "Is graph assembled properly?",node_i);
+        lpg_node_compute(graph->outputs[node_i]);
+    }
+}

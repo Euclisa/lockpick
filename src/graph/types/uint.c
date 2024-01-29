@@ -401,6 +401,8 @@ static inline void __lpg_uint_add_right_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_
 
     if(node_i < result->width)
         result_nodes[node_i] = carry;
+    else
+        lpg_graph_release_node(graph,carry);
     ++node_i;
 
     for(; node_i < result->width; ++node_i)
@@ -450,6 +452,7 @@ void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other)
         dest_nodes[node_i] = lpg_node_xor(graph,dest_nodes[node_i],carry);
         carry = lpg_node_and(graph,saved_dest,carry);
     }
+    lpg_graph_release_node(graph,carry);
 }
 
 
@@ -505,8 +508,11 @@ void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
         }
     }
 
-    for(; node_i < result->width; ++node_i)
-        result_nodes[node_i] = carry;
+    if(node_i == result->width)
+        lpg_graph_release_node(graph,carry);
+    else
+        for(; node_i < result->width; ++node_i)
+            result_nodes[node_i] = carry;
 }
 
 
@@ -708,10 +714,6 @@ void __lpg_uint_mul_school(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
     lpg_graph_t *graph = a->graph;
 
     lpg_node_t **b_nodes = lpg_uint_nodes(b);
-    lpg_node_t **result_nodes = lpg_uint_nodes(result);
-
-    for(size_t node_i = 0; node_i < result->width; ++node_i)
-        result_nodes[node_i] = lpg_node_const(graph,false);
 
     size_t upper_bound = MIN(result->width,b->width);
     lpg_uint_t *a_shifted = lpg_uint_allocate(graph,result->width);

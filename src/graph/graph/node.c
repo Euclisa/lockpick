@@ -68,3 +68,15 @@ inline bool lpg_node_validate_fetch(const lpg_graph_t *graph, const lpg_node_t *
     
     return lpg_node_value(node);
 }
+
+
+inline void __lpg_node_release(lpg_node_t *node)
+{
+    lpg_node_t **parents = lpg_node_parents(node);
+
+    if(parents)
+        free(parents);
+    
+    if(node->children)
+        free(node->children);
+}

@@ -59,6 +59,7 @@ lpg_node_t *lpg_node_var(lpg_graph_t *graph);
 
 void lpg_node_compute(lpg_node_t *node);
 
+void __lpg_node_release(lpg_node_t *node);
 
 struct lpg_graph
 {
@@ -73,8 +74,10 @@ struct lpg_graph
 lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outputs_size, size_t max_nodes);
 
 void lpg_graph_release(lpg_graph_t *graph);
+void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
 void lpg_graph_reset(lpg_graph_t *graph);
 void lpg_graph_compute(lpg_graph_t *graph);
+size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph);
 
 #endif // _LOCKPICK_GRAPH_GRAPH_H

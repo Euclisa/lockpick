@@ -42,7 +42,7 @@ const size_t MAX_HEXES_NUM = sizeof(cases_uint_t)*2;
 const size_t MAX_WIDTH = sizeof(cases_uint_t)*8;
 
 
-void test_graph_uint_from_to_hex(size_t width)
+void __test_graph_uint_from_to_hex(size_t width)
 {
     const uint32_t tests_num = 1000;
 
@@ -82,9 +82,16 @@ void test_graph_uint_from_to_hex(size_t width)
         __lpg_node_set_computed(graph->inputs[node_i],true);                                                                    \
     char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                    \
     char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                   \
-    lpg_uint_t *graph_a = lpg_uint_allocate_as_buffer_view(graph,graph->inputs,a_width);                                               \
-    lpg_uint_t *graph_b = lpg_uint_allocate_as_buffer_view(graph,graph->inputs+a_width,b_width);                                       \
+    lpg_uint_t *graph_a = lpg_uint_allocate_as_buffer_view(graph,graph->inputs,a_width);                                        \
+    lpg_uint_t *graph_b = lpg_uint_allocate_as_buffer_view(graph,graph->inputs+a_width,b_width);                                \
     lpg_uint_t *graph_res_obt = lpg_uint_allocate_as_buffer_view(graph,graph->outputs,res_width);
+
+#define TEST_GRAPH_UINT_OP_DANGLING_INIT_CHUNK(res_width)                                                                       \
+    lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,__LPG_TEST_UINT_MAX_GRAPH_NODES);                    \
+    lpg_uint_t *graph_a = lpg_uint_allocate_as_buffer_view(graph,graph->inputs,a_width);                                        \
+    lpg_uint_t *graph_b = lpg_uint_allocate_as_buffer_view(graph,graph->inputs+a_width,b_width);                                \
+    lpg_uint_t *graph_res_obt = lpg_uint_allocate_as_buffer_view(graph,graph->outputs,res_width);
+
 
 #define TEST_GRAPH_UINT_OP_CLEAN_UP_CHUNK                                                                                       \
     lpg_graph_release(graph);                                                                                                   \
@@ -93,6 +100,12 @@ void test_graph_uint_from_to_hex(size_t width)
     lpg_uint_release(graph_res_obt);                                                                                            \
     free(original_hex_str);                                                                                                     \
     free(converted_hex_str);
+
+#define TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                              \
+    lpg_graph_release(graph);                                                                                                   \
+    lpg_uint_release(graph_a);                                                                                                  \
+    lpg_uint_release(graph_b);                                                                                                  \
+    lpg_uint_release(graph_res_obt);
 
 
 #define __TEST_GRAPH_UINT_OP_GEN_AND_TEST(op_type,postfix)                                                                      \
@@ -137,7 +150,7 @@ static inline void __test_graph_uint_gen_and_test_##op_type##_##postfix(        
 }
 
 
-#define TEST_GRAPH_UINT_OP(op_type, width_high, cases_num)                                                                      \
+#define TEST_GRAPH_UINT_OP(op_type, width_sets_num, width_high, cases_num)                                                      \
 __TEST_GRAPH_UINT_OP_GEN_AND_TEST(op_type,plain)                                                                                \
 void __test_graph_uint_##op_type(size_t a_width, size_t b_width, size_t res_width)                                              \
 {                                                                                                                               \
@@ -156,19 +169,39 @@ void __test_graph_uint_##op_type(size_t a_width, size_t b_width, size_t res_widt
 }                                                                                                                               \
 void test_graph_uint_##op_type()                                                                                                \
 {                                                                                                                               \
-    for(size_t width = 1; width <= width_high; ++width)                                                                         \
+    for(size_t set_i = 0; set_i <= width_sets_num; ++set_i)                                                                     \
     {                                                                                                                           \
-        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width,width,width));                                                      \
-        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width,width,width/2+1));                                                  \
-        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width,width/2+1,width));                                                  \
-        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width/2+1,width,width));                                                  \
-        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width/2+1,width,width*2));                                                \
-        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width,width/2+1,width/2+1));                                              \
+        size_t width_a = rand() % width_high;                                                                                   \
+        size_t width_b = rand() % width_high;                                                                                   \
+        size_t width_res = rand() % width_high;                                                                                 \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width_a,width_b,width_res));                                              \
     }                                                                                                                           \
 }
 
 
-#define TEST_GRAPH_UINT_OP_INPLACE(op_type, width_high, cases_num)                                                              \
+#define TEST_GRAPH_UINT_OP_DANGLING_NODES(op_type, width_sets_num, width_high)                                                  \
+void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t b_width, size_t res_width)                             \
+{                                                                                                                               \
+    TEST_GRAPH_UINT_OP_DANGLING_INIT_CHUNK(res_width)                                                                           \
+    lpg_uint_##op_type(graph_a,graph_b,graph_res_obt);                                                                          \
+    size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
+    LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
+            "Found %ld dangling nodes after full graph assembly",dangling_nodes);                                               \
+    TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
+}                                                                                                                               \
+void test_graph_uint_##op_type##_dangling_nodes()                                                                               \
+{                                                                                                                               \
+    for(size_t set_i = 0; set_i <= width_sets_num; ++set_i)                                                                     \
+    {                                                                                                                           \
+        size_t width_a = rand() % width_high;                                                                                   \
+        size_t width_b = rand() % width_high;                                                                                   \
+        size_t width_res = rand() % width_high;                                                                                 \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_dangling_nodes(width_a,width_b,width_res));                             \
+    }                                                                                                                           \
+}
+
+
+#define TEST_GRAPH_UINT_OP_INPLACE(op_type, width_sets_num, width_high, cases_num)                                              \
 __TEST_GRAPH_UINT_OP_GEN_AND_TEST(op_type,inplace)                                                                              \
 void __test_graph_uint_##op_type##_inplace(size_t a_width, size_t b_width)                                                      \
 {                                                                                                                               \
@@ -188,34 +221,68 @@ void __test_graph_uint_##op_type##_inplace(size_t a_width, size_t b_width)      
 }                                                                                                                               \
 void test_graph_uint_##op_type##_inplace()                                                                                      \
 {                                                                                                                               \
-    for(size_t width = 1; width <= width_high; ++width)                                                                         \
+    for(size_t set_i = 0; set_i <= width_sets_num; ++set_i)                                                                     \
     {                                                                                                                           \
-        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width,width),0);                                                      \
-        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width,width/2+1),0);                                                  \
-        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width/2+1,width),0);                                                  \
-        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width*2+1,width),0);                                                  \
-        LP_TEST_RUN(__test_graph_uint_##op_type##_inplace(width,width*2),0);                                                    \
+        size_t width_a = rand() % width_high;                                                                                   \
+        size_t width_b = rand() % width_high;                                                                                   \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(width_a,width_b));                                              \
     }                                                                                                                           \
 }
 
-TEST_GRAPH_UINT_OP(add,64,10)
-TEST_GRAPH_UINT_OP_INPLACE(add,64,10)
-TEST_GRAPH_UINT_OP(sub,64,10)
-TEST_GRAPH_UINT_OP(mul,32,3)
 
-TEST_GRAPH_UINT_OP(and,64,10)
-TEST_GRAPH_UINT_OP_INPLACE(and,64,10)
-TEST_GRAPH_UINT_OP(or,64,10)
-TEST_GRAPH_UINT_OP_INPLACE(or,64,10)
-TEST_GRAPH_UINT_OP(xor,64,10)
-TEST_GRAPH_UINT_OP_INPLACE(xor,64,10)
+#define TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(op_type, width_sets_num, width_high)                                          \
+void __test_graph_uint_##op_type##_inplace_dangling_nodes(size_t a_width, size_t b_width)                                       \
+{                                                                                                                               \
+    TEST_GRAPH_UINT_OP_DANGLING_INIT_CHUNK(a_width)                                                                             \
+    lpg_uint_copy(graph_res_obt,graph_a);                                                                                       \
+    lpg_uint_##op_type##_ip(graph_res_obt,graph_b);                                                                             \
+    size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
+    LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
+            "Found %ld dangling nodes after full graph assembly",dangling_nodes);                                               \
+    TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
+}                                                                                                                               \
+void test_graph_uint_##op_type##_inplace_dangling_nodes()                                                                       \
+{                                                                                                                               \
+    for(size_t set_i = 0; set_i <= width_sets_num; ++set_i)                                                                     \
+    {                                                                                                                           \
+        size_t width_a = rand() % width_high;                                                                                   \
+        size_t width_b = rand() % width_high;                                                                                   \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace_dangling_nodes(width_a,width_b));                               \
+    }                                                                                                                           \
+}
+
+TEST_GRAPH_UINT_OP(add,20,64,10)
+TEST_GRAPH_UINT_OP_DANGLING_NODES(add,20,64)
+TEST_GRAPH_UINT_OP_INPLACE(add,20,64,10)
+TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(add,20,64)
+
+TEST_GRAPH_UINT_OP(sub,20,64,10)
+TEST_GRAPH_UINT_OP_DANGLING_NODES(sub,20,64)
+
+TEST_GRAPH_UINT_OP(mul,20,64,3)
+TEST_GRAPH_UINT_OP_DANGLING_NODES(mul,20,64)
+
+TEST_GRAPH_UINT_OP(and,20,64,10)
+TEST_GRAPH_UINT_OP_DANGLING_NODES(and,20,64)
+TEST_GRAPH_UINT_OP_INPLACE(and,20,64,10)
+TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(and,20,64)
+
+TEST_GRAPH_UINT_OP(or,20,64,10)
+TEST_GRAPH_UINT_OP_DANGLING_NODES(or,20,64)
+TEST_GRAPH_UINT_OP_INPLACE(or,20,64,10)
+TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(or,20,64)
+
+TEST_GRAPH_UINT_OP(xor,20,64,10)
+TEST_GRAPH_UINT_OP_DANGLING_NODES(xor,20,64)
+TEST_GRAPH_UINT_OP_INPLACE(xor,20,64,10)
+TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(xor,20,64)
 
 
 void test_graph_uint_hex_str()
 {
     for(size_t width = 1; width <= 64; ++width)
     {
-        LP_TEST_RUN(test_graph_uint_from_to_hex(width));
+        LP_TEST_RUN(__test_graph_uint_from_to_hex(width));
     }
 }
 
@@ -225,15 +292,30 @@ void lp_test_graph_uint()
     srand(0);
 
     LP_TEST_RUN(test_graph_uint_hex_str(),1);
+
     LP_TEST_RUN(test_graph_uint_add());
+    LP_TEST_RUN(test_graph_uint_add_dangling_nodes());
     LP_TEST_RUN(test_graph_uint_add_inplace());
+    LP_TEST_RUN(test_graph_uint_add_inplace_dangling_nodes());
+
     LP_TEST_RUN(test_graph_uint_sub());
+    LP_TEST_RUN(test_graph_uint_sub_dangling_nodes());
+
     LP_TEST_RUN(test_graph_uint_mul());
+    LP_TEST_RUN(test_graph_uint_mul_dangling_nodes());
 
     LP_TEST_RUN(test_graph_uint_and());
+    LP_TEST_RUN(test_graph_uint_and_dangling_nodes());
     LP_TEST_RUN(test_graph_uint_and_inplace());
+    LP_TEST_RUN(test_graph_uint_and_inplace_dangling_nodes());
+
     LP_TEST_RUN(test_graph_uint_or());
+    LP_TEST_RUN(test_graph_uint_or_dangling_nodes());
     LP_TEST_RUN(test_graph_uint_or_inplace());
+    LP_TEST_RUN(test_graph_uint_or_inplace_dangling_nodes());
+
     LP_TEST_RUN(test_graph_uint_xor());
+    LP_TEST_RUN(test_graph_uint_xor_dangling_nodes());
     LP_TEST_RUN(test_graph_uint_xor_inplace());
+    LP_TEST_RUN(test_graph_uint_or_inplace_dangling_nodes());
 }

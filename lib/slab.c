@@ -131,12 +131,15 @@ void lp_slab_release(lp_slab_t *slab)
 {
     affirmf(slab,"Expected valid slab pointer but null was given");
     free(slab->__buffer);
-    __lp_slab_block_list_t *current_fb = __lp_slab_block_list_container(slab->__fb_head->__node.next);
-    while(current_fb != slab->__fb_head)
+    if(slab->__fb_head)
     {
-        __lp_slab_block_list_t *to_free_fb = current_fb;
-        current_fb = __lp_slab_block_list_container(current_fb->__node.next);
-        free(to_free_fb);
+        __lp_slab_block_list_t *current_fb = __lp_slab_block_list_container(slab->__fb_head->__node.next);
+        while(current_fb != slab->__fb_head)
+        {
+            __lp_slab_block_list_t *to_free_fb = current_fb;
+            current_fb = __lp_slab_block_list_container(current_fb->__node.next);
+            free(to_free_fb);
+        }
     }
     free(slab->__fb_head);
     free(slab);
@@ -325,7 +328,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
 }
 
 
-void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr))
+void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr, void *args), void *args)
 {
     affirmf(slab,"Expected valid graph pointer but null was given");
 
@@ -342,17 +345,19 @@ void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr))
         {
             if(curr_entry == curr_fb->__base)
             {
-                curr_entry += curr_fb->__block_size*entry_size;
+                size_t fb_size = curr_fb->__block_size*entry_size;
+                curr_entry += fb_size;
+                curr_fb = __lp_slab_block_list_container(curr_fb->__node.next);
                 continue;
             }
             
-            callback(curr_entry);
+            callback(curr_entry,args);
             curr_entry += entry_size;
         }
     }
     else
     {
         for(; curr_entry != end_slab; curr_entry += entry_size)
-            callback(curr_entry);
+            callback(curr_entry,args);
     }
 }
