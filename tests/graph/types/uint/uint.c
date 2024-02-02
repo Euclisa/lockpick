@@ -271,9 +271,13 @@ TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(add,20,64)
 
 TEST_GRAPH_UINT_OP(sub,20,64,10)
 TEST_GRAPH_UINT_OP_DANGLING_NODES(sub,20,64)
+TEST_GRAPH_UINT_OP_INPLACE(sub,20,64,10)
+TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(sub,20,64)
 
 TEST_GRAPH_UINT_OP(mul,20,64,3)
 TEST_GRAPH_UINT_OP_DANGLING_NODES(mul,20,64)
+TEST_GRAPH_UINT_OP_INPLACE(mul,20,64,10)
+TEST_GRAPH_UINT_OP_INPLACE_DANGLING_NODES(mul,20,64)
 
 TEST_GRAPH_UINT_OP(and,20,64,10)
 TEST_GRAPH_UINT_OP_DANGLING_NODES(and,20,64)
@@ -313,9 +317,13 @@ void lp_test_graph_uint()
 
     LP_TEST_RUN(test_graph_uint_sub());
     LP_TEST_RUN(test_graph_uint_sub_dangling_nodes());
+    LP_TEST_RUN(test_graph_uint_sub_inplace());
+    LP_TEST_RUN(test_graph_uint_sub_inplace_dangling_nodes());
 
     LP_TEST_RUN(test_graph_uint_mul());
     LP_TEST_RUN(test_graph_uint_mul_dangling_nodes());
+    LP_TEST_RUN(test_graph_uint_mul_inplace());
+    LP_TEST_RUN(test_graph_uint_mul_inplace_dangling_nodes());
 
     LP_TEST_RUN(test_graph_uint_and());
     LP_TEST_RUN(test_graph_uint_and_dangling_nodes());

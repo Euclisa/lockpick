@@ -43,7 +43,9 @@ void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src);
 void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other);
 void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
+void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other);
 void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
+void lpg_uint_mul_ip(lpg_uint_t *dest, lpg_uint_t *other);
 
 void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_and_ip(lpg_uint_t *dest, lpg_uint_t *other);

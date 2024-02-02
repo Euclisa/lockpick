@@ -516,6 +516,51 @@ void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
+void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other)
+{
+    affirmf(dest,"Expected valid pointer on left-side operand but null was given");
+    affirmf(other,"Expected valid pointer on right-side operand but null was given");
+    __lpg_uint_validate_operands_graphs_binary(dest,other);
+
+    lpg_graph_t *graph = dest->graph;
+
+    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
+    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+
+    lpg_node_t *carry = lpg_node_const(graph,false);
+    size_t upper_bound = MIN(dest->width,other->width);
+    size_t node_i = 0;
+    for(; node_i < upper_bound; ++node_i)
+    {
+        lpg_node_t *terms_part = lpg_node_xor(graph,dest_nodes[node_i],other_nodes[node_i]);
+        lpg_node_t *carry_conj_part = lpg_node_and(graph,
+                                        lpg_node_not(graph,dest_nodes[node_i]),
+                                        other_nodes[node_i]
+                                    );
+        dest_nodes[node_i] = lpg_node_xor(graph,terms_part,carry);
+        carry = lpg_node_or(graph,
+                    lpg_node_and(graph,
+                        lpg_node_not(graph,terms_part),
+                        carry
+                    ),
+                    carry_conj_part
+                );
+    }
+    
+    for(; node_i < dest->width; ++node_i)
+    {
+        lpg_node_t *curr_dest_node = dest_nodes[node_i];
+        dest_nodes[node_i] = lpg_node_xor(graph,dest_nodes[node_i],carry);
+        carry = lpg_node_and(graph,
+                    lpg_node_not(graph,curr_dest_node),
+                    carry
+                );
+    }
+
+    lpg_graph_release_node(graph,carry);
+}
+
+
 void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
     affirmf(a && b && result,"Expected valid pointer but null was given");
@@ -715,8 +760,7 @@ void __lpg_uint_mul_school(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
     lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
-    if(result->width > 0)
-        lpg_uint_update_fill_with_single(result,lpg_node_const(graph,false));
+    lpg_uint_update_from_hex_str(result,"0");
 
     size_t upper_bound = MIN(result->width,b->width);
     lpg_uint_t *a_shifted = lpg_uint_allocate(graph,result->width);
@@ -762,8 +806,7 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     size_t b_tr_width = MIN(result->width,b->width);
     lpg_uint_t *b_tr = lpg_uint_allocate_as_uint_view(graph,b,0,b_tr_width);
 
-    if(result->width > 0)
-        lpg_uint_update_fill_with_single(result,lpg_node_const(graph,false));
+    lpg_uint_update_from_hex_str(result,"0");
 
     /*
         'a' always has equal or higher width than 'b',
@@ -823,14 +866,11 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     else
         lpg_uint_copy(b_sum,b0);
 
-    lpg_uint_t *p1 = lpg_uint_allocate(graph,z1_width);
-    lpg_uint_mul(a_sum,b_sum,p1);
-
-    lpg_uint_t *p2 = lpg_uint_allocate(graph,z1_width);
-    lpg_uint_sub(p1,z2,p2);
-
     lpg_uint_t *z1 = lpg_uint_allocate(graph,z1_width);
-    lpg_uint_sub(p2,z0,z1);
+    lpg_uint_mul(a_sum,b_sum,z1);
+
+    lpg_uint_sub_ip(z1,z2);
+    lpg_uint_sub_ip(z1,z0);
 
     lpg_uint_t *result_v0 = lpg_uint_allocate_as_uint_view(graph,result,0,LP_NPOS);
     lpg_uint_t *result_v1 = lpg_uint_allocate_as_uint_view(graph,result,halve_width,LP_NPOS);
@@ -848,8 +888,6 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     lpg_uint_release(b1);
     lpg_uint_release(a_sum);
     lpg_uint_release(b_sum);
-    lpg_uint_release(p1);
-    lpg_uint_release(p2);
     lpg_uint_release(z0);
     lpg_uint_release(z1);
     lpg_uint_release(z2);
@@ -879,4 +917,19 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
         __lpg_uint_mul_school(a,b,result);
     else
         __lpg_uint_mul_karatsuba(a,b,result);
+}
+
+
+void lpg_uint_mul_ip(lpg_uint_t *dest, lpg_uint_t *other)
+{
+    affirmf(dest,"Expected valid pointer on left-side operand but null was given");
+    affirmf(other,"Expected valid pointer on right-side operand but null was given");
+    __lpg_uint_validate_operands_graphs_binary(dest,other);
+
+    lpg_graph_t *graph = dest->graph;
+
+    lpg_uint_t *result = lpg_uint_allocate(graph,dest->width);
+
+    lpg_uint_mul(dest,other,result);
+    lpg_uint_copy(dest,result);
 }
