@@ -86,22 +86,22 @@ lpg_uint_t *lpg_uint_allocate_as_buffer_view(lpg_graph_t *graph, lpg_node_t **no
 }
 
 
-lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *other, size_t offset, size_t width)
+lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *b, size_t offset, size_t width)
 {
     __lpg_uint_nullptr_affirmf(graph,"graph");
-    __lpg_uint_nullptr_affirmf(other,"uint value to set view on");
-    affirmf(offset <= other->width && (width == LP_NPOS || other->width >= (width+offset)),
+    __lpg_uint_nullptr_affirmf(b,"uint value to set view on");
+    affirmf(offset <= b->width && (width == LP_NPOS || b->width >= (width+offset)),
         "Can't set view on specified 'lpg_uint_t' with requested offset and width");
     
     if(width == LP_NPOS)
-        width = other->width-offset;
+        width = b->width-offset;
 
     lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
 
     if(width > 0)
     {
-        lpg_node_t **other_nodes = lpg_uint_nodes(other);
-        __lpg_uint_set_nodes(_uint,other_nodes+offset);
+        lpg_node_t **b_nodes = lpg_uint_nodes(b);
+        __lpg_uint_set_nodes(_uint,b_nodes+offset);
     }
     else
         __lpg_uint_set_nodes(_uint,NULL);
@@ -285,7 +285,7 @@ char __lpg_uint_i2ch(uint8_t value)
 }
 
 
-size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
+size_t lpg_uint_to_hex(const lpg_uint_t *value, char *a, size_t n)
 {
     __lpg_uint_nullptr_affirmf(value,"uint value");
 
@@ -298,10 +298,10 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
     // If all bits == 0
     if(significant_bits_offset < 0)
     {
-        if(n > 0 && dest)
+        if(n > 0 && a)
         {
-            dest[0] = '0';
-            dest[1] = '\0';
+            a[0] = '0';
+            a[1] = '\0';
         }
 
         return 2;
@@ -309,10 +309,10 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
 
     size_t hex_str_len = significant_bits_offset/__LPG_UINT_BITS_PER_HEX + 1;
     
-    if(dest != NULL)
+    if(a != NULL)
     {
         size_t hex_str_len_truncated = MIN(n,hex_str_len);
-        dest[hex_str_len_truncated] = '\0';
+        a[hex_str_len_truncated] = '\0';
 
         int64_t curr_bit_i = significant_bits_offset;
         size_t curr_hex_i = 0;
@@ -330,7 +330,7 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
                 }
             }
 
-            dest[curr_hex_i++] = __lpg_uint_i2ch(curr_hex_value);
+            a[curr_hex_i++] = __lpg_uint_i2ch(curr_hex_value);
         }
 
     }
@@ -355,16 +355,16 @@ void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src)
 
     lpg_graph_t *graph = dest->graph;
 
-    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
+    lpg_node_t **a_nodes = lpg_uint_nodes(dest);
     lpg_node_t **src_nodes = lpg_uint_nodes(src);
 
     size_t upper_bound = MIN(dest->width,src->width);
     size_t node_i = 0;
     for(; node_i < upper_bound; ++node_i)
-        dest_nodes[node_i] = src_nodes[node_i];
+        a_nodes[node_i] = src_nodes[node_i];
     
     for(; node_i < dest->width; ++node_i)
-        dest_nodes[node_i] = lpg_node_const(graph,false);
+        a_nodes[node_i] = lpg_node_const(graph,false);
 }
 
 
@@ -429,35 +429,35 @@ void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
-void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other)
+void lpg_uint_add_ip(lpg_uint_t *a, lpg_uint_t *b)
 {
-    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
-    __lpg_uint_nullptr_affirmf(other,"right-side operand");
-    __lpg_uint_validate_operand_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
-    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
     lpg_node_t *carry = lpg_node_const(graph,false);
-    size_t upper_bound = MIN(dest->width,other->width);
+    size_t upper_bound = MIN(a->width,b->width);
     size_t node_i = 0;
     for(; node_i < upper_bound; ++node_i)
     {
-        lpg_node_t *terms_part = lpg_node_xor(graph,dest_nodes[node_i],other_nodes[node_i]);
-        lpg_node_t *terms_conj = lpg_node_and(graph,dest_nodes[node_i],other_nodes[node_i]);
-        dest_nodes[node_i] = lpg_node_xor(graph,terms_part,carry);
+        lpg_node_t *terms_part = lpg_node_xor(graph,a_nodes[node_i],b_nodes[node_i]);
+        lpg_node_t *terms_conj = lpg_node_and(graph,a_nodes[node_i],b_nodes[node_i]);
+        a_nodes[node_i] = lpg_node_xor(graph,terms_part,carry);
         carry = lpg_node_or(graph,
                     lpg_node_and(graph,terms_part,carry),
                     terms_conj
                 );
     }
 
-    for(; node_i < dest->width; ++node_i)
+    for(; node_i < a->width; ++node_i)
     {
-        lpg_node_t *saved_dest = dest_nodes[node_i];
-        dest_nodes[node_i] = lpg_node_xor(graph,dest_nodes[node_i],carry);
+        lpg_node_t *saved_dest = a_nodes[node_i];
+        a_nodes[node_i] = lpg_node_xor(graph,a_nodes[node_i],carry);
         carry = lpg_node_and(graph,saved_dest,carry);
     }
     lpg_graph_release_node(graph,carry);
@@ -526,28 +526,28 @@ void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
-void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other)
+void lpg_uint_sub_ip(lpg_uint_t *a, lpg_uint_t *b)
 {
-    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
-    __lpg_uint_nullptr_affirmf(other,"right-side operand");
-    __lpg_uint_validate_operand_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
-    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
     lpg_node_t *carry = lpg_node_const(graph,false);
-    size_t upper_bound = MIN(dest->width,other->width);
+    size_t upper_bound = MIN(a->width,b->width);
     size_t node_i = 0;
     for(; node_i < upper_bound; ++node_i)
     {
-        lpg_node_t *terms_part = lpg_node_xor(graph,dest_nodes[node_i],other_nodes[node_i]);
+        lpg_node_t *terms_part = lpg_node_xor(graph,a_nodes[node_i],b_nodes[node_i]);
         lpg_node_t *carry_conj_part = lpg_node_and(graph,
-                                        lpg_node_not(graph,dest_nodes[node_i]),
-                                        other_nodes[node_i]
+                                        lpg_node_not(graph,a_nodes[node_i]),
+                                        b_nodes[node_i]
                                     );
-        dest_nodes[node_i] = lpg_node_xor(graph,terms_part,carry);
+        a_nodes[node_i] = lpg_node_xor(graph,terms_part,carry);
         carry = lpg_node_or(graph,
                     lpg_node_and(graph,
                         lpg_node_not(graph,terms_part),
@@ -557,10 +557,10 @@ void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other)
                 );
     }
     
-    for(; node_i < dest->width; ++node_i)
+    for(; node_i < a->width; ++node_i)
     {
-        lpg_node_t *curr_dest_node = dest_nodes[node_i];
-        dest_nodes[node_i] = lpg_node_xor(graph,dest_nodes[node_i],carry);
+        lpg_node_t *curr_dest_node = a_nodes[node_i];
+        a_nodes[node_i] = lpg_node_xor(graph,a_nodes[node_i],carry);
         carry = lpg_node_and(graph,
                     lpg_node_not(graph,curr_dest_node),
                     carry
@@ -594,24 +594,24 @@ void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
-void lpg_uint_and_ip(lpg_uint_t *dest, lpg_uint_t *other)
+void lpg_uint_and_ip(lpg_uint_t *a, lpg_uint_t *b)
 {
-    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
-    __lpg_uint_nullptr_affirmf(other,"right-side operand");
-    __lpg_uint_validate_operand_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
-    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
     size_t node_i = 0;
-    size_t upper_bound = MIN(dest->width,other->width);
+    size_t upper_bound = MIN(a->width,b->width);
     for(; node_i < upper_bound; ++node_i)
-        dest_nodes[node_i] = lpg_node_and(graph,dest_nodes[node_i],other_nodes[node_i]);
+        a_nodes[node_i] = lpg_node_and(graph,a_nodes[node_i],b_nodes[node_i]);
     
-    for(; node_i < dest->width; ++node_i)
-        dest_nodes[node_i] = lpg_node_const(graph,false);
+    for(; node_i < a->width; ++node_i)
+        a_nodes[node_i] = lpg_node_const(graph,false);
 }
 
 
@@ -654,21 +654,21 @@ void lpg_uint_or(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
-void lpg_uint_or_ip(lpg_uint_t *dest, lpg_uint_t *other)
+void lpg_uint_or_ip(lpg_uint_t *a, lpg_uint_t *b)
 {
-    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
-    __lpg_uint_nullptr_affirmf(other,"right-side operand");
-    __lpg_uint_validate_operand_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
-    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
     size_t node_i = 0;
-    size_t upper_bound = MIN(dest->width,other->width);
+    size_t upper_bound = MIN(a->width,b->width);
     for(; node_i < upper_bound; ++node_i)
-        dest_nodes[node_i] = lpg_node_or(graph,dest_nodes[node_i],other_nodes[node_i]);
+        a_nodes[node_i] = lpg_node_or(graph,a_nodes[node_i],b_nodes[node_i]);
 }
 
 
@@ -711,21 +711,21 @@ void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
-void lpg_uint_xor_ip(lpg_uint_t *dest, lpg_uint_t *other)
+void lpg_uint_xor_ip(lpg_uint_t *a, lpg_uint_t *b)
 {
-    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
-    __lpg_uint_nullptr_affirmf(other,"right-side operand");
-    __lpg_uint_validate_operand_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **dest_nodes = lpg_uint_nodes(dest);
-    lpg_node_t **other_nodes = lpg_uint_nodes(other);
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+    lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
     size_t node_i = 0;
-    size_t upper_bound = MIN(dest->width,other->width);
+    size_t upper_bound = MIN(a->width,b->width);
     for(; node_i < upper_bound; ++node_i)
-        dest_nodes[node_i] = lpg_node_xor(graph,dest_nodes[node_i],other_nodes[node_i]);
+        a_nodes[node_i] = lpg_node_xor(graph,a_nodes[node_i],b_nodes[node_i]);
 }
 
 
@@ -943,16 +943,16 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
-void lpg_uint_mul_ip(lpg_uint_t *dest, lpg_uint_t *other)
+void lpg_uint_mul_ip(lpg_uint_t *a, lpg_uint_t *b)
 {
-    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
-    __lpg_uint_nullptr_affirmf(other,"right-side operand");
-    __lpg_uint_validate_operand_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_uint_t *result = lpg_uint_allocate(graph,dest->width);
+    lpg_uint_t *result = lpg_uint_allocate(graph,a->width);
 
-    lpg_uint_mul(dest,other,result);
-    lpg_uint_copy(dest,result);
+    lpg_uint_mul(a,b,result);
+    lpg_uint_copy(a,result);
 }

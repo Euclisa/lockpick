@@ -20,7 +20,7 @@ lpg_node_t **lpg_uint_nodes(const lpg_uint_t *value);
 
 lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width);
 lpg_uint_t *lpg_uint_allocate_as_buffer_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width);
-lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *other, size_t offset, size_t width);
+lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *b, size_t offset, size_t width);
 
 void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes);
 void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node);
@@ -36,23 +36,23 @@ void __lpg_uint_update_from_uint(lpg_uint_t *value, const __lp_uint_word_t *uint
 
 void lpg_uint_compute(lpg_uint_t *value);
 
-size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n);
+size_t lpg_uint_to_hex(const lpg_uint_t *value, char *a, size_t n);
 
-void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src);
+void lpg_uint_copy(lpg_uint_t *a, lpg_uint_t *src);
 
 void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
-void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other);
+void lpg_uint_add_ip(lpg_uint_t *a, lpg_uint_t *b);
 void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
-void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other);
+void lpg_uint_sub_ip(lpg_uint_t *a, lpg_uint_t *b);
 void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
-void lpg_uint_mul_ip(lpg_uint_t *dest, lpg_uint_t *other);
+void lpg_uint_mul_ip(lpg_uint_t *a, lpg_uint_t *b);
 
 void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
-void lpg_uint_and_ip(lpg_uint_t *dest, lpg_uint_t *other);
+void lpg_uint_and_ip(lpg_uint_t *a, lpg_uint_t *b);
 void lpg_uint_or(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
-void lpg_uint_or_ip(lpg_uint_t *dest, lpg_uint_t *other);
+void lpg_uint_or_ip(lpg_uint_t *a, lpg_uint_t *b);
 void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
-void lpg_uint_xor_ip(lpg_uint_t *dest, lpg_uint_t *other);
+void lpg_uint_xor_ip(lpg_uint_t *a, lpg_uint_t *b);
 
 void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result);
 void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result);
