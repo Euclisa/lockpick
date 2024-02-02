@@ -955,4 +955,6 @@ void lpg_uint_mul_ip(lpg_uint_t *a, lpg_uint_t *b)
 
     lpg_uint_mul(a,b,result);
     lpg_uint_copy(a,result);
+
+    lpg_uint_release(result);
 }
