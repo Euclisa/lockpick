@@ -118,7 +118,7 @@ inline void lpg_graph_compute(lpg_graph_t *graph)
     for(size_t node_i = 0; node_i < graph->outputs_size; ++node_i)
     {
         affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %ld."
-                                    "Is graph assembled properly?",node_i);
+                                    "Was graph assembled properly?",node_i);
         lpg_node_compute(graph->outputs[node_i]);
     }
 }

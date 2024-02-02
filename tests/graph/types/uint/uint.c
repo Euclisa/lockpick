@@ -175,7 +175,13 @@ void test_graph_uint_##op_type()                                                
         size_t width_b = rand() % width_high;                                                                                   \
         size_t width_res = rand() % width_high;                                                                                 \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width_a,width_b,width_res));                                              \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(0,width_b,width_res));                                                    \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width_a,0,width_res));                                                    \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(width_a,width_b,0));                                                      \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(0,0,width_res));                                                          \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type(0,0,width_res));                                                          \
     }                                                                                                                           \
+    LP_TEST_STEP_INTO(__test_graph_uint_##op_type(0,0,0));                                                                      \
 }
 
 
@@ -186,7 +192,9 @@ void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t b_width
     lpg_uint_##op_type(graph_a,graph_b,graph_res_obt);                                                                          \
     size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
     LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
-            "Found %ld dangling nodes after full graph assembly",dangling_nodes);                                               \
+            "a_width: %ld; b_width: %ld; res_width: %ld; "                                                                      \
+            "Found %ld dangling nodes after full graph assembly",                                                               \
+            a_width,b_width,res_width,dangling_nodes);                                                                          \
     TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
 }                                                                                                                               \
 void test_graph_uint_##op_type##_dangling_nodes()                                                                               \
@@ -226,6 +234,9 @@ void test_graph_uint_##op_type##_inplace()                                      
         size_t width_a = rand() % width_high;                                                                                   \
         size_t width_b = rand() % width_high;                                                                                   \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(width_a,width_b));                                              \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(0,width_b));                                                    \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(width_a,0));                                                    \
+        LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(0,0));                                                          \
     }                                                                                                                           \
 }
 
@@ -238,7 +249,9 @@ void __test_graph_uint_##op_type##_inplace_dangling_nodes(size_t a_width, size_t
     lpg_uint_##op_type##_ip(graph_res_obt,graph_b);                                                                             \
     size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
     LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
-            "Found %ld dangling nodes after full graph assembly",dangling_nodes);                                               \
+            "a_width: %ld; b_width: %ld; "                                                                                      \
+            "Found %ld dangling nodes after full graph assembly",                                                               \
+            a_width,b_width,dangling_nodes);                                                                                    \
     TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
 }                                                                                                                               \
 void test_graph_uint_##op_type##_inplace_dangling_nodes()                                                                       \

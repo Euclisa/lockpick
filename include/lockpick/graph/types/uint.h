@@ -6,7 +6,7 @@
 
 #define __LPG_UINT_BITS_PER_HEX 4
 
-#define __LPG_UINT_KARATSUBA_BOUND 100
+#define __LPG_UINT_KARATSUBA_BOUND 300
 
 typedef struct lpg_uint
 {

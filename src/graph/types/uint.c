@@ -715,6 +715,9 @@ void __lpg_uint_mul_school(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
     lpg_node_t **b_nodes = lpg_uint_nodes(b);
 
+    if(result->width > 0)
+        lpg_uint_update_fill_with_single(result,lpg_node_const(graph,false));
+
     size_t upper_bound = MIN(result->width,b->width);
     lpg_uint_t *a_shifted = lpg_uint_allocate(graph,result->width);
     lpg_uint_t *b_mask = lpg_uint_allocate(graph,result->width);
@@ -723,10 +726,7 @@ void __lpg_uint_mul_school(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
         lpg_uint_update_fill_with_single(b_mask,b_nodes[node_i]);
         lpg_uint_lshift(a,node_i,a_shifted);
         lpg_uint_and_ip(a_shifted,b_mask);
-        if(__likely(node_i > 0))
-            lpg_uint_add_ip(result,a_shifted);
-        else
-            lpg_uint_copy(result,a_shifted);
+        lpg_uint_add_ip(result,a_shifted);
     }
     lpg_uint_release(a_shifted);
     lpg_uint_release(b_mask);
@@ -757,66 +757,84 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
 {
     lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **a_nodes = lpg_uint_nodes(a);
-    lpg_node_t **b_nodes = lpg_uint_nodes(b);
-    lpg_node_t **result_nodes = lpg_uint_nodes(result);
-
     size_t a_tr_width = MIN(result->width,a->width);
-    lpg_uint_t *a_tr = lpg_uint_allocate_as_buffer_view(graph,a_nodes,a_tr_width);
+    lpg_uint_t *a_tr = lpg_uint_allocate_as_uint_view(graph,a,0,a_tr_width);
     size_t b_tr_width = MIN(result->width,b->width);
-    lpg_uint_t *b_tr = lpg_uint_allocate_as_buffer_view(graph,b_nodes,b_tr_width);
+    lpg_uint_t *b_tr = lpg_uint_allocate_as_uint_view(graph,b,0,b_tr_width);
 
-    for(size_t node_i = 0; node_i < result->width; ++node_i)
-        result_nodes[node_i] = lpg_node_const(graph,false);
+    if(result->width > 0)
+        lpg_uint_update_fill_with_single(result,lpg_node_const(graph,false));
 
-    size_t middle = lp_ceil_div_u(a_tr_width,2);
+    /*
+        'a' always has equal or higher width than 'b',
+        that is why we implicitly pad 'b' to 'a' width
+    */
+    size_t work_width = a_tr_width;
 
-    size_t a0_width = middle;
+    /*
+        Use ceil because lower halve must be wider than higher
+    */
+    size_t halve_width = lp_ceil_div_u(work_width,2);
+
+    /*
+        a = a1 * 2^halve_width + a0
+    */
+    size_t a0_width = halve_width;
     lpg_uint_t *a0 = lpg_uint_allocate_as_uint_view(graph,a_tr,0,a0_width);
     lpg_uint_t *a1 = lpg_uint_allocate_as_uint_view(graph,a_tr,a0_width,LP_NPOS);
 
-    size_t b0_width = MIN(middle,b_tr_width);
+    /*
+        b = b1 * 2^halve_width + b0,
+
+            where b1 might have zero width
+    */
+    size_t b0_width = MIN(halve_width,b_tr_width);
     lpg_uint_t *b0 = lpg_uint_allocate_as_uint_view(graph,b_tr,0,b0_width);
     lpg_uint_t *b1 = lpg_uint_allocate_as_uint_view(graph,b_tr,b0_width,LP_NPOS);
 
-    size_t z0_width = __lpg_uint_mul_ops_width(a0->width,b0->width);
+    /*
+        z0 = a0 * b0
+    */
+    size_t z0_width = MIN(result->width,__lpg_uint_mul_ops_width(a0->width,b0->width)); // Maybe don't need MIN here
     lpg_uint_t *z0 = lpg_uint_allocate(graph,z0_width);
     lpg_uint_mul(a0,b0,z0);
 
-    size_t z2_width = __lpg_uint_mul_ops_width(a1->width,b1->width);
+    size_t z1_width = MIN(result->width-halve_width,
+            __lpg_uint_add_ops_width(__lpg_uint_mul_ops_width(a0->width,b1->width),__lpg_uint_mul_ops_width(a1->width,b0->width)));
+
+    /*
+        z2 = a1 * b1
+    */
+    size_t z2_width = MIN(z1_width,__lpg_uint_mul_ops_width(a1->width,b1->width));
     lpg_uint_t *z2 = lpg_uint_allocate(graph,z2_width);
     lpg_uint_mul(a1,b1,z2);
 
-    size_t a_sum_width = __lpg_uint_add_ops_width(a0->width,a1->width);
+    /*
+        z1 = (a0 + a1)*(b0 + b1) - z0 - z2
+    */
+    size_t a_sum_width = MIN(z1_width,__lpg_uint_add_ops_width(a0->width,a1->width));
     lpg_uint_t *a_sum = lpg_uint_allocate(graph,a_sum_width);
     lpg_uint_add(a0,a1,a_sum);
 
-    size_t b_sum_width = __lpg_uint_add_ops_width(b0->width,b1->width);
+    size_t b_sum_width = MIN(z1_width,__lpg_uint_add_ops_width(b0->width,b1->width));
     lpg_uint_t *b_sum = lpg_uint_allocate(graph,b_sum_width);
     if(b1->width > 0)
         lpg_uint_add(b0,b1,b_sum);
     else
         lpg_uint_copy(b_sum,b0);
 
-    size_t z1_width = __lpg_uint_mul_ops_width(a_sum_width,b_sum_width);
     lpg_uint_t *p1 = lpg_uint_allocate(graph,z1_width);
     lpg_uint_mul(a_sum,b_sum,p1);
 
     lpg_uint_t *p2 = lpg_uint_allocate(graph,z1_width);
-    if(b1->width > 0)
-        lpg_uint_sub(p1,z2,p2);
-    else
-        lpg_uint_copy(p2,p1);
+    lpg_uint_sub(p1,z2,p2);
 
     lpg_uint_t *z1 = lpg_uint_allocate(graph,z1_width);
     lpg_uint_sub(p2,z0,z1);
 
-    size_t result_v0_width = MIN(z0_width,result->width);
-    lpg_uint_t *result_v0 = lpg_uint_allocate_as_uint_view(graph,result,0,result_v0_width);
-    size_t result_v1_width = MIN(z1_width,result->width-middle);
-    lpg_uint_t *result_v1 = lpg_uint_allocate_as_uint_view(graph,result,middle,result_v1_width);
-    size_t result_v2_offset = MIN(z0_width,result->width);
-    lpg_uint_t *result_v2 = lpg_uint_allocate_as_uint_view(graph,result,result_v2_offset,LP_NPOS);
+    lpg_uint_t *result_v0 = lpg_uint_allocate_as_uint_view(graph,result,0,LP_NPOS);
+    lpg_uint_t *result_v1 = lpg_uint_allocate_as_uint_view(graph,result,halve_width,LP_NPOS);
+    lpg_uint_t *result_v2 = lpg_uint_allocate_as_uint_view(graph,result,MIN(result->width,halve_width*2),LP_NPOS);
 
     lpg_uint_add_ip(result_v0,z0);
     lpg_uint_add_ip(result_v1,z1);
@@ -857,7 +875,7 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
     __lpg_uint_validate_operands_graphs_binary(a,b);
 
     size_t width_product = a->width*b->width;
-    if(width_product < __LPG_UINT_KARATSUBA_BOUND)
+    if(width_product < __LPG_UINT_KARATSUBA_BOUND || result->width < 4)
         __lpg_uint_mul_school(a,b,result);
     else
         __lpg_uint_mul_karatsuba(a,b,result);
