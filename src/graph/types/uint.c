@@ -5,6 +5,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#define __lpg_uint_nullptr_affirmf(ptr,desc)        \
+        affirmf(ptr,"Expected valid pointer on %s, but null was given",desc);
+
 #define __LPG_UINT_BAD_CHAR 255
 
 #define __LPG_UINT_NODES_MASK ((uintptr_t)(~0b1))
@@ -52,7 +55,7 @@ static inline lpg_uint_t *__lpg_uint_general_init(lpg_graph_t *graph, size_t wid
 
 lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width)
 {
-    affirmf(graph,"Expected valid graph pointer but null was given");
+    __lpg_uint_nullptr_affirmf(graph,"graph");
 
     lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
 
@@ -71,8 +74,8 @@ lpg_uint_t *lpg_uint_allocate(lpg_graph_t *graph, size_t width)
 
 lpg_uint_t *lpg_uint_allocate_as_buffer_view(lpg_graph_t *graph, lpg_node_t **nodes, size_t width)
 {
-    affirmf(graph,"Expected valid graph pointer but null was given");
-    affirmf(nodes,"Expected valid pointer on nodes buffer but null was given");
+    __lpg_uint_nullptr_affirmf(graph,"graph");
+    __lpg_uint_nullptr_affirmf(nodes,"nodes buffer");
 
     lpg_uint_t *_uint = __lpg_uint_general_init(graph,width);
 
@@ -85,8 +88,8 @@ lpg_uint_t *lpg_uint_allocate_as_buffer_view(lpg_graph_t *graph, lpg_node_t **no
 
 lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *other, size_t offset, size_t width)
 {
-    affirmf(graph,"Expected valid graph pointer but null was given");
-    affirmf(other,"Expected valid pointer on 'lpg_uint_t' object but null was given");
+    __lpg_uint_nullptr_affirmf(graph,"graph");
+    __lpg_uint_nullptr_affirmf(other,"uint value to set view on");
     affirmf(offset <= other->width && (width == LP_NPOS || other->width >= (width+offset)),
         "Can't set view on specified 'lpg_uint_t' with requested offset and width");
     
@@ -121,9 +124,8 @@ static inline bool __lpg_uint_is_valid_uint(const lpg_uint_t *value)
 
 void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes)
 {
-    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
-    affirmf(nodes,"Expected valid pointer on nodes buffer but null was given");
-    affirmf(__lpg_uint_is_valid_uint(value),"Specified 'lpg_uint_t' object is invalid");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
+    __lpg_uint_nullptr_affirmf(nodes,"nodes buffer");
 
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
 
@@ -138,8 +140,8 @@ void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes)
 
 void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node)
 {
-    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
-    affirmf(node,"Expected valid pointer but null was given");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
+    __lpg_uint_nullptr_affirmf(node,"node");
     affirmf(__lpg_node_belongs_to_graph(value->graph,node),"Specified node does not belong to the graph given value bounded with");
 
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
@@ -151,7 +153,7 @@ void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node)
 
 void lpg_uint_update_empty(lpg_uint_t *value)
 {
-    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
 
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
 
@@ -162,8 +164,8 @@ void lpg_uint_update_empty(lpg_uint_t *value)
 
 void lpg_uint_update_from_hex_str(lpg_uint_t *value, const char *hex_str)
 {
-    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
-    affirmf(hex_str,"Expected valid pointer on hex string but null was given");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
+    __lpg_uint_nullptr_affirmf(hex_str,"hex-string");
 
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
 
@@ -190,7 +192,7 @@ void lpg_uint_release(lpg_uint_t *_uint)
 
 void lpg_uint_compute(lpg_uint_t *value)
 {
-    affirmf(value,"Expected valid pointer on 'lpg_uint_t' but null was given");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
 
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
 
@@ -219,7 +221,8 @@ uint8_t __lpg_uint_ch2i(char char_hex)
 
 void lpg_uint_assign_from_hex_str(const char *hex_str, lpg_uint_t *value)
 {
-    affirmf(hex_str && value,"Expected valid pointer but null was given");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
+    __lpg_uint_nullptr_affirmf(hex_str,"hex-string");
 
     lpg_node_t **nodes = lpg_uint_nodes(value);
 
@@ -250,7 +253,8 @@ void lpg_uint_assign_from_hex_str(const char *hex_str, lpg_uint_t *value)
 
 void __lpg_uint_update_from_uint(lpg_uint_t *value, const __lp_uint_word_t *uint_value, size_t uint_value_size)
 {
-    affirmf(value && uint_value,"Expected valid pointer but null was given");
+    __lpg_uint_nullptr_affirmf(value,"graph uint value");
+    __lpg_uint_nullptr_affirmf(uint_value,"uint value");
 
     lpg_node_t **nodes = lpg_uint_nodes(value);
 
@@ -283,7 +287,7 @@ char __lpg_uint_i2ch(uint8_t value)
 
 size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
 {
-    affirmf(value,"Expected valid pointer of type 'lpg_uint_t' but null was given");
+    __lpg_uint_nullptr_affirmf(value,"uint value");
 
     lpg_node_t **nodes = lpg_uint_nodes(value);
 
@@ -335,18 +339,19 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
 }
 
 
-#define __lpg_uint_validate_operands_graphs_binary(a,b)                                     \
+#define __lpg_uint_validate_operand_graphs_binary(a,b)                                      \
         affirmf_debug((a)->graph && (b)->graph,"Found operand with no associated graph");   \
         affirmf((a)->graph == (b)->graph,"Operands bounded to different graphs");
 
-#define __lpg_uint_validate_operands_graphs_unary(a)                                        \
+#define __lpg_uint_validate_operand_graphs_unary(a)                                         \
         affirmf_debug((a)->graph,"Found operand with no associated graph");
 
 
 void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src)
 {
-    affirmf(dest && src,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,src);
+    __lpg_uint_nullptr_affirmf(dest,"destination uint");
+    __lpg_uint_nullptr_affirmf(src,"source uint");
+    __lpg_uint_validate_operand_graphs_binary(dest,src);
 
     lpg_graph_t *graph = dest->graph;
 
@@ -412,8 +417,10 @@ static inline void __lpg_uint_add_right_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_
 
 void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_nullptr_affirmf(b,"result");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
     
     if(a->width < b->width)
         __lpg_uint_add_right_wider(a,b,result);
@@ -424,8 +431,9 @@ void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(dest && other,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
+    __lpg_uint_nullptr_affirmf(other,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(dest,other);
 
     lpg_graph_t *graph = dest->graph;
 
@@ -458,8 +466,10 @@ void lpg_uint_add_ip(lpg_uint_t *dest, lpg_uint_t *other)
 
 void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_nullptr_affirmf(b,"result");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
     lpg_graph_t *graph = a->graph;
 
@@ -518,9 +528,9 @@ void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(dest,"Expected valid pointer on left-side operand but null was given");
-    affirmf(other,"Expected valid pointer on right-side operand but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
+    __lpg_uint_nullptr_affirmf(other,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(dest,other);
 
     lpg_graph_t *graph = dest->graph;
 
@@ -563,8 +573,10 @@ void lpg_uint_sub_ip(lpg_uint_t *dest, lpg_uint_t *other)
 
 void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_nullptr_affirmf(b,"result");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
     lpg_graph_t *graph = a->graph;
 
@@ -584,8 +596,9 @@ void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_and_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(dest && other,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
+    __lpg_uint_nullptr_affirmf(other,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(dest,other);
 
     lpg_graph_t *graph = dest->graph;
 
@@ -604,8 +617,10 @@ void lpg_uint_and_ip(lpg_uint_t *dest, lpg_uint_t *other)
 
 void lpg_uint_or(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_nullptr_affirmf(b,"result");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
     lpg_graph_t *graph = a->graph;
 
@@ -641,8 +656,9 @@ void lpg_uint_or(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_or_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(dest && other,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
+    __lpg_uint_nullptr_affirmf(other,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(dest,other);
 
     lpg_graph_t *graph = dest->graph;
 
@@ -658,8 +674,10 @@ void lpg_uint_or_ip(lpg_uint_t *dest, lpg_uint_t *other)
 
 void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_nullptr_affirmf(b,"result");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
     lpg_graph_t *graph = a->graph;
 
@@ -695,8 +713,9 @@ void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_xor_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(dest && other,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
+    __lpg_uint_nullptr_affirmf(other,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(dest,other);
 
     lpg_graph_t *graph = dest->graph;
 
@@ -712,8 +731,9 @@ void lpg_uint_xor_ip(lpg_uint_t *dest, lpg_uint_t *other)
 
 void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
 {
-    affirmf(a && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_unary(a);
+    __lpg_uint_nullptr_affirmf(a,"uint operand");
+    __lpg_uint_nullptr_affirmf(result,"result");
+    __lpg_uint_validate_operand_graphs_unary(a);
 
     lpg_graph_t *graph = a->graph;
 
@@ -734,8 +754,9 @@ void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
 
 void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
 {
-    affirmf(a && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_unary(a);
+    __lpg_uint_nullptr_affirmf(a,"uint operand");
+    __lpg_uint_nullptr_affirmf(result,"result");
+    __lpg_uint_validate_operand_graphs_unary(a);
 
     lpg_graph_t *graph = a->graph;
 
@@ -909,8 +930,10 @@ void __lpg_uint_mul_karatsuba(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 {
-    affirmf(a && b && result,"Expected valid pointer but null was given");
-    __lpg_uint_validate_operands_graphs_binary(a,b);
+    __lpg_uint_nullptr_affirmf(a,"left-side operand");
+    __lpg_uint_nullptr_affirmf(b,"right-side operand");
+    __lpg_uint_nullptr_affirmf(b,"result");
+    __lpg_uint_validate_operand_graphs_binary(a,b);
 
     size_t width_product = a->width*b->width;
     if(width_product < __LPG_UINT_KARATSUBA_BOUND || result->width < 4)
@@ -922,9 +945,9 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 
 void lpg_uint_mul_ip(lpg_uint_t *dest, lpg_uint_t *other)
 {
-    affirmf(dest,"Expected valid pointer on left-side operand but null was given");
-    affirmf(other,"Expected valid pointer on right-side operand but null was given");
-    __lpg_uint_validate_operands_graphs_binary(dest,other);
+    __lpg_uint_nullptr_affirmf(dest,"left-side operand");
+    __lpg_uint_nullptr_affirmf(other,"right-side operand");
+    __lpg_uint_validate_operand_graphs_binary(dest,other);
 
     lpg_graph_t *graph = dest->graph;
 
