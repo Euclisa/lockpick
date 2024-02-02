@@ -99,13 +99,13 @@ bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t val
 /**
  * __lp_uint_i2ch - converts single word to hex string
  * @value:          word to convert
- * @dest:           destination pointer on string to store result in
- * @n:              maximum number of hexes to write into dest
+ * @a:              destination pointer on string to store result in
+ * @n:              maximum number of hexes to write into a
  * @truncate_zeros: whether to truncate high zeros or not
  * 
  * Returns number of characters written.
  */
-uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool truncate_zeros)
+uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *a, size_t n, bool truncate_zeros)
 {
     static const char i2ch_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
@@ -127,7 +127,7 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool trunca
         uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(wrote_hexes+hexes_truncated+1);
         __lp_uint_word_t shifted = value >> shift;
         char shifted_hex = i2ch_map[shifted & 0xf];
-        dest[wrote_hexes] = shifted_hex;
+        a[wrote_hexes] = shifted_hex;
     }
 
     return wrote_hexes;
@@ -136,17 +136,17 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *dest, size_t n, bool trunca
 
 /**
  * __lp_uint_to_hex - converts uint object to hex string
- * @value:      pointer on uint buffer
- * @value_size: size of uint buffer
- * @dest:           destination pointer on string to store result in
- * @n:              maximum number of hexes to write into dest
+ * @value:          pointer on uint buffer
+ * @value_size:     size of uint buffer
+ * @a:              destination pointer on string to store result in
+ * @n:              maximum number of hexes to write into a
  * 
  * Returns number of hexes in hex string corresponding to 'value'.
  * Negative value is returned on error.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
-int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
+int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *a, size_t n)
 {
     if(!value)
         return_set_errno(-1,EINVAL);
@@ -158,10 +158,10 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
     // If all words == 0
     if(significant_words_offset < 0)
     {
-        if(n > 0 && dest)
+        if(n > 0 && a)
         {
-            dest[0] = '0';
-            dest[1] = '\0';
+            a[0] = '0';
+            a[1] = '\0';
         }
 
         return 2;
@@ -172,15 +172,15 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
     for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += __LP_UINT_BITS_PER_HEX)
         ++hex_str_len;
     
-    if(dest != NULL)
+    if(a != NULL)
     {
         size_t hex_str_len_truncated = MIN(n,hex_str_len);
-        dest[hex_str_len_truncated] = '\0';
+        a[hex_str_len_truncated] = '\0';
 
         size_t wrote_hexes = 0;
-        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,true);
+        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],a+wrote_hexes,hex_str_len_truncated-wrote_hexes,true);
         while(significant_words_offset >= 0)
-            wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,false);
+            wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],a+wrote_hexes,hex_str_len_truncated-wrote_hexes,false);
     }
     
     return hex_str_len;
@@ -188,9 +188,9 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
 
 
 /**
- * __lp_uint_copy - copies value from 'src' to 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
+ * __lp_uint_copy - copies value from 'src' to 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
  * @src:        pointer on source uint buffer
  * @src_size:   size of source uint buffer
  * 
@@ -198,51 +198,51 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
  * 
  * This is not supposed to be called by user. Use 'lp_uint_copy' macro instead.
  */
-inline bool __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *src, size_t src_size)
+inline bool __lp_uint_copy(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *src, size_t src_size)
 {
-    if(dest == NULL || src == NULL)
+    if(a == NULL || src == NULL)
         return_set_errno(false,EINVAL);
     
-    size_t src_upper_bound = MIN(dest_size,src_size);
+    size_t src_upper_bound = MIN(a_size,src_size);
     size_t word_i = 0;
     for(; word_i < src_upper_bound; ++word_i)
-        dest[word_i] = src[word_i];
+        a[word_i] = src[word_i];
     
-    for(; word_i < dest_size; ++word_i)
-        dest[word_i] = 0;
+    for(; word_i < a_size; ++word_i)
+        a[word_i] = 0;
     
     return true;
 }
 
 
 /**
- * __lp_uint_add_2w_inplace - performs addition of 'dest' and 'other' treating other as a uint of size 2 words storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform addition with
+ * __lp_uint_add_2w_inplace - performs addition of 'a' and 'b' treating b as a uint of size 2 words storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on another uint buffer to perform addition with
  * 
  * Returns nothing because does not perform any checks.
  * 
  * Calls must be performed from higher level functions that check for pointers and sizes validity.
  */
-static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other)
+static inline void __lp_uint_add_2w_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b)
 {
-    __lp_uint_word_t other_w0 = other[0];
-    __lp_uint_word_t other_w1 = other[1];
-    dest[0] += other_w0;
-    __lp_uint_word_t carry = (dest[0] < other_w0) ? 1 : 0;
+    __lp_uint_word_t other_w0 = b[0];
+    __lp_uint_word_t other_w1 = b[1];
+    a[0] += other_w0;
+    __lp_uint_word_t carry = (a[0] < other_w0) ? 1 : 0;
 
-    if(dest_size > 1)
+    if(a_size > 1)
     {
-        __uint128_t sum1 = (__uint128_t)dest[1] + (__uint128_t)other_w1 + (__uint128_t)carry;
-        dest[1] = sum1;
+        __uint128_t sum1 = (__uint128_t)a[1] + (__uint128_t)other_w1 + (__uint128_t)carry;
+        a[1] = sum1;
         carry = sum1 >> __LP_UINT_BITS_PER_WORD;
     }
 
-    if(carry && dest_size > 2)
+    if(carry && a_size > 2)
     {
-        for(size_t word_i = 2; word_i < dest_size; ++word_i)
-            if(++dest[word_i] != 0)
+        for(size_t word_i = 2; word_i < a_size; ++word_i)
+            if(++a[word_i] != 0)
                 break;
     }
 }
@@ -322,35 +322,35 @@ inline bool __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 
 
 /**
- * __lp_uint_add_inplace_bigger - performs addition of 'dest' and 'other' storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform addition with
- * @other_size: size of another uint buffer
+ * __lp_uint_add_inplace_bigger - performs addition of 'a' and 'b' storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on another uint buffer to perform addition with
+ * @b_size:     size of another uint buffer
  * 
  * Returns true on success, false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_add_ip' macro instead.
  */
-inline bool __lp_uint_add_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_add_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!dest || !other)
+    if(!a || !b)
         return_set_errno(false,EINVAL);
 
     __uint128_t carry = 0;
     size_t word_i = 0;
-    size_t other_upper_bound = MIN(other_size,dest_size);
+    size_t other_upper_bound = MIN(b_size,a_size);
     for(; word_i < other_upper_bound; ++word_i)
     {
-        __uint128_t curr_sum = (__uint128_t)dest[word_i] + (__uint128_t)other[word_i] + carry;
-        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        __uint128_t curr_sum = (__uint128_t)a[word_i] + (__uint128_t)b[word_i] + carry;
+        a[word_i] = curr_sum & __LP_UINT_MAX_WORD;
         carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
 
-    for(; (word_i < dest_size) && (carry > 0); ++word_i)
+    for(; (word_i < a_size) && (carry > 0); ++word_i)
     {
-        __uint128_t curr_sum = (__uint128_t)dest[word_i] + carry;
-        dest[word_i] = curr_sum & __LP_UINT_MAX_WORD;
+        __uint128_t curr_sum = (__uint128_t)a[word_i] + carry;
+        a[word_i] = curr_sum & __LP_UINT_MAX_WORD;
         carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
 
@@ -473,44 +473,44 @@ inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 
 
 /**
- * __lp_uint_sub_inplace - performs subtraction of 'other' from 'dest' storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform addition with
- * @other_size: size of another uint buffer
+ * __lp_uint_sub_inplace - performs subtraction of 'b' from 'a' storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on another uint buffer to perform addition with
+ * @b_size:     size of another uint buffer
  * 
  * Returns true on success, false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_sub_ip' macro instead.
  */
-inline bool __lp_uint_sub_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_sub_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!dest || !other)
+    if(!a || !b)
         return_set_errno(false,EINVAL);
 
     __uint128_t carry = 0;
     size_t word_i = 0;
-    size_t other_upper_bound = MIN(other_size,dest_size);
+    size_t other_upper_bound = MIN(b_size,a_size);
     for(; word_i < other_upper_bound; ++word_i)
     {
-        __uint128_t total_neg = other[word_i] + carry;
-        if(dest[word_i] < total_neg)
+        __uint128_t total_neg = b[word_i] + carry;
+        if(a[word_i] < total_neg)
         {
-            dest[word_i] += __LP_UINT_BASE - total_neg;
+            a[word_i] += __LP_UINT_BASE - total_neg;
             carry = 1;
         }
         else
         {
-            dest[word_i] -= total_neg;
+            a[word_i] -= total_neg;
             carry = 0;
         }
     }
 
     if(carry > 0)
     {
-        for(; word_i < dest_size; ++word_i)
+        for(; word_i < a_size; ++word_i)
         {
-            if(dest[word_i]-- != 0)
+            if(a[word_i]-- != 0)
                 break;
         }
     }
@@ -569,11 +569,11 @@ inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 
 
 /**
- * __lp_uint_mul_inplace - performs multiplication of 'dest' and 'other' storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform addition with
- * @other_size: size of another uint buffer
+ * __lp_uint_mul_inplace - performs multiplication of 'a' and 'b' storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on another uint buffer to perform addition with
+ * @b_size:     size of another uint buffer
  * 
  * Returns true on success, false on failure.
  * 
@@ -581,21 +581,21 @@ inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * 
  * CAUTION: It is preferable to use regular version of multiplication
  * because this inplace version does the same amount of operations
- * plus copying from temporary buffer to 'dest' (plus 'malloc' and 'free' calls).
+ * plus copying from temporary buffer to 'a' (plus 'malloc' and 'free' calls).
  */
-inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_mul_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    // Basically, rewritting procedure above taking into account that 'a_size' ('dest_size') is now equal to 'result_size'
-    if(!dest || !other)
+    // Basically, rewritting procedure above taking into account that 'a_size' ('a_size') is now equal to 'result_size'
+    if(!a || !b)
         return_set_errno(false,EINVAL);
     
-    __lp_uint_word_t *result = (__lp_uint_word_t*)malloc(sizeof(__lp_uint_word_t)*dest_size);
-    size_t result_size = dest_size;
+    __lp_uint_word_t *result = (__lp_uint_word_t*)malloc(sizeof(__lp_uint_word_t)*a_size);
+    size_t result_size = a_size;
 
     for(size_t res_i = 0; res_i < result_size; ++res_i)
         result[res_i] = 0;
     
-    size_t other_last_i = other_size - 1;
+    size_t other_last_i = b_size - 1;
     size_t res_i = 0;
     for(; res_i < result_size; ++res_i)
     {
@@ -605,15 +605,15 @@ inline bool __lp_uint_mul_inplace(__lp_uint_word_t *dest, size_t dest_size, cons
         for(size_t a_i = a_lower_bound; a_i <= a_upper_bound; ++a_i)
         {
             size_t b_i = res_i-a_i;
-            curr_mul = (__uint128_t)dest[a_i]*(__uint128_t)other[b_i];
+            curr_mul = (__uint128_t)a[a_i]*(__uint128_t)b[b_i];
             // Split 128-bit word into two 64-bit word and treat it like a regular 2-word sized uint adding it to corresponding result with offset
             __lp_uint_word_t curr_mul_words[2] = {curr_mul, curr_mul >> __LP_UINT_BITS_PER_WORD};
             __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
         }
     }
 
-    for(size_t dest_i = 0; dest_i < dest_size; ++dest_i)
-        dest[dest_i] = result[dest_i];
+    for(size_t dest_i = 0; dest_i < a_size; ++dest_i)
+        a[dest_i] = result[dest_i];
     
     free(result);
 
@@ -836,28 +836,28 @@ inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 
 
 /**
- * __lp_uint_and_inplace - performs bitwise *and* operation on 'dest' and 'other' storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform operation with
- * @other_size: size of another uint buffer
+ * __lp_uint_and_inplace - performs bitwise *and* operation on 'a' and 'b' storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on right side uint buffer
+ * @b_size:     size of another uint buffer
  * 
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_and_ip' macro instead.
  */
-inline bool __lp_uint_and_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_and_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!dest || !other)
+    if(!a || !b)
         return_set_errno(false,EINVAL);
     
-    size_t upper_bound = MIN(dest_size,other_size);
+    size_t upper_bound = MIN(a_size,b_size);
     size_t dest_i = 0;
     for(; dest_i < upper_bound; ++dest_i)
-        dest[dest_i] &= other[dest_i];
+        a[dest_i] &= b[dest_i];
     
-    for(; dest_i < dest_size; ++dest_i)
-        dest[dest_i] = 0;
+    for(; dest_i < a_size; ++dest_i)
+        a[dest_i] = 0;
     
     return true;
 }
@@ -917,24 +917,24 @@ inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
 
 
 /**
- * __lp_uint_or_inplace - performs bitwise *or* operation on 'dest' and 'other' storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform operation with
- * @other_size: size of another uint buffer
+ * __lp_uint_or_inplace - performs bitwise *or* operation on 'a' and 'b' storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on right side uint buffer
+ * @b_size:     size of another uint buffer
  * 
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_or_ip' macro instead.
  */
-inline bool __lp_uint_or_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_or_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!dest || !other)
+    if(!a || !b)
         return_set_errno(false,EINVAL);
     
-    size_t upper_bound = MIN(dest_size,other_size);
+    size_t upper_bound = MIN(a_size,b_size);
     for(size_t i = 0; i < upper_bound; ++i)
-        dest[i] |= other[i];
+        a[i] |= b[i];
     
     return true;
 }
@@ -994,24 +994,24 @@ inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_u
 
 
 /**
- * __lp_uint_xor_inplace - performs bitwise *xor* operation on 'dest' and 'other' storing result in 'dest'
- * @dest:       pointer on destination uint buffer
- * @dest_size:  size of destination uint buffer
- * @other:      pointer on another uint buffer to perform operation with
- * @other_size: size of another uint buffer
+ * __lp_uint_xor_inplace - performs bitwise *xor* operation on 'a' and 'b' storing result in 'a'
+ * @a:          pointer on left side uint buffer (destination)
+ * @a_size:     size of destination uint buffer
+ * @b:          pointer on right side uint buffer
+ * @b_size:     size of another uint buffer
  * 
  * Returns true on success and false on failure.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_xor_ip' macro instead.
  */
-inline bool __lp_uint_xor_inplace(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *other, size_t other_size)
+inline bool __lp_uint_xor_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!dest || !other)
+    if(!a || !b)
         return_set_errno(false,EINVAL);
     
-    size_t upper_bound = MIN(dest_size,other_size);
+    size_t upper_bound = MIN(a_size,b_size);
     for(size_t i = 0; i < upper_bound; ++i)
-        dest[i] ^= other[i];
+        a[i] ^= b[i];
     
     return true;
 }
@@ -1075,7 +1075,7 @@ inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
 
 /**
  * __lp_uint_lshift_inplace - performs bits left shift storing result in 'a'
- * @a:          pointer on destination uint buffer
+ * @a:          pointer on left side uint buffer (destination)
  * @a_size:     size of destination uint buffer
  * @shift:      shift size
  * 
@@ -1165,7 +1165,7 @@ inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
 
 /**
  * __lp_uint_rshift_inplace - performs bits right shift storing result in 'a'
- * @a:          pointer on destination uint buffer
+ * @a:          pointer on left side uint buffer (destination)
  * @a_size:     size of destination uint buffer
  * @shift:      shift size
  * 

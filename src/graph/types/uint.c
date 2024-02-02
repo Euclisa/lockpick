@@ -347,23 +347,23 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *a, size_t n)
         affirmf_debug((a)->graph,"Found operand with no associated graph");
 
 
-void lpg_uint_copy(lpg_uint_t *dest, lpg_uint_t *src)
+void lpg_uint_copy(lpg_uint_t *a, lpg_uint_t *src)
 {
-    __lpg_uint_nullptr_affirmf(dest,"destination uint");
+    __lpg_uint_nullptr_affirmf(a,"destination uint");
     __lpg_uint_nullptr_affirmf(src,"source uint");
-    __lpg_uint_validate_operand_graphs_binary(dest,src);
+    __lpg_uint_validate_operand_graphs_binary(a,src);
 
-    lpg_graph_t *graph = dest->graph;
+    lpg_graph_t *graph = a->graph;
 
-    lpg_node_t **a_nodes = lpg_uint_nodes(dest);
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
     lpg_node_t **src_nodes = lpg_uint_nodes(src);
 
-    size_t upper_bound = MIN(dest->width,src->width);
+    size_t upper_bound = MIN(a->width,src->width);
     size_t node_i = 0;
     for(; node_i < upper_bound; ++node_i)
         a_nodes[node_i] = src_nodes[node_i];
     
-    for(; node_i < dest->width; ++node_i)
+    for(; node_i < a->width; ++node_i)
         a_nodes[node_i] = lpg_node_const(graph,false);
 }
 
