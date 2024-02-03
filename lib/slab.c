@@ -108,7 +108,7 @@ lp_slab_t *lp_slab_create(size_t total_entries, size_t entry_size)
     affirmf(memalign_status == 0,"Failed to allocate memory for slab buffer of size %ld bytes",total_size);
 
     slab->__entry_size = entry_size;
-    slab->__total_entries = total_entries;
+    slab->__total_entries = slab->__total_free = total_entries;
     slab->__fb_head = (__lp_slab_block_list_t*)malloc(sizeof(__lp_slab_block_list_t));
     affirmf(slab->__fb_head,"Failed to allocate memory for slab free blocks linked list");
 
@@ -172,6 +172,7 @@ void *lp_slab_alloc(lp_slab_t *slab)
         affirmf(__lp_slab_block_list_remove(&slab->__fb_head,old_head),"Failed to remove empty free block");
         free(old_head);
     }
+    --slab->__total_free;
 
     return ptr;
 }
@@ -282,6 +283,8 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
             ptr < end_slab,
             "Provided entry pointer does not belong to the specified slab");
     affirmf((ptr-begin_slab) % entry_size == 0,"Provided entry is not aligned to slab entry size");
+
+    ++slab->__total_free;
 
     if(!slab->__fb_head)
     {

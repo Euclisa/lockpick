@@ -83,3 +83,15 @@ inline void lpg_graph_reset(lpg_graph_t *graph)
 
     lp_slab_exec(graph->slab,__lpg_graph_reset_slab_callback,NULL);    
 }
+
+
+inline size_t lpg_graph_nodes_count(lpg_graph_t *graph)
+{
+    return graph->slab->__total_entries - graph->slab->__total_free;
+}
+
+
+inline size_t lpg_graph_operators_count(lpg_graph_t *graph)
+{
+    return lpg_graph_nodes_count(graph) - graph->inputs_size;
+}

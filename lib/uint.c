@@ -6,7 +6,7 @@
 
 const __uint128_t __LP_UINT_BASE = ((__uint128_t)1 << (__LP_UINT_BITS_PER_WORD));
 const __lp_uint_word_t __LP_UINT_MAX_WORD = (__lp_uint_word_t)-1;
-const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / __LP_UINT_BITS_PER_HEX;
+const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / LP_BITS_PER_HEX;
 
 
 /**
@@ -43,7 +43,7 @@ int8_t __lp_uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __l
     int64_t curr_char_i = start;
     
     // Characters are parsed in reverse order so low hexes come first
-    for (uint8_t offset = 0; offset < __LP_UINT_BITS_PER_WORD; offset += __LP_UINT_BITS_PER_HEX)
+    for (uint8_t offset = 0; offset < __LP_UINT_BITS_PER_WORD; offset += LP_BITS_PER_HEX)
     {
         // If nothing left to parse
         if (curr_char_i < 0)
@@ -113,7 +113,7 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *a, size_t n, bool truncate_
     uint8_t hexes_truncated = 0;
     while(truncate_zeros)
     {
-        uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(hexes_truncated+1);
+        uint8_t shift = __LP_UINT_BITS_PER_WORD-LP_BITS_PER_HEX*(hexes_truncated+1);
         __lp_uint_word_t shifted = value >> shift;
         if(shifted != 0)
             break;
@@ -124,7 +124,7 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *a, size_t n, bool truncate_
     uint8_t wrote_hexes = 0;
     for(; wrote_hexes < max_hexes_to_write; ++wrote_hexes)
     {
-        uint8_t shift = __LP_UINT_BITS_PER_WORD-__LP_UINT_BITS_PER_HEX*(wrote_hexes+hexes_truncated+1);
+        uint8_t shift = __LP_UINT_BITS_PER_WORD-LP_BITS_PER_HEX*(wrote_hexes+hexes_truncated+1);
         __lp_uint_word_t shifted = value >> shift;
         char shifted_hex = i2ch_map[shifted & 0xf];
         a[wrote_hexes] = shifted_hex;
@@ -169,7 +169,7 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
 
     // All high zeros in the highest word must be truncated
     size_t hex_str_len = (significant_words_offset) * __LP_UINT_HEXES_PER_WORD;
-    for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += __LP_UINT_BITS_PER_HEX)
+    for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += LP_BITS_PER_HEX)
         ++hex_str_len;
     
     if(a != NULL)

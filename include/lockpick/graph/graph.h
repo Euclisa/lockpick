@@ -78,6 +78,9 @@ void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
 void lpg_graph_reset(lpg_graph_t *graph);
 void lpg_graph_compute(lpg_graph_t *graph);
+
 size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph);
+size_t lpg_graph_nodes_count(lpg_graph_t *graph);
+size_t lpg_graph_operators_count(lpg_graph_t *graph);
 
 #endif // _LOCKPICK_GRAPH_GRAPH_H

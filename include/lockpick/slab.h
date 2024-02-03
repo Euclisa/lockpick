@@ -19,6 +19,7 @@ typedef struct lp_slab
 {
     void *__buffer;
     __lp_slab_block_list_t *__fb_head;
+    size_t __total_free;
     size_t __total_entries;
     size_t __entry_size;
 } lp_slab_t;

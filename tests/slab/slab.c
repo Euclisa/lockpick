@@ -13,6 +13,8 @@
 
 static inline bool __validate_slab(const lp_slab_t *slab, size_t expected_free_entries)
 {
+    if(slab->__total_free != expected_free_entries)
+        return false;
     size_t free_entries = 0;
     __lp_slab_block_list_t *fb_curr = slab->__fb_head;
     if(!fb_curr)

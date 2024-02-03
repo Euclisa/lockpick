@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define __aligned(N) __attribute__((aligned(N)))
 #define __no_return __attribute__((noreturn))
@@ -25,5 +26,8 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 #define LP_NPOS ((size_t)-1)
+
+#define LP_BITS_IN_BYTE 8
+#define LP_BITS_PER_HEX 4
 
 #endif // _LOCKPICK_DEFINE_H

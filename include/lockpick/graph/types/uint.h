@@ -4,8 +4,6 @@
 #include <lockpick/graph/graph.h>
 #include <lockpick/uint.h>
 
-#define __LPG_UINT_BITS_PER_HEX 4
-
 #define __LPG_UINT_KARATSUBA_BOUND 300
 
 typedef struct lpg_uint
@@ -29,7 +27,7 @@ void lpg_uint_update_from_hex_str(lpg_uint_t *value, const char *hex_str);
 
 void lpg_uint_release(lpg_uint_t *_uint);
 
-void lpg_uint_assign_from_hex_str(const char *hex_str, lpg_uint_t *value);
+void lpg_uint_assign_from_hex_str(lpg_uint_t *value, const char *hex_str);
 
 void __lpg_uint_update_from_uint(lpg_uint_t *value, const __lp_uint_word_t *uint_value, size_t uint_value_size);
 #define lpg_uint_update_from_uint(value,uint_value) __lpg_uint_update_from_uint((value),(uint_value).__buffer,__array_size((uint_value).__buffer))
@@ -42,15 +40,20 @@ void lpg_uint_copy(lpg_uint_t *a, lpg_uint_t *src);
 
 void lpg_uint_add(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_add_ip(lpg_uint_t *a, lpg_uint_t *b);
+
 void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_sub_ip(lpg_uint_t *a, lpg_uint_t *b);
+
+bool __lpg_uint_is_mul_karatsuba(size_t a_width, size_t b_width, size_t result_width)
 void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_mul_ip(lpg_uint_t *a, lpg_uint_t *b);
 
 void lpg_uint_and(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_and_ip(lpg_uint_t *a, lpg_uint_t *b);
+
 void lpg_uint_or(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_or_ip(lpg_uint_t *a, lpg_uint_t *b);
+
 void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_xor_ip(lpg_uint_t *a, lpg_uint_t *b);
 
