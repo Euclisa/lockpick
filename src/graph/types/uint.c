@@ -1150,6 +1150,7 @@ void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
     lpg_node_t **a_nodes = lpg_uint_nodes(a);
     lpg_node_t **result_nodes = lpg_uint_nodes(result);
 
+    shift = MIN(shift,result->width);
     int64_t node_i = result->width-1;
     for(; node_i >= (int64_t)(a->width+shift); --node_i)
         result_nodes[node_i] = lpg_node_const(graph,false);
@@ -1159,6 +1160,40 @@ void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
     
     for(; node_i >= 0; --node_i)
         result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+/**
+ * lpg_uint_lshift_ip - inplace left shift uint by bits 
+ * @a:          uint operand to shift
+ * @shift:      number of bits to shift left by 
+ * 
+ * This left shifts the value in @a by @shift number of bits, 
+ * storing the result in @a nodes buffer.
+ *
+ * Excess bits shifted off the left edge are discarded.
+ * Zeroes are shifted in from the right side.
+ *
+ * If @shift exceeds the width of @a, result will be fully zeroed out. @a 
+ * width sets the maximum useful shift distance.
+ *
+ * Return: None
+*/
+void lpg_uint_lshift_ip(lpg_uint_t *a, size_t shift)
+{
+    affirm_nullptr(a,"uint operand");
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+
+    shift = MIN(shift,a->width);
+    int64_t node_i = a->width-1;
+    for(; node_i >= (int64_t)shift; --node_i)
+        a_nodes[node_i] = a_nodes[node_i-shift];
+    
+    for(; node_i >= 0; --node_i)
+        a_nodes[node_i] = lpg_node_const(graph,false);
 }
 
 
@@ -1188,7 +1223,6 @@ void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
     lpg_node_t **result_nodes = lpg_uint_nodes(result);
 
     shift = MIN(a->width,shift);
-
     size_t node_i = 0;
     size_t upper_bound = MIN(a->width-shift,result->width);
     for(; node_i < upper_bound; ++node_i)
@@ -1196,6 +1230,25 @@ void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result)
     
     for(; node_i < result->width; ++node_i)
         result_nodes[node_i] = lpg_node_const(graph,false);
+}
+
+
+void lpg_uint_rshift_ip(lpg_uint_t *a, size_t shift)
+{
+    affirm_nullptr(a,"uint operand");
+    __lpg_uint_validate_operand_graphs_unary(a);
+
+    lpg_graph_t *graph = a->graph;
+
+    lpg_node_t **a_nodes = lpg_uint_nodes(a);
+
+    shift = MIN(a->width,shift);
+    size_t node_i = 0;
+    for(; node_i < a->width-shift; ++node_i)
+        a_nodes[node_i] = a_nodes[node_i+shift];
+    
+    for(; node_i < a->width; ++node_i)
+        a_nodes[node_i] = lpg_node_const(graph,false);
 }
 
 
@@ -1238,6 +1291,20 @@ void __lpg_uint_mul_school(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 }
 
 
+/**
+ * __lpg_uint_mul_ops_width - get required width for multiplication result
+ * @a_width:    width of left-side operand in bits  
+ * @b_width:    width of right-side operand in bits
+ *
+ * Returns the minimum result uint width needed to store the full 
+ * product of two unsigned integers with widths @a_width and @b_width,  
+ * without any overflow.
+ *
+ * This facilitates pre-allocating a properly sized uint to fit  
+ * the multiplication output prior to calling the multiply routine.
+ * 
+ * Return: Minimum uint width to store full multiplication output 
+*/
 static inline size_t __lpg_uint_mul_ops_width(size_t a_width, size_t b_width)
 {
     size_t min_ops_width = MIN(a_width,b_width);
@@ -1249,6 +1316,20 @@ static inline size_t __lpg_uint_mul_ops_width(size_t a_width, size_t b_width)
     return min_ops_width+max_ops_width;
 }
 
+/**
+ * __lpg_uint_add_ops_width - get required width for addition result
+ * @a_width:    width of left-side operand in bits  
+ * @b_width:    width of right-side operand in bits
+ *
+ * Returns the minimum result uint width needed to store the full 
+ * sum of two unsigned integers with widths @a_width and @b_width,  
+ * without any overflow.
+ *
+ * This facilitates pre-allocating a properly sized uint to fit  
+ * the addition output prior to calling the addition routine.
+ * 
+ * Return: Minimum uint width to store full addition output 
+*/
 static inline size_t __lpg_uint_add_ops_width(size_t a_width, size_t b_width)
 {
     size_t min_ops_width = MIN(a_width,b_width);

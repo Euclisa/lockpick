@@ -44,7 +44,7 @@ void lpg_uint_add_ip(lpg_uint_t *a, lpg_uint_t *b);
 void lpg_uint_sub(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_sub_ip(lpg_uint_t *a, lpg_uint_t *b);
 
-bool __lpg_uint_is_mul_karatsuba(size_t a_width, size_t b_width, size_t result_width)
+bool __lpg_uint_is_mul_karatsuba(size_t a_width, size_t b_width, size_t result_width);
 void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_mul_ip(lpg_uint_t *a, lpg_uint_t *b);
 
@@ -58,6 +58,9 @@ void lpg_uint_xor(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result);
 void lpg_uint_xor_ip(lpg_uint_t *a, lpg_uint_t *b);
 
 void lpg_uint_lshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result);
+void lpg_uint_lshift_ip(lpg_uint_t *a, size_t shift);
+
 void lpg_uint_rshift(lpg_uint_t *a, size_t shift, lpg_uint_t *result);
+void lpg_uint_rshift_ip(lpg_uint_t *a, size_t shift);
 
 #endif // _LOCKPICK_GRAPH_TYPES_UINT_H

@@ -1204,6 +1204,16 @@ inline bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t 
 }
 
 
+/**
+ * __lp_uint_rand - assigns uint to random number
+ * @a:              target uint buffer
+ * @a_size:         size of target uint buffer
+ * @width_high:     highest width generated random number may have
+ * 
+ * Returns true on success and false on failure.
+ * 
+ * This is not supposed to be called by user. Use 'lp_uint_rand' macro instead.
+*/
 inline bool __lp_uint_rand(__lp_uint_word_t *a, size_t a_size, size_t width_high)
 {
     if(!a)
