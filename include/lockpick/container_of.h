@@ -3,8 +3,7 @@
 
 #include <assert.h>
 #include <stddef.h>
-
-#define __same_type(t1,t2) __builtin_types_compatible_p(typeof(t1),typeof(t2))
+#include <lockpick/define.h>
 
 /**
  * container_of - cast a member of a structure out to the containing structure
@@ -16,8 +15,8 @@
  */
 #define container_of(ptr, type, member) ({				            \
 	void *__mptr = (void *)(ptr);					                \
-	static_assert(__same_type(*(ptr), ((type *)0)->member) ||	    \
-		      __same_type(*(ptr), void),			                \
+	static_assert(lp_same_type(*(ptr), ((type *)0)->member) ||	    \
+		      lp_same_type(*(ptr), void),			                \
 		      "pointer type mismatch in container_of()");	        \
 	((type *)(__mptr - offsetof(type, member))); })
 

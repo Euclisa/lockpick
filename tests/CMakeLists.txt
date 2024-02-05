@@ -1,5 +1,6 @@
 file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/htable/*.c"
         "${CMAKE_SOURCE_DIR}/tests/list/*.c"
         "${CMAKE_SOURCE_DIR}/tests/rb_tree/*.c"
         "${CMAKE_SOURCE_DIR}/tests/slab/*.c"
