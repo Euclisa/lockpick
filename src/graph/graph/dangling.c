@@ -102,7 +102,8 @@ inline size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph)
     args.counter = 0;
     args.node_set_root = node_set_root;
 
-    lp_slab_exec(graph->slab,__lpg_graph_count_dangling_slab_callback,&args);
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lp_slab_exec(slab,__lpg_graph_count_dangling_slab_callback,&args);
 
     lp_slab_release(entries_slab);
 

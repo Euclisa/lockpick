@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <lockpick/define.h>
 
+#define __LP_RB_COLOR_MASK ((uintptr_t)1)
+#define __LP_RB_PARENT_MASK ((uintptr_t)(~1))
+
 
 typedef enum __lp_rb_colors
 {

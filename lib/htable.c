@@ -6,7 +6,7 @@
 
 static inline size_t __lp_htable_occupancy_bm_size(size_t capacity)
 {
-    return MAX(1, capacity << 3);
+    return MAX(1, capacity >> 3);
 }
 
 static inline size_t __lp_htable_capacity_mask(size_t capacity)
@@ -241,4 +241,16 @@ inline size_t lp_htable_size(const lp_htable_t *ht)
 inline size_t lp_htable_capacity(const lp_htable_t *ht)
 {
     return ht->__capacity;
+}
+
+
+void lp_htable_rehash(lp_htable_t *ht, size_t new_size)
+{
+    size_t new_capacity;
+    if(lp_is_pow_2(new_size))
+        new_capacity = new_size;
+    else
+        new_capacity = 1ULL << (lp_floor_log2(new_size)+2);
+
+    __lp_htable_rehash(ht,new_capacity);
 }

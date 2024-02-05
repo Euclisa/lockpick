@@ -36,4 +36,6 @@ bool lp_htable_remove(lp_htable_t *ht, const void *entry);
 size_t lp_htable_size(const lp_htable_t *ht);
 size_t lp_htable_capacity(const lp_htable_t *ht);
 
+void lp_htable_rehash(lp_htable_t *ht, size_t new_size);
+
 #endif // _LOCKPICK_HTABLE_H

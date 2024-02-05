@@ -138,7 +138,12 @@ lpg_node_t *__lpg_node_alloc(lp_slab_t *slab)
 
 lpg_node_t *lpg_node_and(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b)
 {
-    lpg_node_t *node = __lpg_node_alloc(graph->slab);
+    affirm_nullptr(graph,"graph");
+    affirm_nullptr(a,"left-side node operand");
+    affirm_nullptr(b,"right-side node operand");
+
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lpg_node_t *node = __lpg_node_alloc(slab);
     __lpg_node_init_and(node,a,b);
 
     return node;
@@ -146,7 +151,12 @@ lpg_node_t *lpg_node_and(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b)
 
 lpg_node_t *lpg_node_or(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b)
 {
-    lpg_node_t *node = __lpg_node_alloc(graph->slab);
+    affirm_nullptr(graph,"graph");
+    affirm_nullptr(a,"left-side node operand");
+    affirm_nullptr(b,"right-side node operand");
+
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lpg_node_t *node = __lpg_node_alloc(slab);
     __lpg_node_init_or(node,a,b);
 
     return node;
@@ -154,7 +164,11 @@ lpg_node_t *lpg_node_or(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b)
 
 lpg_node_t *lpg_node_not(lpg_graph_t *graph, lpg_node_t *a)
 {
-    lpg_node_t *node = __lpg_node_alloc(graph->slab);
+    affirm_nullptr(graph,"graph");
+    affirm_nullptr(a,"node operand");
+
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lpg_node_t *node = __lpg_node_alloc(slab);
     __lpg_node_init_not(node,a);
 
     return node;
@@ -162,7 +176,12 @@ lpg_node_t *lpg_node_not(lpg_graph_t *graph, lpg_node_t *a)
 
 lpg_node_t *lpg_node_xor(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b)
 {
-    lpg_node_t *node = __lpg_node_alloc(graph->slab);
+    affirm_nullptr(graph,"graph");
+    affirm_nullptr(a,"left-side node operand");
+    affirm_nullptr(b,"right-side node operand");
+
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lpg_node_t *node = __lpg_node_alloc(slab);
     __lpg_node_init_xor(node,a,b);
 
     return node;
@@ -170,7 +189,10 @@ lpg_node_t *lpg_node_xor(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b)
 
 lpg_node_t *lpg_node_const(lpg_graph_t *graph, bool value)
 {
-    lpg_node_t *node = __lpg_node_alloc(graph->slab);
+    affirm_nullptr(graph,"graph");
+
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lpg_node_t *node = __lpg_node_alloc(slab);
     __lpg_node_init_const(node,value);
 
     return node;
@@ -178,7 +200,10 @@ lpg_node_t *lpg_node_const(lpg_graph_t *graph, bool value)
 
 lpg_node_t *lpg_node_var(lpg_graph_t *graph)
 {
-    lpg_node_t *node = __lpg_node_alloc(graph->slab);
+    affirm_nullptr(graph,"graph");
+
+    lp_slab_t *slab = __lpg_graph_slab(graph);
+    lpg_node_t *node = __lpg_node_alloc(slab);
     __lpg_node_init_var(node);
 
     return node;

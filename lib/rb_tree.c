@@ -17,7 +17,7 @@
 
 inline __lp_rb_color_t __lp_rb_color(const lp_rb_node_t *node)
 {
-    return node ? (__lp_rb_color_t)(node->__parent_color & 1) : __LP_RB_BLACK;
+    return node ? (__lp_rb_color_t)(node->__parent_color & __LP_RB_COLOR_MASK) : __LP_RB_BLACK;
 }
 
 
@@ -25,13 +25,13 @@ inline void __lp_rb_set_color(lp_rb_node_t *node, __lp_rb_color_t color)
 {
     affirmf_debug(node,"Node must be non-null");
 
-    node->__parent_color = (node->__parent_color & ~1) | color;
+    node->__parent_color = (node->__parent_color & (~__LP_RB_COLOR_MASK)) | color;
 }
 
 
 inline lp_rb_node_t *lp_rb_parent(const lp_rb_node_t *node)
 {
-    return node ? (lp_rb_node_t*)(node->__parent_color & ~1) : (lp_rb_node_t *)NULL;
+    return node ? (lp_rb_node_t*)(node->__parent_color & __LP_RB_PARENT_MASK) : (lp_rb_node_t *)NULL;
 }
 
 
@@ -100,9 +100,9 @@ lp_rb_node_t *lp_rb_sibling(const lp_rb_node_t *node)
 
 void lp_rb_set_parent(lp_rb_node_t *node, const lp_rb_node_t *parent_ptr)
 {
-    affirmf_debug(!((unsigned long)parent_ptr & 1), "'parent_ptr' must be aligned at least to 2 bytes boundary.");
+    affirmf_debug(!((uintptr_t)parent_ptr & 1), "'parent_ptr' must be aligned at least to 2 bytes boundary.");
 
-    node->__parent_color = (unsigned long)parent_ptr | __lp_rb_color(node);
+    node->__parent_color = (uintptr_t)parent_ptr | (node->__parent_color & (~__LP_RB_PARENT_MASK));
 }
 
 

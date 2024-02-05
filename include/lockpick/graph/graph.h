@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <lockpick/list.h>
 #include <lockpick/define.h>
 #include <lockpick/slab.h>
@@ -46,9 +47,7 @@ void __lpg_node_set_computed(lpg_node_t *node, bool computed);
 bool lpg_node_value(const lpg_node_t *node);
 void __lpg_node_set_value(lpg_node_t *node, bool value);
 
-bool lpg_node_validate_fetch(const lpg_graph_t *graph, const lpg_node_t *node);
-
-bool __lpg_node_belongs_to_graph(const lpg_graph_t *graph, const lpg_node_t *node);
+bool __lpg_graph_is_native_node(const lpg_graph_t *graph, const lpg_node_t *node);
 
 lpg_node_t *lpg_node_and(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_or(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
@@ -57,19 +56,27 @@ lpg_node_t *lpg_node_xor(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_const(lpg_graph_t *graph, bool value);
 lpg_node_t *lpg_node_var(lpg_graph_t *graph);
 
-void lpg_node_compute(lpg_node_t *node);
-
 void __lpg_node_release(lpg_node_t *node);
+
+
+#define __LPG_GRAPH_SLAB_MASK ((uintptr_t)(~0b1))
+#define __LPG_GRAPH_SUPER_MASK ((uintptr_t)(0b1))
 
 struct lpg_graph
 {
     char *name;
-    lp_slab_t *slab;
+    uintptr_t __slab_super;
     lpg_node_t **inputs;
     size_t inputs_size;
     lpg_node_t **outputs;
     size_t outputs_size;
 };
+
+lp_slab_t *__lpg_graph_slab(const lpg_graph_t *graph);
+void __lpg_graph_set_slab(lpg_graph_t *graph, lp_slab_t *slab);
+
+bool lpg_graph_is_super(const lpg_graph_t *graph);
+void __lpg_graph_set_super(lpg_graph_t *graph, bool super);
 
 lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outputs_size, size_t max_nodes);
 
@@ -77,10 +84,14 @@ void lpg_graph_release(lpg_graph_t *graph);
 void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
 void lpg_graph_reset(lpg_graph_t *graph);
+
+void lpg_graph_compute_node(lpg_graph_t *graph, lpg_node_t *node);
 void lpg_graph_compute(lpg_graph_t *graph);
 
 size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph);
 size_t lpg_graph_nodes_count(lpg_graph_t *graph);
 size_t lpg_graph_operators_count(lpg_graph_t *graph);
+
+bool __lpg_graph_is_native_node(const lpg_graph_t *graph, const lpg_node_t *node);
 
 #endif // _LOCKPICK_GRAPH_GRAPH_H

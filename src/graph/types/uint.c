@@ -227,7 +227,7 @@ void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes)
 
     for(size_t node_i = 0; node_i < value->width; ++node_i)
     {
-        affirmf(__lpg_node_belongs_to_graph(value->graph,nodes[node_i]),
+        affirmf(__lpg_graph_is_native_node(value->graph,nodes[node_i]),
         "Node inside buffer at index '%ld' does not belong to the graph given value bounded with");
         value_nodes[node_i] = nodes[node_i];
     }
@@ -247,7 +247,7 @@ void lpg_uint_update_fill_with_single(lpg_uint_t *value, lpg_node_t *node)
 {
     affirm_nullptr(value,"uint value");
     affirm_nullptr(node,"node");
-    affirmf(__lpg_node_belongs_to_graph(value->graph,node),"Specified node does not belong to the graph given value bounded with");
+    affirmf(__lpg_graph_is_native_node(value->graph,node),"Specified node does not belong to the graph given value bounded with");
 
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
 
@@ -393,7 +393,7 @@ void lpg_uint_compute(lpg_uint_t *value)
     lpg_node_t **value_nodes = lpg_uint_nodes(value);
 
     for(size_t node_i = 0; node_i < value->width; ++node_i)
-        lpg_node_compute(value_nodes[node_i]);
+        lpg_graph_compute_node(value->graph,value_nodes[node_i]);
 }
 
 /**
@@ -476,6 +476,31 @@ static inline char __lpg_uint_i2ch(uint8_t value)
 }
 
 
+/**
+ * __lpg_uint_node_validate_fetch - validate node/graph association
+ * @node:       node object to validate  
+ * @graph:      expected graph the node belongs to
+ *
+ * This verifies that the given @node belongs to the provided @graph,  
+ * ensuring they are not mixed across different graphs.
+ *
+ * Since nodes do not track owning graph info, this lookup validation is
+ * crucial before using @node in operations to avoid corruption.
+ *
+ * The function also checks if @node value has been computed yet by the
+ * owning @graph.
+ *
+ * Return: Node value after verifying @node/@graph association
+*/
+static inline bool __lpg_uint_node_validate_fetch(const lpg_graph_t *graph, const lpg_node_t *node)
+{
+    affirmf(__lpg_graph_is_native_node(graph,node),"Specified node does not belong to the given graph");
+    affirmf(lpg_node_computed(node),"Attempt to read value of node that had not been computed before");
+    
+    return lpg_node_value(node);
+}
+
+
 /** 
  * lpg_uint_to_hex - Convert uint to hexadecimal string
  * @value: Uint object to convert
@@ -502,7 +527,7 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
 
     // Find highest non-zero bit
     int64_t significant_bits_offset = value->width-1;
-    for(; significant_bits_offset >= 0 && !lpg_node_validate_fetch(value->graph,nodes[significant_bits_offset]); --significant_bits_offset);
+    for(; significant_bits_offset >= 0 && !__lpg_uint_node_validate_fetch(value->graph,nodes[significant_bits_offset]); --significant_bits_offset);
 
     // If all bits == 0
     if(significant_bits_offset < 0)
@@ -532,7 +557,7 @@ size_t lpg_uint_to_hex(const lpg_uint_t *value, char *dest, size_t n)
             int64_t curr_hex_low_bit_i = (curr_bit_i/LP_BITS_PER_HEX)*LP_BITS_PER_HEX;
             for(; curr_bit_i >= curr_hex_low_bit_i; --curr_bit_i)
             {
-                if(lpg_node_validate_fetch(value->graph,nodes[curr_bit_i]))
+                if(__lpg_uint_node_validate_fetch(value->graph,nodes[curr_bit_i]))
                 {
                     uint8_t offset = curr_bit_i-curr_hex_low_bit_i;
                     curr_hex_value |= 1 << offset;
