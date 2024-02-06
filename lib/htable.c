@@ -246,6 +246,9 @@ inline size_t lp_htable_capacity(const lp_htable_t *ht)
 
 void lp_htable_rehash(lp_htable_t *ht, size_t new_size)
 {
+    affirm_nullptr(ht,"htable");
+
+    new_size = MAX(1,new_size);
     size_t new_capacity;
     if(lp_is_pow_2(new_size))
         new_capacity = new_size;
