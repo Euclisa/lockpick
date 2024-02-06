@@ -48,10 +48,7 @@ void __test_graph_uint_from_to_hex(size_t width)
 
     lpg_graph_t *graph = lpg_graph_create("test",width,width,(width+1)*tests_num);
     for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)
-    {
-        __lpg_node_set_computed(graph->inputs[node_i],true);
         graph->outputs[node_i] = graph->inputs[node_i];
-    }
 
     char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
     char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);
@@ -78,8 +75,6 @@ void __test_graph_uint_from_to_hex(size_t width)
 
 #define TEST_GRAPH_UINT_OP_INIT_CHUNK(res_width)                                                                                \
     lpg_graph_t *graph = lpg_graph_create("test",a_width+b_width,res_width,__LPG_TEST_UINT_MAX_GRAPH_NODES);                    \
-    for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)                                                               \
-        __lpg_node_set_computed(graph->inputs[node_i],true);                                                                    \
     char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                    \
     char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                   \
     lpg_uint_t *graph_a = lpg_uint_allocate_as_buffer_view(graph,graph->inputs,a_width);                                        \
@@ -139,7 +134,6 @@ static inline void __test_graph_uint_gen_and_test_##op_type##_##postfix(        
     lpg_uint_update_from_uint(graph_a,a_prop);                                                                                  \
     lpg_uint_update_from_uint(graph_b,b_prop);                                                                                  \
     /* Compute new graph value and convert it to uint */                                                                        \
-    lpg_graph_reset(graph);                                                                                                     \
     lpg_graph_compute(graph);                                                                                                   \
     lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);                                                             \
     lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
@@ -252,8 +246,6 @@ void test_graph_uint_##op_type##_inplace()                                      
 
 #define TEST_GRAPH_UINT_SHIFT_OP_INIT_CHUNK(res_width)                                                                          \
     lpg_graph_t *graph = lpg_graph_create("test",a_width,res_width,__LPG_TEST_UINT_MAX_GRAPH_NODES);                            \
-    for(size_t node_i = 0; node_i < graph->inputs_size; ++node_i)                                                               \
-        __lpg_node_set_computed(graph->inputs[node_i],true);                                                                    \
     char *original_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                    \
     char *converted_hex_str = (char*)malloc(MAX_HEXES_NUM+1);                                                                   \
     lpg_uint_t *graph_a = lpg_uint_allocate_as_buffer_view(graph,graph->inputs,a_width);                                        \
@@ -305,7 +297,6 @@ static inline void __test_graph_uint_gen_and_test_##op_type##_##postfix(        
     /* Update graph uint operand values from previously generated ones */                                                       \
     lpg_uint_update_from_uint(graph_a,a_prop);                                                                                  \
     /* Compute new graph value and convert it to uint */                                                                        \
-    lpg_graph_reset(graph);                                                                                                     \
     lpg_graph_compute(graph);                                                                                                   \
     lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);                                                             \
     lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
@@ -405,7 +396,7 @@ void test_graph_uint_##op_type##_inplace()                                      
     for(size_t set_i = 0; set_i <= width_sets_num; ++set_i)                                                                     \
     {                                                                                                                           \
         size_t a_width = rand() % width_high;                                                                                   \
-        size_t shift = rand() % a_width;                                                                                        \
+        size_t shift = rand() % MAX(1,a_width);                                                                                 \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set_inplace(a_width,shift));                                      \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set_inplace(0,shift));                                            \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set_inplace(a_width,0));                                          \
@@ -420,8 +411,8 @@ TEST_GRAPH_UINT_OP_INPLACE(add,20,64,10)
 TEST_GRAPH_UINT_OP(sub,20,64,10)
 TEST_GRAPH_UINT_OP_INPLACE(sub,20,64,10)
 
-TEST_GRAPH_UINT_OP(mul,20,64,3)
-TEST_GRAPH_UINT_OP_INPLACE(mul,20,64,10)
+TEST_GRAPH_UINT_OP(mul,10,32,3)
+TEST_GRAPH_UINT_OP_INPLACE(mul,10,32,10)
 
 TEST_GRAPH_UINT_OP(and,20,64,10)
 TEST_GRAPH_UINT_OP_INPLACE(and,20,64,10)

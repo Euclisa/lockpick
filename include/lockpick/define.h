@@ -32,12 +32,4 @@
 
 #define lp_same_type(t1,t2) __builtin_types_compatible_p(typeof(t1),typeof(t2))
 
-#define lp_swap(a,b)  ({                                \
-    static_assert(lp_same_type(a,b),                    \
-            "operands types mismatch in lp_swap()");    \
-    typeof(a) c = (a);                                  \
-    (a) = (b);                                          \
-    (b) = (c);                                          \
-})
-
 #endif // _LOCKPICK_DEFINE_H

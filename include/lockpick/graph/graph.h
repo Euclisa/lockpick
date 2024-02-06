@@ -18,31 +18,25 @@ typedef enum lpg_node_types
     LPG_NODE_TYPE_OR,
     LPG_NODE_TYPE_NOT,
     LPG_NODE_TYPE_XOR,
-    LPG_NODE_TYPE_VAR
+    LPG_NODE_TYPE_CONST
 } lpg_node_type_t;
 
-extern const uint16_t lpg_node_type_operands_num[];
 
-
-#define __LPG_NODE_PARENTS_MASK ((uintptr_t)(~0b11))
-#define __LPG_NODE_COMPUTED_MASK ((uintptr_t)(0b10))
+#define __LPG_NODE_PARENTS_MASK ((uintptr_t)(~0b1))
 #define __LPG_NODE_VALUE_MASK ((uintptr_t)(0b1))
 
 
 typedef struct lpg_node
 {
     lpg_node_type_t type;
-    uintptr_t __parents_computed_value;
+    uintptr_t __parents_value;
     struct lpg_node **children;
     uint32_t children_size;
-} __aligned(4) lpg_node_t;
+} __aligned(2) lpg_node_t;
 
 
 lpg_node_t **lpg_node_parents(const lpg_node_t *node);
 void __lpg_node_set_parents(lpg_node_t *node, lpg_node_t **parents);
-
-bool lpg_node_computed(const lpg_node_t *node);
-void __lpg_node_set_computed(lpg_node_t *node, bool computed);
 
 bool lpg_node_value(const lpg_node_t *node);
 void __lpg_node_set_value(lpg_node_t *node, bool value);
@@ -54,7 +48,8 @@ lpg_node_t *lpg_node_or(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_not(lpg_graph_t *graph, lpg_node_t *a);
 lpg_node_t *lpg_node_xor(lpg_graph_t *graph, lpg_node_t *a, lpg_node_t *b);
 lpg_node_t *lpg_node_const(lpg_graph_t *graph, bool value);
-lpg_node_t *lpg_node_var(lpg_graph_t *graph);
+
+size_t lpg_node_get_parents_num(const lpg_node_t *node);
 
 void __lpg_node_release(lpg_node_t *node);
 
@@ -83,9 +78,9 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
 void lpg_graph_release(lpg_graph_t *graph);
 void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
-void lpg_graph_reset(lpg_graph_t *graph);
+typedef void (*__lpg_traverse_cb_t)(lpg_graph_t *graph, lpg_node_t *node, void *args);
+void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args);
 
-void lpg_graph_compute_node(lpg_graph_t *graph, lpg_node_t *node);
 void lpg_graph_compute(lpg_graph_t *graph);
 
 size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph);

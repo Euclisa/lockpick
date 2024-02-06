@@ -1,16 +1,15 @@
 #include <lockpick/htable.h>
+#include <lockpick/utility.h>
 #include <lockpick/container_of.h>
 #include <lockpick/test.h>
 #include <stdlib.h>
 
 
-#define LP_TEST_HTABLE_UINT_ENTRY(uint_t,tests_num,entries_num)                                                  \
+#define LP_TEST_HTABLE_UINT_ENTRY(uint_t,tests_num,entries_num)                                         \
 size_t uint_t##_hash(const void *x)                                                                     \
 {                                                                                                       \
     uint_t *ux = (uint_t*)x;                                                                            \
-    size_t a = 15429261971298606581ULL;                                                                 \
-    size_t b = 14218188292255501262ULL;                                                                 \
-    return (*ux)*a + b;                                                                                 \
+    return lp_uni_hash((size_t)(*ux));                                                                  \
 }                                                                                                       \
 bool uint_t##_eq(const void *a, const void *b)                                                          \
 {                                                                                                       \

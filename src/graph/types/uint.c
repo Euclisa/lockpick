@@ -31,7 +31,7 @@ inline lpg_node_t **lpg_uint_nodes(const lpg_uint_t *value)
 */
 static inline void __lpg_uint_set_nodes(lpg_uint_t *value, lpg_node_t **nodes)
 {
-    value->__nodes_own = (uintptr_t)nodes | (value->__nodes_own & 0b1);
+    value->__nodes_own = (uintptr_t)nodes | (value->__nodes_own & (~__LPG_UINT_NODES_MASK));
 }
 
 
@@ -193,16 +193,6 @@ lpg_uint_t *lpg_uint_allocate_as_uint_view(lpg_graph_t *graph, lpg_uint_t *other
     __lpg_uint_set_own(_uint,false);
 
     return _uint;
-}
-
-
-static inline bool __lpg_uint_is_valid_uint(const lpg_uint_t *value)
-{
-    if(!value)
-        return false;
-    if(!value->graph)
-        return false;
-    return true;
 }
 
 
@@ -379,24 +369,6 @@ void lpg_uint_release(lpg_uint_t *_uint)
 
 
 /**
- * lpg_uint_compute - computes nodes of specified uint object
- * @value:      uint object to compute nodes of
- * 
- * Computes full graph with outputs at @value's nodes buffer.
- * 
- * Return: None
-*/
-void lpg_uint_compute(lpg_uint_t *value)
-{
-    affirm_nullptr(value,"uint value");
-
-    lpg_node_t **value_nodes = lpg_uint_nodes(value);
-
-    for(size_t node_i = 0; node_i < value->width; ++node_i)
-        lpg_graph_compute_node(value->graph,value_nodes[node_i]);
-}
-
-/**
  * __lpg_uint_ch2i - converts hex characters to unsigned integer
  * @char_hex:	hex character ([0-9a-fA-F])
  * 
@@ -495,7 +467,6 @@ static inline char __lpg_uint_i2ch(uint8_t value)
 static inline bool __lpg_uint_node_validate_fetch(const lpg_graph_t *graph, const lpg_node_t *node)
 {
     affirmf(__lpg_graph_is_native_node(graph,node),"Specified node does not belong to the given graph");
-    affirmf(lpg_node_computed(node),"Attempt to read value of node that had not been computed before");
     
     return lpg_node_value(node);
 }
@@ -1531,7 +1502,7 @@ void __lpg_uint_mul_karatsuba(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
 inline bool __lpg_uint_is_mul_karatsuba(size_t a_width, size_t b_width, size_t result_width)
 {
     size_t width_product = a_width*b_width;
-    return width_product < __LPG_UINT_KARATSUBA_BOUND || result_width < 4;
+    return width_product >= __LPG_UINT_KARATSUBA_BOUND && result_width >= 4;
 }
 
 
@@ -1563,9 +1534,9 @@ void lpg_uint_mul(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_t *result)
     __lpg_uint_validate_operand_graphs_binary(a,b);
 
     if(__lpg_uint_is_mul_karatsuba(a->width,b->width,result->width))
-        __lpg_uint_mul_school(a,b,result);
-    else
         __lpg_uint_mul_karatsuba(a,b,result);
+    else
+        __lpg_uint_mul_school(a,b,result);
 }
 
 
