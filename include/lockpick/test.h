@@ -43,14 +43,14 @@ void __lp_test_process_action(__lp_test_actions_t action, ...);
     bool __leave_test;                                                                  \
     __lp_test_process_action(__LP_TEST_STEP_OUT,&__leave_test);                         \
     if(__leave_test)                                                                    \
-        return;                                                                         \
+        goto lp_test_cleanup;                                                           \
 })
 
 #define LP_TEST_ASSERT(cond,msg,...)  ({                                                \
     __lp_test_actions_t __lpt_asrt_act = (cond) ? __LP_TEST_PASS : __LP_TEST_FAIL;      \
     __lp_test_process_action(__lpt_asrt_act,msg,##__VA_ARGS__);                         \
     if(__lpt_asrt_act == __LP_TEST_FAIL)                                                \
-        return;                                                                         \
+        goto lp_test_cleanup;                                                           \
 })
 
 #define LP_TEST_BEGIN(project_name_str)   ({                                            \

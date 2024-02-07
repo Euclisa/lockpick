@@ -109,6 +109,7 @@ void test_slab_##entry_type##_random_alloc_free()                               
             entries_valid &= !entries[entry_j] || *entries[entry_j] == preserved_entries[entry_j];                                          \
         LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on clean-up phase at entry %ld",entry_i);                      \
     }                                                                                                                                       \
+    lp_test_cleanup:                                                                                                                        \
     lp_slab_release(slab);                                                                                                                  \
 }
 

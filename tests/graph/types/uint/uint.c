@@ -66,6 +66,7 @@ void __test_graph_uint_from_to_hex(size_t width)
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),
             "Expected: %s, got: %s",original_hex_str,converted_hex_str);
     }
+    lp_test_cleanup:
     lpg_graph_release(graph);
     lpg_uint_release(val);
     free(original_hex_str);
@@ -139,6 +140,7 @@ static inline void __test_graph_uint_gen_and_test_##op_type##_##postfix(        
     lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
     LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),                                                                      \
             "a: %s; b: %s; Expected: %s, got: %s",hex_str_a,hex_str_b,original_hex_str,converted_hex_str);                      \
+    lp_test_cleanup:                                                                                                            \
     free(hex_str_a);                                                                                                            \
     free(hex_str_b);                                                                                                            \
 }
@@ -159,6 +161,7 @@ void __test_graph_uint_##op_type(size_t a_width, size_t b_width, size_t res_widt
                 original_hex_str,converted_hex_str)                                                                             \
         );                                                                                                                      \
     }                                                                                                                           \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_OP_CLEAN_UP_CHUNK                                                                                           \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t b_width, size_t res_width)                             \
@@ -170,12 +173,14 @@ void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t b_width
             "a_width: %ld; b_width: %ld; res_width: %ld; "                                                                      \
             "Found %ld dangling nodes after full graph assembly",                                                               \
             a_width,b_width,res_width,dangling_nodes);                                                                          \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_width_set(size_t a_width, size_t b_width, size_t res_width)                                  \
 {                                                                                                                               \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type(a_width,b_width,res_width));                                                  \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_dangling_nodes(a_width,b_width,res_width));                                 \
+    lp_test_cleanup:                                                                                                            \
 }                                                                                                                               \
 void test_graph_uint_##op_type()                                                                                                \
 {                                                                                                                               \
@@ -191,6 +196,7 @@ void test_graph_uint_##op_type()                                                
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set(0,0,res_width));                                              \
     }                                                                                                                           \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set(0,0,0));                                                          \
+    lp_test_cleanup:                                                                                                            \
 }
 
 
@@ -210,6 +216,7 @@ void __test_graph_uint_##op_type##_inplace(size_t a_width, size_t b_width)      
                 original_hex_str,converted_hex_str)                                                                             \
         );                                                                                                                      \
     }                                                                                                                           \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_OP_CLEAN_UP_CHUNK                                                                                           \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_inplace_dangling_nodes(size_t a_width, size_t b_width)                                       \
@@ -222,12 +229,14 @@ void __test_graph_uint_##op_type##_inplace_dangling_nodes(size_t a_width, size_t
             "a_width: %ld; b_width: %ld; "                                                                                      \
             "Found %ld dangling nodes after full graph assembly",                                                               \
             a_width,b_width,dangling_nodes);                                                                                    \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_inplace_width_set(size_t a_width, size_t b_width)                                            \
 {                                                                                                                               \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(a_width,b_width));                                                  \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace_dangling_nodes(a_width,b_width));                                   \
+    lp_test_cleanup:                                                                                                            \
 }                                                                                                                               \
 void test_graph_uint_##op_type##_inplace()                                                                                      \
 {                                                                                                                               \
@@ -240,6 +249,7 @@ void test_graph_uint_##op_type##_inplace()                                      
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace_width_set(a_width,0));                                          \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace_width_set(0,0));                                                \
     }                                                                                                                           \
+    lp_test_cleanup:                                                                                                            \
 }
 
 
@@ -302,6 +312,7 @@ static inline void __test_graph_uint_gen_and_test_##op_type##_##postfix(        
     lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
     LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),                                                                      \
             "a: %s; shift: %ld; Expected: %s, got: %s",hex_str_a,shift,original_hex_str,converted_hex_str);                     \
+    lp_test_cleanup:                                                                                                            \
     free(hex_str_a);                                                                                                            \
 }
 
@@ -321,6 +332,7 @@ void __test_graph_uint_##op_type(size_t a_width, size_t shift, size_t res_width)
                 original_hex_str,converted_hex_str)                                                                             \
         );                                                                                                                      \
     }                                                                                                                           \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_SHIFT_OP_CLEAN_UP_CHUNK                                                                                     \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t shift, size_t res_width)                               \
@@ -332,12 +344,14 @@ void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t shift, 
             "a_width: %ld; shift: %ld; res_width: %ld; "                                                                        \
             "Found %ld dangling nodes after full graph assembly",                                                               \
             a_width,shift,res_width,dangling_nodes);                                                                            \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_SHIFT_OP_DANGLING_CLEAN_UP_CHUNK                                                                            \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_width_set(size_t a_width, size_t shift, size_t res_width)                                    \
 {                                                                                                                               \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type(a_width,shift,res_width));                                                    \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_dangling_nodes(a_width,shift,res_width));                                   \
+    lp_test_cleanup:                                                                                                            \
 }                                                                                                                               \
 void test_graph_uint_##op_type()                                                                                                \
 {                                                                                                                               \
@@ -352,6 +366,7 @@ void test_graph_uint_##op_type()                                                
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set(a_width,shift,0));                                            \
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set(0,0,res_width));                                              \
     }                                                                                                                           \
+    lp_test_cleanup:                                                                                                            \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set(0,0,0));                                                          \
 }
 
@@ -372,6 +387,7 @@ void __test_graph_uint_##op_type##_inplace(size_t a_width, size_t shift)        
                 original_hex_str,converted_hex_str)                                                                             \
         );                                                                                                                      \
     }                                                                                                                           \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_SHIFT_OP_CLEAN_UP_CHUNK                                                                                     \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_dangling_nodes_inplace(size_t a_width, size_t shift)                                         \
@@ -384,12 +400,14 @@ void __test_graph_uint_##op_type##_dangling_nodes_inplace(size_t a_width, size_t
             "a_width: %ld; shift: %ld; "                                                                                        \
             "Found %ld dangling nodes after full graph assembly",                                                               \
             a_width,shift,dangling_nodes);                                                                                      \
+    lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_SHIFT_OP_DANGLING_CLEAN_UP_CHUNK                                                                            \
 }                                                                                                                               \
 void __test_graph_uint_##op_type##_width_set_inplace(size_t a_width, size_t shift)                                              \
 {                                                                                                                               \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_inplace(a_width,shift));                                                    \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_dangling_nodes_inplace(a_width,shift));                                     \
+    lp_test_cleanup:                                                                                                            \
 }                                                                                                                               \
 void test_graph_uint_##op_type##_inplace()                                                                                      \
 {                                                                                                                               \
@@ -402,6 +420,7 @@ void test_graph_uint_##op_type##_inplace()                                      
         LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set_inplace(a_width,0));                                          \
     }                                                                                                                           \
     LP_TEST_STEP_INTO(__test_graph_uint_##op_type##_width_set_inplace(0,0));                                                    \
+    lp_test_cleanup:                                                                                                            \
 }
 
 

@@ -83,27 +83,29 @@ void test_uint##N##_from_to_hex()                                               
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),                                                        \
             "Expected: %s, got: %s",original_hex_str,converted_hex_str);                                                    \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
 }                                                                                                                           \
 void test_uint##N##_from_to_hex_overflow()                                                                                  \
 {                                                                                                                           \
     srand(0);                                                                                                               \
     const uint32_t tests_num = 1000;                                                                                        \
+    const size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                            \
+    const size_t max_overflow = N/__LP_UINT_BITS_PER_WORD*4-1;                                                              \
+    const size_t max_hex_str_size = hexes_num+max_overflow+1;                                                               \
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)                                                                  \
     {                                                                                                                       \
         lp_uint_t(N) val;                                                                                                   \
-        size_t hexes_num = N*__LP_UINT_HEXES_PER_WORD/__LP_UINT_BITS_PER_WORD;                                              \
         size_t hexes_num_overflowed = hexes_num + rand()%(N/__LP_UINT_BITS_PER_WORD*4);                                     \
-        char *original_hex_str = (char*)malloc(hexes_num_overflowed+1);                                                     \
-        char *converted_hex_str = (char*)malloc(hexes_num_overflowed+1);                                                    \
+        char original_hex_str[max_hex_str_size];                                                                            \
+        char converted_hex_str[max_hex_str_size];                                                                           \
         __rand_hex_str(original_hex_str,hexes_num_overflowed);                                                              \
         lp_uint_from_hex(val,original_hex_str);                                                                             \
         affirmf(lp_uint_to_hex(val,converted_hex_str,hexes_num_overflowed) > 0,                                             \
             "Failed to convert value to hex string");                                                                       \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)),                       \
             "Expected: %s, got: %s",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);                   \
-        free(original_hex_str);                                                                                             \
-        free(converted_hex_str);                                                                                            \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
 }
 
 
@@ -162,6 +164,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_##op_type(lp_uint_t(N_a) *a_samples,
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f);                                                                                                              \
 }
 
@@ -183,6 +186,7 @@ void test_uint_##N_a##_##N_b##_##op_type##_inplace(lp_uint_t(N_a) *a_samples, lp
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f);                                                                                                              \
 }
 
@@ -220,6 +224,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_comparison(lp_uint_t(N_a) *a_samples
             "Expected %d, got: 'less-equal'",res_true_int);                                                                 \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f_comp);                                                                                                         \
 }                                                                                                                           \
 void test_uint_##N_a##_##N_b##_##N_result##_ops_arithmetic(lp_uint_t(N_a) *a_samples, lp_uint_t(N_b) *b_samples)            \
@@ -315,6 +320,7 @@ void test_uint_##N_a##_##N_result##_lshift(lp_uint_t(N_a) *a_samples)           
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f_lshift);                                                                                                       \
     fclose(f_shifts);                                                                                                       \
 }                                                                                                                           \
@@ -341,6 +347,7 @@ void test_uint_##N_a##_##N_result##_rshift(lp_uint_t(N_a) *a_samples)           
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f_rshift);                                                                                                       \
     fclose(f_shifts);                                                                                                       \
 }                                                                                                                           \
@@ -378,6 +385,7 @@ void test_uint_##N_a##_lshift_inplace(lp_uint_t(N_a) *a_samples)                
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f_lshift);                                                                                                       \
     fclose(f_shifts);                                                                                                       \
 }                                                                                                                           \
@@ -405,6 +413,7 @@ void test_uint_##N_a##_rshift_inplace(lp_uint_t(N_a) *a_samples)                
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
+    lp_test_cleanup:                                                                                                        \
     fclose(f_rshift);                                                                                                       \
     fclose(f_shifts);                                                                                                       \
 }                                                                                                                           \

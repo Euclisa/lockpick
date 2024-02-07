@@ -68,6 +68,7 @@ void test_htable_##uint_t()                                                     
             LP_TEST_ASSERT(valid,"Htable inconsitency after %ld removals",i);                           \
         }                                                                                               \
     }                                                                                                   \
+    lp_test_cleanup:                                                                                    \
     lp_htable_release(ht);                                                                              \
 }
 

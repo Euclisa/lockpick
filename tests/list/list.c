@@ -55,6 +55,7 @@ void __validate_list_case(lp_list_t *head, FILE *fp, uint32_t case_i)
     }
     else
         LP_TEST_ASSERT(!head,"List must be empty in case %d",case_i);
+    lp_test_cleanup:
 }
 
 
@@ -89,6 +90,7 @@ void test_list_push_back()
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
+    lp_test_cleanup:
     __free_list(head);
 }
 
@@ -108,6 +110,7 @@ void test_list_push_front()
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
+    lp_test_cleanup:
     __free_list(head);
 }
 
@@ -130,6 +133,7 @@ void test_list_insert_before_head()
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
+    lp_test_cleanup:
     __free_list(head);
 }
 
@@ -152,6 +156,7 @@ void test_list_insert_after_head()
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
+    lp_test_cleanup:
     __free_list(head);
 }
 
@@ -174,6 +179,7 @@ void test_list_insert_before_tail()
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
+    lp_test_cleanup:
     __free_list(head);
 }
 
@@ -196,6 +202,7 @@ void test_list_insert_after_tail()
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
+    lp_test_cleanup:
     __free_list(head);
 }
 
@@ -273,6 +280,9 @@ void test_list_random()
     affirmf(lp_list_remove(&head,head),"Failed to remove last element from list",value,case_i);
     LP_TEST_ASSERT(!head,"List is not empty after last element removal");
     free(container_of(old_head,uint8_list_t,entry));
+
+    lp_test_cleanup:
+    __free_list(head);
 }
 
 
@@ -299,6 +309,7 @@ void test_list_foreach()
     lp_list_foreach(empty_head,entry,uint8_list_t,entry)
         LP_TEST_ASSERT(false,"Head is empty but entered foreach body");
 
+    lp_test_cleanup:
     __free_list(head);
 }
 
