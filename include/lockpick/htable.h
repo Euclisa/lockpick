@@ -5,6 +5,7 @@
 #include <lockpick/affirmf.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #define __LP_HTABLE_CRSHT_LOADF_MAX 1
 #define __LP_HTABLE_CRSHT_LOADF_MIN 3
