@@ -1,5 +1,6 @@
 #include <lockpick/test.h>
 #include <lockpick/math.h>
+#include <math.h>
 
 
 void test_math_is_pow_2()
@@ -72,8 +73,25 @@ void test_math_floor_log2()
 }
 
 
+void test_math_ceil_div_u()
+{
+    const uint64_t upper_bound = 1000;
+    for(uint64_t a = 0; a <= upper_bound; ++a)
+    {
+        for(uint64_t b = 1; b <= upper_bound; ++b)
+        {
+            uint64_t true_ceil = (uint64_t)ceil((double)a/(double)b);
+            uint64_t obt_ceil = lp_ceil_div_u(a,b);
+            LP_TEST_ASSERT(obt_ceil == true_ceil,"Expected: %ld, got: %ld",true_ceil,obt_ceil);
+        }
+    }
+    lp_test_cleanup:
+}
+
+
 void lp_test_math()
 {
     LP_TEST_RUN(test_math_is_pow_2());
     LP_TEST_RUN(test_math_floor_log2());
+    LP_TEST_RUN(test_math_ceil_div_u());
 }

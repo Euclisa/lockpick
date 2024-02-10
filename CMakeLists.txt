@@ -17,10 +17,11 @@ file(GLOB SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/src/graph/functions/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/types/*.c")
 file(GLOB LIB_SOURCES CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/lib/*.c")
+file(GLOB ARCH_SOURCES CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/arch/x86_64/*.c")
 
 file(GLOB LOCKPICK_INCLUDE_DIR "${CMAKE_SOURCE_DIR/include}")
 
-add_executable(lockpick "src/main.c" ${LIB_SOURCES} ${SOURCES})
+add_executable(lockpick "src/main.c" ${LIB_SOURCES} ${SOURCES} ${ARCH_SOURCES})
 target_include_directories(lockpick PRIVATE ${LOCKPICK_INCLUDE_DIR})
 
 add_subdirectory(tests)
