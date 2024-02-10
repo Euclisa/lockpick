@@ -9,12 +9,25 @@
 #define __aligned(N) __attribute__((aligned(N)))
 #define __no_return __attribute__((noreturn))
 
-#define lp_assert(cond,msg)                     \
+#define lp_assert(cond,msg)                             \
     assert((cond) && __func__ && msg)
 
-#define return_set_errno(ret,errno_code)  ({    \
-    errno = errno_code;                         \
-    return ret;                                 \
+#define return_set_errno(ret,errno_code)  ({            \
+    errno = errno_code;                                 \
+    return ret;                                         \
+})
+
+#define return_set_errno_on(cond,ret,errno_code)  ({    \
+    if(cond)                                            \
+    {                                                   \
+        errno = errno_code;                             \
+        return ret;                                     \
+    }                                                   \
+})
+
+#define return_on(cond,ret)  ({                         \
+    if(cond)                                            \
+        return ret;                                     \
 })
 
 #define __likely(x) __builtin_expect(!!(x), 1)

@@ -5,19 +5,17 @@
 #include <lockpick/affirmf.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <pthread.h>
 
 // Capacity right shifts required to compute max load factor
 #define __LP_HTABLE_CRSHT_LOADF_MAX 1
 // Capacity right shifts required to compute min load factor
 #define __LP_HTABLE_CRSHT_LOADF_MIN 3
 
-typedef uint32_t __lp_htable_occ_bm_word_t;
 
 typedef struct lp_htable
 {
     void *__buckets;
-    __lp_htable_occ_bm_word_t *__occupancy_bm;
+    uint8_t *__occupancy_bm;
 
     size_t (*__hsh)(const void *);
     bool (*__eq)(const void *, const void *);
@@ -25,15 +23,6 @@ typedef struct lp_htable
     size_t __entry_size;
     size_t __capacity;
     size_t __size;
-
-    uint32_t __altering_threads_num;
-    pthread_cond_t __altering_threads_num_cond,__removing_concurr_cond,__removing_rm_cond;
-    pthread_mutex_t __altering_threads_num_lock,__removing_lock;
-    pthread_mutex_t __rehash_lock;
-    bool __removing;
-    uint32_t __removing_threads_num;
-    pthread_cond_t __removing_threads_num_cond;
-    pthread_mutex_t __removing_threads_num_lock;
 } lp_htable_t;
 
 

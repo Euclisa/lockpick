@@ -1,7 +1,7 @@
 #include <lockpick/test.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/utility.h>
-#include <lockpick/spinlock_bitset.h>
+#include <lockpick/sync/spinlock_bitset.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>

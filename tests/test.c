@@ -4,7 +4,7 @@
 #include "list/list.h"
 #include "math/math.h"
 #include "slab/slab.h"
-#include "arch/arch.h"
+#include "bitops/bitops.h"
 #include "htable/htable.h"
 #include "graph/types/uint/uint.h"
 #include <lockpick/test.h>
@@ -12,14 +12,14 @@
 int main()
 {
     LP_TEST_BEGIN("Lockpick");
-    //LP_TEST_RUN(lp_test_rb_tree(),1);
-    //LP_TEST_RUN(lp_test_uint(),1);
-    //LP_TEST_RUN(lp_test_list(),1);
+    LP_TEST_RUN(lp_test_rb_tree(),1);
+    LP_TEST_RUN(lp_test_uint(),1);
+    LP_TEST_RUN(lp_test_list(),1);
     LP_TEST_RUN(lp_test_math(),1);
-    //LP_TEST_RUN(lp_test_slab(),1);
-    LP_TEST_RUN(lp_test_intrin());
+    LP_TEST_RUN(lp_test_slab(),1);
+    LP_TEST_RUN(lp_test_bitops());
     LP_TEST_RUN(lp_test_spinlock_bitset());
-    //LP_TEST_RUN(lp_test_htable(),1);
-    //LP_TEST_RUN(lp_test_graph_uint(),1);
+    LP_TEST_RUN(lp_test_htable(),1);
+    LP_TEST_RUN(lp_test_graph_uint(),1);
     LP_TEST_END();
 }

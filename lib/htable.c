@@ -1,7 +1,5 @@
 #include <lockpick/htable.h>
 #include <lockpick/math.h>
-#include <lockpick/arch/x86_64/bittestandset.h>
-#include <lockpick/arch/x86_64/bittestandreset.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,18 +14,21 @@ static inline size_t __lp_htable_capacity_mask(size_t capacity)
     return capacity-1;
 }
 
-static inline bool __lp_htable_get_occ_bit(const __lp_htable_occ_bm_word_t *occupancy_bm, size_t bucket_i)
+static inline bool __lp_htable_get_occ_bit(const uint8_t *occupancy_bm, size_t bucket_i)
 {
     size_t bm_word_i = bucket_i / LP_BITS_IN_BYTE;
     size_t bm_bit_i = bucket_i % LP_BITS_IN_BYTE;
     return (occupancy_bm[bm_word_i] >> bm_bit_i) & 0b1;
 }
 
-static inline bool __lp_htable_test_and_set_occ_bit(__lp_htable_occ_bm_word_t *occupancy_bm, size_t bucket_i)
+static inline void __lp_htable_set_occ_bit(uint8_t *occupancy_bm, size_t bucket_i, bool occupied)
 {
-    size_t bm_word_i = bucket_i / LP_BITS_IN_BYTE;
-    size_t bm_bit_i = bucket_i % LP_BITS_IN_BYTE;
-    return lp_bittestandset(occupancy_bm+bm_word_i,bm_bit_i);
+    size_t mask_word_i = bucket_i / LP_BITS_IN_BYTE;
+    size_t mask_bit_i = bucket_i % LP_BITS_IN_BYTE;
+    if(occupied)
+        occupancy_bm[mask_word_i] |= 0b1 << mask_bit_i;
+    else
+        occupancy_bm[mask_word_i] &= ~(0b1 << mask_bit_i);
 }
 
 static inline bool __lp_htable_is_overloaded(size_t size, size_t capacity)
@@ -58,7 +59,7 @@ lp_htable_t *lp_htable_create(size_t entry_size, size_t capacity, size_t (*hsh)(
     affirm_bad_malloc(ht->__buckets,"buckets array",buckets_arr_size);
 
     const size_t occupancy_bm_size = __lp_htable_occupancy_bm_size(capacity);
-    ht->__occupancy_bm = (__lp_htable_occ_bm_word_t*)calloc(occupancy_bm_size,sizeof(__lp_htable_occ_bm_word_t));
+    ht->__occupancy_bm = (uint8_t*)calloc(occupancy_bm_size,sizeof(uint8_t));
     affirm_bad_malloc(ht->__occupancy_bm,"occupancy bitmap",occupancy_bm_size);
 
     ht->__entry_size = entry_size;
@@ -66,11 +67,6 @@ lp_htable_t *lp_htable_create(size_t entry_size, size_t capacity, size_t (*hsh)(
     ht->__hsh = hsh;
     ht->__eq = eq;
     ht->__size = 0;
-    ht->__altering_threads_num = 0;
-
-    affirmf(pthread_mutex_init(&ht->__rehash_lock,NULL) == 0,"Failed to initialize rehash mutex lock");
-    affirmf(pthread_mutex_init(&ht->__altering_threads_num_lock,NULL) == 0,"Failed to initialize inserting threads mutex lock");
-    affirmf(pthread_cond_init(&ht->__altering_threads_num_cond,NULL) == 0,"Failed to initialize inserting threads condition");
 
     return ht;
 }
@@ -90,14 +86,16 @@ static inline const void *__lp_htable_insert(lp_htable_t *ht, const void *entry)
     size_t capacity_mask = __lp_htable_capacity_mask(ht->__capacity);
     size_t bucket_i = ht->__hsh(entry) & capacity_mask;
     void *ht_entry = ht->__buckets + bucket_i*ht->__entry_size;
-    while(__lp_htable_test_and_set_occ_bit(ht->__occupancy_bm,bucket_i))
+    while(__lp_htable_get_occ_bit(ht->__occupancy_bm,bucket_i))
     {
         if(ht->__eq(entry,ht_entry))
             return NULL;
         bucket_i = (bucket_i + 1) & capacity_mask;
         ht_entry = ht->__buckets + bucket_i*ht->__entry_size;
     }
+    __lp_htable_set_occ_bit(ht->__occupancy_bm,bucket_i,true);
     memcpy(ht_entry,entry,ht->__entry_size);
+    ++ht->__size;
     
     return ht_entry;
 }
@@ -112,9 +110,9 @@ void __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
     ht->__buckets = (void*)malloc(new_buckets_arr_size);
     affirm_bad_malloc(ht->__buckets,"new buckets array",new_buckets_arr_size);
 
-    __lp_htable_occ_bm_word_t *old_occupancy_bm = ht->__occupancy_bm;
+    uint8_t *old_occupancy_bm = ht->__occupancy_bm;
     size_t new_occupancy_bm_size = __lp_htable_occupancy_bm_size(new_capacity);
-    ht->__occupancy_bm = (__lp_htable_occ_bm_word_t*)calloc(new_occupancy_bm_size,sizeof(__lp_htable_occ_bm_word_t));
+    ht->__occupancy_bm = (uint8_t*)calloc(new_occupancy_bm_size,sizeof(uint8_t));
     affirm_bad_malloc(ht->__occupancy_bm,"new occupancy bitmap",new_occupancy_bm_size);
 
     size_t old_capacity = ht->__capacity;
@@ -135,56 +133,15 @@ void __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
 }
 
 
-static inline void __lp_htable_thread_enter_concurr(lp_htable_t *ht)
-{
-    pthread_mutex_lock(&ht->__altering_threads_num_lock);
-    ++ht->__altering_threads_num;
-    pthread_mutex_unlock(&ht->__altering_threads_num_lock);
-}
-
-static inline void __lp_htable_thread_leave_concurr(lp_htable_t *ht)
-{
-    pthread_mutex_lock(&ht->__altering_threads_num_lock);
-    --ht->__altering_threads_num;
-    pthread_cond_signal(&ht->__altering_threads_num_cond);
-    pthread_mutex_unlock(&ht->__altering_threads_num_lock);
-}
-
-static inline void __lp_htable_check_rm(lp_htable_t *ht, pthread_cond_t *cond)
-{
-    pthread_mutex_lock(&ht->__removing_lock);
-    while(ht->__removing)
-        pthread_cond_wait(cond,&ht->__removing_lock);
-}
-
-
 const void *lp_htable_insert(lp_htable_t *ht, const void *entry)
 {
     affirm_nullptr(ht,"htable");
     affirm_nullptr(entry,"entry to be inserted");
 
-    __lp_htable_check_rm(ht,&ht->__removing_concurr_cond);
-
-    size_t size = __sync_add_and_fetch(&ht->__size,1);
-
-    pthread_mutex_lock(&ht->__rehash_lock);
-    if(__lp_htable_is_overloaded(size,ht->__capacity))
-    {
-        pthread_mutex_lock(&ht->__altering_threads_num_lock);
-        while(ht->__altering_threads_num > 0)
-            pthread_cond_wait(&ht->__altering_threads_num_cond,&ht->__altering_threads_num_lock);
-
+    if(__lp_htable_is_overloaded(ht->__size+1,ht->__capacity))
         __lp_htable_rehash(ht,ht->__capacity << 1);
-    }
-    pthread_mutex_unlock(&ht->__rehash_lock);
-
-    __lp_htable_thread_enter_concurr(ht);
-
-    const void *ret_ptr = __lp_htable_insert(ht,entry);
-
-    __lp_htable_thread_leave_concurr(ht);
-
-    return ret_ptr;
+    
+    return __lp_htable_insert(ht,entry);
 }
 
 
@@ -219,7 +176,7 @@ static inline void __lp_htable_remove_found(lp_htable_t *ht, void *ht_entry)
         }
         bucket_i = (bucket_i + 1) & capacity_mask;
     }
-    //__lp_htable_set_occ_bit(ht->__occupancy_bm,prev_bucket_i,false);
+    __lp_htable_set_occ_bit(ht->__occupancy_bm,prev_bucket_i,false);
 }
 
 
@@ -249,27 +206,9 @@ const void *lp_htable_find(lp_htable_t *ht, const void *entry)
     affirm_nullptr(ht,"htable");
     affirm_nullptr(entry,"look-up entry");
 
-    __lp_htable_check_rm(ht,&ht->__removing_concurr_cond);
-
-    __lp_htable_thread_enter_concurr(ht);
-    const void *res = __lp_htable_find(ht,entry);
-    __lp_htable_thread_leave_concurr(ht);
-
-    return res;
+    return __lp_htable_find(ht,entry);
 }
 
-
-static inline void __lp_htable_thread_set_rm_status(lp_htable_t *ht, bool removing)
-{
-    pthread_mutex_lock(&ht->__removing_lock);
-    ht->__removing = removing;
-    if(!removing)
-    {
-        pthread_cond_signal(&ht->__removing_rm_cond);
-        pthread_cond_signal(&ht->__removing_concurr_cond);
-    }
-    pthread_mutex_unlock(&ht->__removing_lock);
-}
 
 bool lp_htable_remove(lp_htable_t *ht, const void *entry)
 {
@@ -279,29 +218,15 @@ bool lp_htable_remove(lp_htable_t *ht, const void *entry)
     if(ht->__size == 0)
         return false;
     
-    pthread_mutex_lock(&ht->__removing_lock);
-    while(__sync_val_compare_and_swap(&ht->__removing,false,true))
-        pthread_cond_wait(&ht->__removing_rm_cond,&ht->__removing_lock);
-
-    pthread_mutex_lock(&ht->__altering_threads_num_lock);
-    while(ht->__altering_threads_num > 0)
-        pthread_cond_wait(&ht->__altering_threads_num_cond,&ht->__altering_threads_num_lock);
-
     if(__lp_htable_is_sparse(ht->__size-1,ht->__capacity))
         __lp_htable_rehash(ht,ht->__capacity >> 1);
-
+    
     void *ht_entry = __lp_htable_find(ht,entry);
     if(!ht_entry)
         return false;
 
     __lp_htable_remove_found(ht,ht_entry);
     --ht->__size;
-
-    pthread_mutex_lock(&ht->__removing_lock);
-    __sync_val_compare_and_swap(&ht->__removing,true,false);
-    pthread_cond_signal(&ht->__removing_rm_cond);
-    pthread_cond_signal(&ht->__removing_concurr_cond);
-    pthread_mutex_unlock(&ht->__removing_lock);
 
     return true;
 }
