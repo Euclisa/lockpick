@@ -1,5 +1,5 @@
 #include "rb_tree/rb_tree.h"
-#include "spinlock_bitset/spinlock_bitset.h"
+#include "sync/test.h"
 #include "uint/uint.h"
 #include "list/list.h"
 #include "math/math.h"
@@ -17,8 +17,8 @@ int main()
     LP_TEST_RUN(lp_test_list(),1);
     LP_TEST_RUN(lp_test_math(),1);
     LP_TEST_RUN(lp_test_slab(),1);
-    LP_TEST_RUN(lp_test_bitops());
-    LP_TEST_RUN(lp_test_spinlock_bitset());
+    LP_TEST_RUN(lp_test_bitops(),1);
+    LP_TEST_RUN(lp_test_sync(),1);
     LP_TEST_RUN(lp_test_htable(),1);
     LP_TEST_RUN(lp_test_graph_uint(),1);
     LP_TEST_END();

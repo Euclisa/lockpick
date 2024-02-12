@@ -8,17 +8,25 @@
 
 typedef struct lp_lock_graph
 {
-    uint32_t **__build_adj_list;
-    uint32_t *__adj_list;
+    uint32_t **__lockee_list;
+    uint32_t *__lockee_list_sizes;
     pthread_cond_t *__block_conds;
-    pthread_mutex_t *__block_locks;
-    uint32_t *__adj_list_offsets;
+    pthread_mutex_t __counters_lock;
     uint32_t *__lock_counters;
-    lp_spinlock_bitset_t *__lock_counters_spins;
     uint32_t __blocks_num;
+    bool __commited;
 } lp_lock_graph_t;
 
 
 lp_lock_graph_t *lp_lock_graph_init(uint32_t blocks_num);
+bool lp_lock_graph_release(lp_lock_graph_t *graph);
+
+bool lp_lock_graph_add_dep(lp_lock_graph_t *graph, uint32_t locker, uint32_t lockee);
+bool lp_lock_graph_commit(lp_lock_graph_t *graph);
+
+bool lp_lock_graph_lock(lp_lock_graph_t *graph, uint32_t block_i);
+bool lp_lock_graph_unlock(lp_lock_graph_t *graph, uint32_t block_i);
+
+uint32_t lp_lock_graph_blocks_num(lp_lock_graph_t *graph);
 
 #endif // _LOCKPICK_SYNC_LOCK_GRAPH_H

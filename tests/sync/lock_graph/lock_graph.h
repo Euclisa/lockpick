@@ -1,0 +1,6 @@
+#ifndef _LOCKPICK_TESTS_SYNC_LOCK_GRAPH_H
+#define _LOCKPICK_TESTS_SYNC_LOCK_GRAPH_H
+
+void lp_test_lock_graph();
+
+#endif  // _LOCKPICK_TESTS_SYNC_LOCK_GRAPH_H

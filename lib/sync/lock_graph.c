@@ -1,44 +1,147 @@
 #include <lockpick/sync/lock_graph.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/define.h>
+#include <lockpick/emalloc.h>
 #include <stdlib.h>
 
 
 lp_lock_graph_t *lp_lock_graph_init(uint32_t blocks_num)
 {
-    size_t graph_size = sizeof(lp_lock_graph_t);
-    lp_lock_graph_t *graph = (lp_lock_graph_t*)malloc(graph_size);
-    return_set_errno_on(!graph,NULL,ENOMEM);
+    lp_lock_graph_t *graph = (lp_lock_graph_t*)emalloc(1,sizeof(lp_lock_graph_t),NULL);
 
-    size_t build_adj_list_size = blocks_num*sizeof(uint32_t*);
-    graph->__build_adj_list = (uint32_t**)malloc(build_adj_list_size);
-    return_set_errno_on(!graph->__build_adj_list,NULL,ENOMEM);
+    graph->__lockee_list = (uint32_t**)emalloc(blocks_num,sizeof(uint32_t*),NULL);
     for(uint32_t block_i = 0; block_i < blocks_num; ++block_i)
-    {
-        graph->__build_adj_list[block_i] = (uint32_t*)malloc(0);
-        return_set_errno_on(!graph->__build_adj_list[block_i],NULL,ENOMEM);
-    }
+        graph->__lockee_list[block_i] = (uint32_t*)emalloc(0,sizeof(uint32_t),NULL);
 
-    graph->__lock_counters = (uint32_t*)calloc(blocks_num,sizeof(uint32_t));
-    return_set_errno_on(!graph->__lock_counters,NULL,ENOMEM);
+    graph->__lockee_list_sizes = (uint32_t*)ecalloc(blocks_num,sizeof(uint32_t),NULL);
 
-    graph->__lock_counters_spins = lp_spinlock_bitset_init(blocks_num);
-    return_on(!graph->__lock_counters_spins,NULL);
+    graph->__lock_counters = (uint32_t*)ecalloc(blocks_num,sizeof(uint32_t),NULL);
 
-    size_t block_conds_size = blocks_num*sizeof(pthread_cond_t);
-    graph->__block_conds = (pthread_cond_t*)malloc(block_conds_size);
-    return_set_errno_on(!graph->__block_conds,NULL,ENOMEM);
+    graph->__block_conds = (pthread_cond_t*)emalloc(blocks_num,sizeof(pthread_cond_t),NULL);
     for(uint32_t block_i = 0; block_i < blocks_num; ++block_i)
         return_on(pthread_cond_init(&graph->__block_conds[block_i],NULL) != 0,NULL);
 
-    size_t block_locks_size = blocks_num*sizeof(pthread_mutex_t);
-    graph->__block_locks = (pthread_mutex_t*)malloc(block_locks_size);
-    return_set_errno_on(!graph->__block_locks,NULL,ENOMEM);
-    for(uint32_t block_i = 0; block_i < blocks_num; ++block_i)
-        return_on(pthread_mutex_init(&graph->__block_locks[block_i],NULL) != 0,NULL);
+    return_on(pthread_mutex_init(&graph->__counters_lock,NULL) != 0,NULL);
 
-    graph->__adj_list = NULL;
     graph->__blocks_num = blocks_num;
+    graph->__commited = false;
 
     return graph;
+}
+
+
+bool lp_lock_graph_release(lp_lock_graph_t *graph)
+{
+    if(!graph)
+        return_set_errno(false,EINVAL);
+
+    for(uint32_t block_i = 0; block_i < graph->__blocks_num; ++block_i)
+    {
+        free(graph->__lockee_list[block_i]);
+        pthread_cond_destroy(&graph->__block_conds[block_i]);
+    }
+
+    pthread_mutex_destroy(&graph->__counters_lock);
+
+    free(graph->__block_conds);
+    free(graph->__lockee_list);
+    free(graph->__lockee_list_sizes);
+    free(graph->__lock_counters);
+    free(graph);
+
+    return true;
+}
+
+
+static inline bool __lp_lock_graph_add_dep(lp_lock_graph_t *graph, uint32_t locker, uint32_t lockee)
+{
+    uint32_t curr_locker_list_size = graph->__lockee_list_sizes[locker];
+    for(uint32_t lockee_i = 0; lockee_i < curr_locker_list_size; ++lockee_i)
+        return_set_errno_on(graph->__lockee_list[locker][lockee_i] == lockee,false,EINVAL);
+
+    graph->__lockee_list[locker] = (uint32_t*)erealloc(graph->__lockee_list[locker],curr_locker_list_size+1,sizeof(uint32_t),false);
+    graph->__lockee_list[locker][curr_locker_list_size] = lockee;
+    ++graph->__lockee_list_sizes[locker];
+
+    return true;
+}
+
+
+bool lp_lock_graph_add_dep(lp_lock_graph_t *graph, uint32_t a, uint32_t b)
+{
+    if(!graph || a >= graph->__blocks_num || b >= graph->__blocks_num)
+        return_set_errno(false,EINVAL);
+    if(graph->__commited)
+        return_set_errno(false,EBUSY);
+    
+    return_on(!__lp_lock_graph_add_dep(graph,a,b),false);
+    if(a != b)
+        return_on(!__lp_lock_graph_add_dep(graph,b,a),false);
+
+    return true;
+}
+
+
+inline bool lp_lock_graph_commit(lp_lock_graph_t *graph)
+{
+    if(!graph)
+        return_set_errno(false,EINVAL);
+    if(graph->__commited)
+        return_set_errno(false,EBUSY);
+
+    graph->__commited = true; 
+
+    return true;
+}
+
+
+bool lp_lock_graph_lock(lp_lock_graph_t *graph, uint32_t block_i)
+{
+    if(!graph || block_i >= graph->__blocks_num)
+        return_set_errno(false,EINVAL);
+    if(!graph->__commited)
+        return_set_errno(false,EBUSY);
+
+    pthread_mutex_lock(&graph->__counters_lock);
+
+    while(graph->__lock_counters[block_i] != 0)
+        pthread_cond_wait(&graph->__block_conds[block_i],&graph->__counters_lock);
+
+    for(uint32_t lockee_i = 0; lockee_i < graph->__lockee_list_sizes[block_i]; ++lockee_i)
+    {
+        uint32_t lockee = graph->__lockee_list[block_i][lockee_i];
+        ++graph->__lock_counters[lockee];
+    }
+
+    pthread_mutex_unlock(&graph->__counters_lock);
+
+    return true;
+}
+
+
+bool lp_lock_graph_unlock(lp_lock_graph_t *graph, uint32_t block_i)
+{
+    if(!graph || block_i >= graph->__blocks_num)
+        return_set_errno(false,EINVAL);
+    if(!graph->__commited)
+        return_set_errno(false,EBUSY);
+    
+    pthread_mutex_lock(&graph->__counters_lock);
+
+    for(uint32_t lockee_i = 0; lockee_i < graph->__lockee_list_sizes[block_i]; ++lockee_i)
+    {
+        uint32_t lockee = graph->__lockee_list[block_i][lockee_i];
+        --graph->__lock_counters[lockee];
+        pthread_cond_broadcast(&graph->__block_conds[lockee]);
+    }
+
+    pthread_mutex_unlock(&graph->__counters_lock);
+
+    return true;
+}
+
+
+inline uint32_t lp_lock_graph_blocks_num(lp_lock_graph_t *graph)
+{
+    return graph->__blocks_num;
 }

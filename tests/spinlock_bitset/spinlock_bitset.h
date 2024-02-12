@@ -1,6 +1,0 @@
-#ifndef _LOCKPICK_TESTS_SPINLOCK_BITSET_H
-#define _LOCKPICK_TESTS_SPINLOCK_BITSET_H
-
-void lp_test_spinlock_bitset();
-
-#endif  // _LOCKPICK_TESTS_SPINLOCK_BITSET_H

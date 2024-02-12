@@ -3,19 +3,17 @@
 #include <lockpick/affirmf.h>
 #include <lockpick/math.h>
 #include <lockpick/sync/bitops.h>
+#include <lockpick/emalloc.h>
 #include <stdlib.h>
 #include <immintrin.h>
 
 
 lp_spinlock_bitset_t *lp_spinlock_bitset_init(size_t locks_num)
 {
-    size_t spins_size = sizeof(lp_spinlock_bitset_t);
-    lp_spinlock_bitset_t *spins = (lp_spinlock_bitset_t*)malloc(spins_size);
-    return_set_errno_on(!spins,NULL,ENOMEM);
+    lp_spinlock_bitset_t *spins = (lp_spinlock_bitset_t*)emalloc(1,sizeof(lp_spinlock_bitset_t),NULL);
 
     size_t bitset_words_num = lp_ceil_div_u(locks_num,(sizeof(uint32_t)*LP_BITS_IN_BYTE));
-    spins->__bitset = (uint32_t*)calloc(bitset_words_num,sizeof(uint32_t));
-    return_set_errno_on(!spins->__bitset,NULL,ENOMEM);
+    spins->__bitset = (uint32_t*)ecalloc(bitset_words_num,sizeof(uint32_t),NULL);
 
     spins->__locks_num = locks_num;
 

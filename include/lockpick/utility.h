@@ -16,10 +16,10 @@
 
 
 #define lp_shuffle(arr,n)  ({                           \
-    for(size_t i = 0; i < n; ++i)                       \
+    for(size_t i = 0; i < (n); ++i)                     \
     {                                                   \
-        size_t dest_i = rand()%n;                       \
-        lp_swap(arr[i],arr[dest_i]);                    \
+        size_t dest_i = rand()%(n);                     \
+        lp_swap((arr)[i],(arr)[dest_i]);                \
     }                                                   \
 })
 
