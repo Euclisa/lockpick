@@ -119,20 +119,20 @@ void __lp_test_print_enter(uint8_t curr_level, const char *test_call_str)
  * 
  * Returns pointer on string containing specified statistics.
 */
-char *__lp_test_get_stats_str(const char *test_call_str, uint64_t tests_passed, uint64_t cases_passed, uint64_t duration_total_ns)
+char *__lp_test_get_stats_str(uint64_t tests_passed, uint64_t cases_passed, uint64_t duration_total_ns)
 {
     uint64_t duration_total_ms = duration_total_ns/(__LP_TEST_NANO_DECIMALS/__LP_TEST_MILLI_DECIMALS);
     uint64_t duration_per_case_ns = duration_total_ns / MAX(1,cases_passed);
 
-    const char *stats_format = "Test: %s | TP: %ld | CP: %ld | DT: %ld ms | DPC: %ld ns";
+    const char *stats_format = " | TP: %ld | CP: %ld | DT: %ld ms | DPC: %ld ns";
     size_t stats_str_len = snprintf(NULL,0,stats_format,
-        test_call_str,tests_passed,cases_passed,duration_total_ms,duration_per_case_ns)+1;
+        tests_passed,cases_passed,duration_total_ms,duration_per_case_ns)+1;
 
     char *stats_str = __lp_test_allocator(stats_str_len+1);
     affirmf(stats_str,"Failed to allocate string of length %ld",stats_str_len);
 
     uint64_t chars_written = snprintf(stats_str,stats_str_len+1,stats_format,
-        test_call_str,tests_passed,cases_passed,duration_total_ms,duration_per_case_ns);
+        tests_passed,cases_passed,duration_total_ms,duration_per_case_ns);
     affirmf(chars_written > 0, "Failed to write formatted string");
     
     return stats_str;
@@ -177,11 +177,11 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
     else
         snprintf(status_str,status_str_len+1,"%sPASSED%s",__LP_TEST_PASSED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
     
-    printf("%s|-+-> [%s] %s ",space_padding,time_str,status_str);
+    printf("%s|-+-> [%s] %s Test: %s",space_padding,time_str,status_str,test_call_str);
 
     if(print_stats)
     {
-        char *stats_str = __lp_test_get_stats_str(test_call_str,tests_passed,cases_passed,duration_total_ns);
+        char *stats_str = __lp_test_get_stats_str(tests_passed,cases_passed,duration_total_ns);
         printf("%s",stats_str);
     }
     if(print_details)
