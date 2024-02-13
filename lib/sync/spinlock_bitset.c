@@ -8,7 +8,7 @@
 #include <immintrin.h>
 
 
-lp_spinlock_bitset_t *lp_spinlock_bitset_init(size_t locks_num)
+lp_spinlock_bitset_t *lp_spinlock_bitset_create(size_t locks_num)
 {
     lp_spinlock_bitset_t *spins = (lp_spinlock_bitset_t*)emalloc(1,sizeof(lp_spinlock_bitset_t),NULL);
 

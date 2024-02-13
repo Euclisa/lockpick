@@ -1,0 +1,6 @@
+#ifndef _LOCKPICK_TESTS_SYNC_SHTABLE_H
+#define _LOCKPICK_TESTS_SYNC_SHTABLE_H
+
+void lp_test_shtable();
+
+#endif  // _LOCKPICK_TESTS_SYNC_SHTABLE_H

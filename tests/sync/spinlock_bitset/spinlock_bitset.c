@@ -33,7 +33,7 @@ void *__count(void *args)
 void test_spinlock_bitset_multiple_counters(size_t counters_num, size_t threads_per_counter)
 {
     counters = (size_t*)calloc(counters_num,sizeof(size_t));
-    spins = lp_spinlock_bitset_init(counters_num);
+    spins = lp_spinlock_bitset_create(counters_num);
 
     const size_t threads_total = counters_num*threads_per_counter;
     size_t *counters_exec_order = (size_t*)malloc(threads_total*sizeof(size_t));

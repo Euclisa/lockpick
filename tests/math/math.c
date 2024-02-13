@@ -73,6 +73,63 @@ void test_math_floor_log2()
 }
 
 
+void test_math_ceil_log2()
+{
+    for(uint32_t exp = 0; exp < 8; ++exp)
+    {
+        uint8_t pow = 1 << exp;
+        for(uint8_t value = (pow >> 1)+1; value < pow; ++value)
+        {
+            uint32_t res_obt = lp_ceil_log2(value);
+            LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",value,exp,res_obt);
+        }
+        uint32_t res_obt = lp_ceil_log2(pow);
+        LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",pow,exp,res_obt);
+    }
+
+    for(uint32_t exp = 0; exp < 10; ++exp)
+    {
+        uint16_t pow = 1 << exp;
+        for(uint16_t value = (pow >> 1)+1; value < pow; ++value)
+        {
+            uint32_t res_obt = lp_ceil_log2(value);
+            LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",value,exp,res_obt);
+        }
+        uint32_t res_obt = lp_ceil_log2(pow);
+        LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",pow,exp,res_obt);
+    }
+
+    for(uint32_t exp = 0; exp < 14; ++exp)
+    {
+        uint32_t pow = 1 << exp;
+        for(uint32_t value = (pow >> 1)+1; value < pow; ++value)
+        {
+            uint32_t res_obt = lp_ceil_log2(value);
+            LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",value,exp,res_obt);
+        }
+        uint32_t res_obt = lp_ceil_log2(pow);
+        LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",pow,exp,res_obt);
+    }
+
+    for(uint64_t exp = 32; exp < 64; ++exp)
+    {
+        uint64_t value = 1ULL << exp;
+        uint32_t res_obt = lp_ceil_log2(value);
+        LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",value,exp,res_obt);
+    }
+
+    uint32_t exp = 32;
+    uint64_t start = 1ULL << exp;
+    uint64_t end = start + 1000;
+    for(uint64_t value = start+1; value < end; ++value)
+    {
+        uint32_t res_obt = lp_ceil_log2(value);
+        LP_TEST_ASSERT(res_obt == exp+1,"For %ld expected: %d, got: %d",value,exp+1,res_obt);
+    }
+    lp_test_cleanup:
+}
+
+
 void test_math_ceil_div_u()
 {
     const uint64_t upper_bound = 1000;
@@ -93,5 +150,6 @@ void lp_test_math()
 {
     LP_TEST_RUN(test_math_is_pow_2());
     LP_TEST_RUN(test_math_floor_log2());
+    LP_TEST_RUN(test_math_ceil_log2());
     LP_TEST_RUN(test_math_ceil_div_u());
 }

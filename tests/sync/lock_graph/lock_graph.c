@@ -24,7 +24,7 @@ void __lp_build_random_graph_and_masks(lp_lock_graph_t *lgraph, uint32_t *lmasks
             if(set_lock)
             {
                 lmasks[lockee_i] |= 1 << block_i;
-                affirmf(lp_lock_graph_add_dep(lgraph,block_i,lockee_i),
+                affirmf(lp_lock_graph_add_dep_mutual(lgraph,block_i,lockee_i),
                     "Failed to add dependency: %d -> %d",block_i,lockee_i);
                 --set_deps_remain;
             }
@@ -66,7 +66,7 @@ void *__block(void *args)
 
 void __test_lock_graph_random_graph(uint32_t blocks_num, uint32_t deps_num)
 {
-    lgraph = lp_lock_graph_init(blocks_num);
+    lgraph = lp_lock_graph_create(blocks_num);
     lmasks = (uint32_t*)calloc(blocks_num,sizeof(uint32_t));
     __lp_build_random_graph_and_masks(lgraph,lmasks,deps_num);
 

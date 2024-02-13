@@ -18,10 +18,11 @@ typedef struct lp_lock_graph
 } lp_lock_graph_t;
 
 
-lp_lock_graph_t *lp_lock_graph_init(uint32_t blocks_num);
+lp_lock_graph_t *lp_lock_graph_create(uint32_t blocks_num);
 bool lp_lock_graph_release(lp_lock_graph_t *graph);
 
 bool lp_lock_graph_add_dep(lp_lock_graph_t *graph, uint32_t locker, uint32_t lockee);
+bool lp_lock_graph_add_dep_mutual(lp_lock_graph_t *graph, uint32_t a, uint32_t b);
 bool lp_lock_graph_commit(lp_lock_graph_t *graph);
 
 bool lp_lock_graph_lock(lp_lock_graph_t *graph, uint32_t block_i);

@@ -23,12 +23,12 @@ static inline bool __lp_htable_get_occ_bit(const uint8_t *occupancy_bm, size_t b
 
 static inline void __lp_htable_set_occ_bit(uint8_t *occupancy_bm, size_t bucket_i, bool occupied)
 {
-    size_t mask_word_i = bucket_i / LP_BITS_IN_BYTE;
-    size_t mask_bit_i = bucket_i % LP_BITS_IN_BYTE;
+    size_t bm_word_i = bucket_i / LP_BITS_IN_BYTE;
+    size_t bm_bit_i = bucket_i % LP_BITS_IN_BYTE;
     if(occupied)
-        occupancy_bm[mask_word_i] |= 0b1 << mask_bit_i;
+        occupancy_bm[bm_word_i] |= 0b1 << bm_bit_i;
     else
-        occupancy_bm[mask_word_i] &= ~(0b1 << mask_bit_i);
+        occupancy_bm[bm_word_i] &= ~(0b1 << bm_bit_i);
 }
 
 static inline bool __lp_htable_is_overloaded(size_t size, size_t capacity)
