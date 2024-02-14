@@ -1,0 +1,133 @@
+#include <lockpick/sync/visit_table.h>
+#include <lockpick/sync/bits.h>
+#include <lockpick/math.h>
+#include <lockpick/emalloc.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+static inline size_t __lp_visit_table_occupancy_bm_size(size_t capacity)
+{
+    return MAX(1, capacity >> lp_floor_log2(sizeof(uint32_t)));
+}
+
+static inline bool __lp_htable_get_occ_bit(const uint32_t *occupancy_bm, size_t bucket_i)
+{
+    const size_t bits_in_occ_word = lp_sizeof_bits(uint32_t);
+    size_t bm_word_i = lp_div_pow_2(bucket_i,bits_in_occ_word);
+    size_t bm_bit_i = lp_mod_pow_2(bucket_i,bits_in_occ_word);
+    return (occupancy_bm[bm_word_i] >> bm_bit_i) & 0b1;
+}
+
+static inline bool __lp_visit_table_test_set_occ_bit(uint32_t *occupancy_bm, size_t bucket_i)
+{
+    const size_t bits_in_occ_word = lp_sizeof_bits(uint32_t);
+    size_t bm_word_i = lp_div_pow_2(bucket_i,bits_in_occ_word);
+    size_t bm_bit_i = lp_mod_pow_2(bucket_i,bits_in_occ_word);
+    return lp_atomic_bittestandset(&occupancy_bm[bm_word_i],bm_bit_i);
+}
+
+
+lp_visit_table_t *lp_visit_table_create(size_t capacity, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
+{
+    if(!hsh || !eq || !lp_is_pow_2(capacity))
+        return_set_errno(NULL,EINVAL);
+
+    lp_visit_table_t *vt = (lp_visit_table_t*)emalloc(1,sizeof(lp_visit_table_t),NULL);
+
+    vt->__buckets = (void*)emalloc(capacity,entry_size,NULL);
+
+    const size_t occupancy_bm_size = __lp_visit_table_occupancy_bm_size(capacity);
+    vt->__occupancy_bm = (uint32_t*)ecalloc(occupancy_bm_size,sizeof(uint32_t),NULL);
+
+    vt->__spins = lp_spinlock_bitset_create(capacity);
+
+    vt->__entry_size = entry_size;
+    vt->__capacity = capacity;
+    vt->__capacity_mask = capacity-1;
+    vt->__hsh = hsh;
+    vt->__eq = eq;
+
+    return vt;
+}
+
+
+lp_visit_table_t *lp_visit_table_create_max_el(size_t max_elements, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
+{
+    size_t capacity = lp_ceil_log2(max_elements) << 1;
+    return lp_visit_table_create(capacity,entry_size,hsh,eq);
+}
+
+
+bool lp_visit_table_release(lp_visit_table_t *vt)
+{
+    if(!vt)
+        return_set_errno(false,EINVAL);
+
+    lp_spinlock_bitset_release(vt->__spins);
+    free(vt->__buckets);
+    free(vt->__occupancy_bm);
+    free(vt);
+
+    return true;
+}
+#include <stdio.h>
+
+bool lp_visit_table_insert(lp_visit_table_t *vt, const void *entry)
+{
+    if(!vt || !entry)
+        return_set_errno(false,EINVAL);
+
+    size_t bucket_i = vt->__hsh(entry) & vt->__capacity_mask;
+    size_t native_bucket_i = bucket_i;
+    while(true)
+    {
+        void *ht_entry = vt->__buckets + bucket_i*vt->__entry_size;
+        bool occupied = true;
+        bool duplicate = false;
+
+        lp_spinlock_bitset_lock(vt->__spins,bucket_i);
+        //printf("Locked %ld, entry: %d\n",bucket_i,*(uint32_t*)entry);
+        occupied = __lp_visit_table_test_set_occ_bit(vt->__occupancy_bm,bucket_i);
+        if(occupied)
+            duplicate = vt->__eq(entry,ht_entry);
+        else
+            memcpy(ht_entry,entry,vt->__entry_size);
+        //printf("Unlocked %ld, entry: %d\n",bucket_i,*(uint32_t*)entry);
+        lp_spinlock_bitset_unlock(vt->__spins,bucket_i);
+
+        return_set_errno_on(duplicate,false,EDUP);
+        return_on(!occupied,true);
+
+        bucket_i = (bucket_i + 1) & vt->__capacity_mask;
+        return_set_errno_on(bucket_i == native_bucket_i,false,ENCAP);
+    }
+}
+
+
+bool lp_visit_table_find(lp_visit_table_t *vt, const void *entry, void *result)
+{
+    if(!vt || !entry)
+        return_set_errno(false,EINVAL);
+
+    size_t bucket_i = vt->__hsh(entry) & vt->__capacity_mask;
+    size_t native_bucket_i = bucket_i;
+    while(true)
+    {
+        void *ht_entry = vt->__buckets + bucket_i*vt->__entry_size;
+        bool occupied = true;
+        bool found = false;
+
+        lp_spinlock_bitset_lock(vt->__spins,bucket_i);
+        occupied = __lp_htable_get_occ_bit(vt->__occupancy_bm,bucket_i);
+        if(occupied && (found = vt->__eq(entry,ht_entry)))
+            memcpy(result,ht_entry,vt->__entry_size);
+        lp_spinlock_bitset_unlock(vt->__spins,bucket_i);
+
+        return_on(!occupied,false);
+        return_on(found,true);
+
+        bucket_i = (bucket_i + 1) & vt->__capacity_mask;
+        return_on(bucket_i == native_bucket_i,false);
+    }
+}

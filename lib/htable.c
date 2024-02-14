@@ -16,15 +16,15 @@ static inline size_t __lp_htable_capacity_mask(size_t capacity)
 
 static inline bool __lp_htable_get_occ_bit(const uint8_t *occupancy_bm, size_t bucket_i)
 {
-    size_t bm_word_i = bucket_i / LP_BITS_IN_BYTE;
-    size_t bm_bit_i = bucket_i % LP_BITS_IN_BYTE;
+    size_t bm_word_i = bucket_i / LP_BITS_PER_BYTE;
+    size_t bm_bit_i = bucket_i % LP_BITS_PER_BYTE;
     return (occupancy_bm[bm_word_i] >> bm_bit_i) & 0b1;
 }
 
 static inline void __lp_htable_set_occ_bit(uint8_t *occupancy_bm, size_t bucket_i, bool occupied)
 {
-    size_t bm_word_i = bucket_i / LP_BITS_IN_BYTE;
-    size_t bm_bit_i = bucket_i % LP_BITS_IN_BYTE;
+    size_t bm_word_i = bucket_i / LP_BITS_PER_BYTE;
+    size_t bm_bit_i = bucket_i % LP_BITS_PER_BYTE;
     if(occupied)
         occupancy_bm[bm_word_i] |= 0b1 << bm_bit_i;
     else

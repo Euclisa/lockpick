@@ -1,0 +1,6 @@
+#ifndef _LOCKPICK_TESTS_SYNC_VISIT_TABLE_H
+#define _LOCKPICK_TESTS_SYNC_VISIT_TABLE_H
+
+void lp_test_visit_table();
+
+#endif  // _LOCKPICK_TESTS_SYNC_VISIT_TABLE_H

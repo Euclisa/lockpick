@@ -1,5 +1,5 @@
-#include <lockpick/bitops.h>
-#include <lockpick/sync/bitops.h>
+#include <lockpick/bits.h>
+#include <lockpick/sync/bits.h>
 #include <lockpick/test.h>
 #include <stdlib.h>
 

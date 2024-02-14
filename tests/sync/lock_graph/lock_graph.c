@@ -1,6 +1,6 @@
 #include <lockpick/test.h>
 #include <lockpick/sync/lock_graph.h>
-#include <lockpick/sync/bitops.h>
+#include <lockpick/sync/bits.h>
 #include <lockpick/utility.h>
 #include <lockpick/affirmf.h>
 #include <stdlib.h>

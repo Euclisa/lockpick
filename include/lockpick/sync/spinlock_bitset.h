@@ -1,11 +1,10 @@
 #ifndef _LOCKPICK_SYNC_SPINLOCK_BITSET_H
 #define _LOCKPICK_SYNC_SPINLOCK_BITSET_H
 
+#include <lockpick/errno.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
-#define ENLCKD 1203 
 
 
 typedef struct lp_spinlock_bitset

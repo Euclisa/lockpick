@@ -1,3 +1,6 @@
+#ifndef _LOCKPICK_EMALLOC_H
+#define _LOCKPICK_EMALLOC_H
+
 #include <lockpick/define.h>
 #include <stdlib.h>
 
@@ -21,3 +24,5 @@
     return_set_errno_on(!__ptr,err_ret,ENOMEM);             \
     __ptr;                                                  \
 })
+
+#endif // _LOCKPICK_EMALLOC_H

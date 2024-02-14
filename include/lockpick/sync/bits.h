@@ -1,6 +1,7 @@
 #ifndef _LOCKPICK_SYNC_BITOPS_H
 #define _LOCKPICK_SYNC_BITOPS_H
 
+#include <lockpick/bits.h>
 #include <stdint.h>
 
 

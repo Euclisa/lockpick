@@ -4,7 +4,7 @@
 #include "list/list.h"
 #include "math/math.h"
 #include "slab/slab.h"
-#include "bitops/bitops.h"
+#include "bits/bits.h"
 #include "htable/htable.h"
 #include "graph/types/uint/uint.h"
 #include <lockpick/test.h>

@@ -10,6 +10,7 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/sync/spinlock_bitset/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/lock_graph/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/shtable/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/sync/visit_table/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/*.c"
         "${CMAKE_SOURCE_DIR}/tests/graph/types/uint/*.c")
 file(GLOB TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/tests/")
