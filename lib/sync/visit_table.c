@@ -54,7 +54,10 @@ lp_visit_table_t *lp_visit_table_create(size_t capacity, size_t entry_size, size
 
 lp_visit_table_t *lp_visit_table_create_max_el(size_t max_elements, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
 {
-    size_t capacity = lp_ceil_log2(max_elements) << 1;
+    if(max_elements == 0)
+        return_set_errno(NULL,EINVAL);
+    
+    size_t capacity = 1ULL << (lp_ceil_log2(max_elements)+1);
     return lp_visit_table_create(capacity,entry_size,hsh,eq);
 }
 
@@ -120,7 +123,7 @@ bool lp_visit_table_find(lp_visit_table_t *vt, const void *entry, void *result)
 
         lp_spinlock_bitset_lock(vt->__spins,bucket_i);
         occupied = __lp_htable_get_occ_bit(vt->__occupancy_bm,bucket_i);
-        if(occupied && (found = vt->__eq(entry,ht_entry)))
+        if(occupied && (found = vt->__eq(entry,ht_entry)) && result)
             memcpy(result,ht_entry,vt->__entry_size);
         lp_spinlock_bitset_unlock(vt->__spins,bucket_i);
 

@@ -15,7 +15,7 @@
 typedef struct lp_htable
 {
     void *__buckets;
-    uint8_t *__occupancy_bm;
+    uint32_t *__occupancy_bm;
 
     size_t (*__hsh)(const void *);
     bool (*__eq)(const void *, const void *);
@@ -26,18 +26,20 @@ typedef struct lp_htable
 } lp_htable_t;
 
 
-lp_htable_t *lp_htable_create(size_t entry_size, size_t capacity, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
-void lp_htable_release(lp_htable_t *ht);
+lp_htable_t *lp_htable_create(size_t capacity, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
+lp_htable_t *lp_htable_create_el_num(size_t elements_num, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
 
-const void *lp_htable_insert(lp_htable_t *ht, const void *entry);
+bool lp_htable_release(lp_htable_t *ht);
 
-const void *lp_htable_find(lp_htable_t *ht, const void *entry);
+bool lp_htable_insert(lp_htable_t *ht, const void *entry);
+
+bool lp_htable_find(lp_htable_t *ht, const void *entry, void *result);
 
 bool lp_htable_remove(lp_htable_t *ht, const void *entry);
 
 size_t lp_htable_size(const lp_htable_t *ht);
 size_t lp_htable_capacity(const lp_htable_t *ht);
 
-void lp_htable_rehash(lp_htable_t *ht, size_t new_size);
+bool lp_htable_rehash(lp_htable_t *ht, size_t new_size);
 
 #endif // _LOCKPICK_HTABLE_H

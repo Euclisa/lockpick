@@ -67,11 +67,11 @@ void __free_list(lp_list_t *head)
     lp_list_t *current = head->next;
     while(current != head)
     {
-        lp_list_t *to_free = current;
+        uint8_list_t *to_free = container_of(current,uint8_list_t,entry);
         current = current->next;
         free(to_free);
     }
-    free(head);
+    free(container_of(head,uint8_list_t,entry));
 }
 
 
@@ -314,6 +314,34 @@ void test_list_foreach()
 }
 
 
+void test_list_foreach_rev()
+{
+    lp_list_t *head = NULL;
+    uint8_t entries_values[LP_TEST_LIST_FOREACH_ELEMENTS_NUM] = {0};
+    srand(1);
+    for(uint32_t entry_i = 0; entry_i < LP_TEST_LIST_FOREACH_ELEMENTS_NUM; ++entry_i)
+    {
+        uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
+        entry->value = entries_values[entry_i] = rand() % 255;
+        affirmf(lp_list_push_back(&head,&entry->entry),"Failed to insert entry on init phase.");
+    }
+
+    uint32_t entry_i = LP_TEST_LIST_FOREACH_ELEMENTS_NUM-1;
+    lp_list_foreach_rev(head->prev,entry,uint8_list_t,entry)
+    {
+        LP_TEST_ASSERT(entry->value == entries_values[entry_i],"Values don't match");
+        --entry_i;
+    }
+    
+    lp_list_t *empty_head = NULL;
+    lp_list_foreach(empty_head,entry,uint8_list_t,entry)
+        LP_TEST_ASSERT(false,"Head is empty but entered foreach body");
+
+    lp_test_cleanup:
+    __free_list(head);
+}
+
+
 void lp_test_list()
 {
     LP_TEST_RUN(test_list_push_back());
@@ -323,5 +351,6 @@ void lp_test_list()
     LP_TEST_RUN(test_list_insert_before_tail());
     LP_TEST_RUN(test_list_insert_after_tail());
     LP_TEST_RUN(test_list_foreach());
+    LP_TEST_RUN(test_list_foreach_rev());
     LP_TEST_RUN(test_list_random());
 }

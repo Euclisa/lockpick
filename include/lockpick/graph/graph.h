@@ -65,6 +65,7 @@ struct lpg_graph
     size_t inputs_size;
     lpg_node_t **outputs;
     size_t outputs_size;
+    size_t __max_nodes;
 };
 
 lp_slab_t *__lpg_graph_slab(const lpg_graph_t *graph);
@@ -79,7 +80,8 @@ void lpg_graph_release(lpg_graph_t *graph);
 void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
 typedef void (*__lpg_traverse_cb_t)(lpg_graph_t *graph, lpg_node_t *node, void *args);
-void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args);
+void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args);
+void lpg_graph_traverse(lpg_graph_t *graph, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args);
 
 void lpg_graph_compute(lpg_graph_t *graph);
 

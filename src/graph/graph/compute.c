@@ -48,21 +48,10 @@ void __lpg_graph_compute_node_cb(lpg_graph_t *graph, lpg_node_t *node, void *arg
 }
 
 
-void __lpg_graph_compute_node(lpg_graph_t *graph, lpg_node_t *node)
-{
-    __lpg_graph_traverse_node(graph,node,NULL,NULL,__lpg_graph_compute_node_cb,NULL);
-}
-
-
 inline void lpg_graph_compute(lpg_graph_t *graph)
 {
     affirm_nullptr(graph,"graph");
     affirmf(graph,"Expected valid graph pointer but null was given");
 
-    for(size_t node_i = 0; node_i < graph->outputs_size; ++node_i)
-    {
-        affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %ld."
-                                    "Was graph assembled properly?",node_i);
-        __lpg_graph_compute_node(graph,graph->outputs[node_i]);
-    }
+    lpg_graph_traverse(graph,NULL,NULL,__lpg_graph_compute_node_cb,NULL);
 }

@@ -21,6 +21,8 @@
 #define lp_mod_pow_2(a,b)       \
         ((a) & ((b)-1))
 
-uint64_t lp_ceil_div_u(uint64_t a, uint64_t b);
+uint64_t lp_ceil_div_u64(uint64_t a, uint64_t b);
+
+uint64_t lp_pow_u64(uint64_t base, uint64_t exp);
 
 #endif // _LOCKPICK_RB_TREE_H

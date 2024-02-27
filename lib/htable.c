@@ -1,5 +1,7 @@
 #include <lockpick/htable.h>
 #include <lockpick/math.h>
+#include <lockpick/bits.h>
+#include <lockpick/emalloc.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -14,21 +16,28 @@ static inline size_t __lp_htable_capacity_mask(size_t capacity)
     return capacity-1;
 }
 
-static inline bool __lp_htable_get_occ_bit(const uint8_t *occupancy_bm, size_t bucket_i)
+static inline bool __lp_htable_get_occ_bit(const uint32_t *occupancy_bm, size_t bucket_i)
 {
-    size_t bm_word_i = bucket_i / LP_BITS_PER_BYTE;
-    size_t bm_bit_i = bucket_i % LP_BITS_PER_BYTE;
+    const size_t bits_in_occ_word = lp_sizeof_bits(uint32_t);
+    size_t bm_word_i = lp_div_pow_2(bucket_i,bits_in_occ_word);
+    size_t bm_bit_i = lp_mod_pow_2(bucket_i,bits_in_occ_word);
     return (occupancy_bm[bm_word_i] >> bm_bit_i) & 0b1;
 }
 
-static inline void __lp_htable_set_occ_bit(uint8_t *occupancy_bm, size_t bucket_i, bool occupied)
+static inline bool __lp_htable_test_set_occ_bit(uint32_t *occupancy_bm, size_t bucket_i)
 {
-    size_t bm_word_i = bucket_i / LP_BITS_PER_BYTE;
-    size_t bm_bit_i = bucket_i % LP_BITS_PER_BYTE;
-    if(occupied)
-        occupancy_bm[bm_word_i] |= 0b1 << bm_bit_i;
-    else
-        occupancy_bm[bm_word_i] &= ~(0b1 << bm_bit_i);
+    const size_t bits_in_occ_word = lp_sizeof_bits(uint32_t);
+    size_t bm_word_i = lp_div_pow_2(bucket_i,bits_in_occ_word);
+    size_t bm_bit_i = lp_mod_pow_2(bucket_i,bits_in_occ_word);
+    return lp_bittestandset(&occupancy_bm[bm_word_i],bm_bit_i);
+}
+
+static inline void __lp_htable_reset_occ_bit(uint32_t *occupancy_bm, size_t bucket_i)
+{
+    const size_t bits_in_occ_word = lp_sizeof_bits(uint32_t);
+    size_t bm_word_i = lp_div_pow_2(bucket_i,bits_in_occ_word);
+    size_t bm_bit_i = lp_mod_pow_2(bucket_i,bits_in_occ_word);
+    occupancy_bm[bm_word_i] &= ~(1U << bm_bit_i);
 }
 
 static inline bool __lp_htable_is_overloaded(size_t size, size_t capacity)
@@ -44,23 +53,17 @@ static inline bool __lp_htable_is_sparse(size_t size, size_t capacity)
 }
 
 
-lp_htable_t *lp_htable_create(size_t entry_size, size_t capacity, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
+lp_htable_t *lp_htable_create(size_t capacity, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
 {
-    affirm_nullptr(hsh,"entries hash function");
-    affirm_nullptr(eq,"entries equality predicate");
-    affirmf(lp_is_pow_2(capacity),"Capacity must be a power of 2");
+    if(!hsh || !eq || !lp_is_pow_2(capacity))
+        return_set_errno(NULL,EINVAL);
 
-    const size_t ht_size = sizeof(lp_htable_t);
-    lp_htable_t *ht = (lp_htable_t*)malloc(ht_size);
-    affirm_bad_malloc(ht,"htable structure",ht_size);
+    lp_htable_t *ht = (lp_htable_t*)emalloc(1,sizeof(lp_htable_t),NULL);
 
-    const size_t buckets_arr_size = entry_size*capacity;
-    ht->__buckets = (void*)malloc(buckets_arr_size);
-    affirm_bad_malloc(ht->__buckets,"buckets array",buckets_arr_size);
+    ht->__buckets = emalloc(capacity,entry_size,NULL);
 
     const size_t occupancy_bm_size = __lp_htable_occupancy_bm_size(capacity);
-    ht->__occupancy_bm = (uint8_t*)calloc(occupancy_bm_size,sizeof(uint8_t));
-    affirm_bad_malloc(ht->__occupancy_bm,"occupancy bitmap",occupancy_bm_size);
+    ht->__occupancy_bm = (uint32_t*)ecalloc(occupancy_bm_size,sizeof(uint32_t),NULL);
 
     ht->__entry_size = entry_size;
     ht->__capacity = capacity;
@@ -72,48 +75,56 @@ lp_htable_t *lp_htable_create(size_t entry_size, size_t capacity, size_t (*hsh)(
 }
 
 
-void lp_htable_release(lp_htable_t *ht)
+lp_htable_t *lp_htable_create_el_num(size_t elements_num, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
 {
-    affirm_nullptr(ht,"htable");
-    free(ht->__buckets);
-    free(ht->__occupancy_bm);
-    free(ht);
+    if(elements_num == 0)
+        return_set_errno(NULL,EINVAL);
+
+    size_t capacity = 1 << (lp_ceil_log2(elements_num)+__LP_HTABLE_CRSHT_LOADF_MAX);
+    return lp_htable_create(capacity,entry_size,hsh,eq);
 }
 
 
-static inline const void *__lp_htable_insert(lp_htable_t *ht, const void *entry)
+bool lp_htable_release(lp_htable_t *ht)
+{
+    if(!ht)
+        return_set_errno(false,EINVAL);
+
+    free(ht->__buckets);
+    free(ht->__occupancy_bm);
+    free(ht);
+
+    return true;
+}
+
+
+static inline bool __lp_htable_insert(lp_htable_t *ht, const void *entry)
 {
     size_t capacity_mask = __lp_htable_capacity_mask(ht->__capacity);
     size_t bucket_i = ht->__hsh(entry) & capacity_mask;
     void *ht_entry = ht->__buckets + bucket_i*ht->__entry_size;
-    while(__lp_htable_get_occ_bit(ht->__occupancy_bm,bucket_i))
+    while(__lp_htable_test_set_occ_bit(ht->__occupancy_bm,bucket_i))
     {
         if(ht->__eq(entry,ht_entry))
-            return NULL;
+            return false;
         bucket_i = (bucket_i + 1) & capacity_mask;
         ht_entry = ht->__buckets + bucket_i*ht->__entry_size;
     }
-    __lp_htable_set_occ_bit(ht->__occupancy_bm,bucket_i,true);
     memcpy(ht_entry,entry,ht->__entry_size);
     ++ht->__size;
     
-    return ht_entry;
+    return true;
 }
 
 
-void __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
+bool __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
 {
-    affirmf_debug(lp_is_pow_2(new_capacity),"Capacity must be a power of 2");
-
     void *old_buckets = ht->__buckets;
-    size_t new_buckets_arr_size = ht->__entry_size*new_capacity;
-    ht->__buckets = (void*)malloc(new_buckets_arr_size);
-    affirm_bad_malloc(ht->__buckets,"new buckets array",new_buckets_arr_size);
+    ht->__buckets = emalloc(new_capacity,ht->__entry_size,false);
 
-    uint8_t *old_occupancy_bm = ht->__occupancy_bm;
+    uint32_t *old_occupancy_bm = ht->__occupancy_bm;
     size_t new_occupancy_bm_size = __lp_htable_occupancy_bm_size(new_capacity);
-    ht->__occupancy_bm = (uint8_t*)calloc(new_occupancy_bm_size,sizeof(uint8_t));
-    affirm_bad_malloc(ht->__occupancy_bm,"new occupancy bitmap",new_occupancy_bm_size);
+    ht->__occupancy_bm = (uint32_t*)ecalloc(new_occupancy_bm_size,sizeof(uint32_t),false);
 
     size_t old_capacity = ht->__capacity;
     ht->__capacity = new_capacity;
@@ -130,13 +141,15 @@ void __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
 
     free(old_buckets);
     free(old_occupancy_bm);
+
+    return true;
 }
 
 
-const void *lp_htable_insert(lp_htable_t *ht, const void *entry)
+bool lp_htable_insert(lp_htable_t *ht, const void *entry)
 {
-    affirm_nullptr(ht,"htable");
-    affirm_nullptr(entry,"entry to be inserted");
+    if(!ht || !entry)
+        return_set_errno(false,EINVAL);
 
     if(__lp_htable_is_overloaded(ht->__size+1,ht->__capacity))
         __lp_htable_rehash(ht,ht->__capacity << 1);
@@ -176,7 +189,7 @@ static inline void __lp_htable_remove_found(lp_htable_t *ht, void *ht_entry)
         }
         bucket_i = (bucket_i + 1) & capacity_mask;
     }
-    __lp_htable_set_occ_bit(ht->__occupancy_bm,prev_bucket_i,false);
+    __lp_htable_reset_occ_bit(ht->__occupancy_bm,prev_bucket_i);
 }
 
 
@@ -201,19 +214,23 @@ static inline void *__lp_htable_find(lp_htable_t *ht, const void *entry)
 }
 
 
-const void *lp_htable_find(lp_htable_t *ht, const void *entry)
+bool lp_htable_find(lp_htable_t *ht, const void *entry, void *result)
 {
-    affirm_nullptr(ht,"htable");
-    affirm_nullptr(entry,"look-up entry");
+    if(!ht || !entry)
+        return_set_errno(false,EINVAL);
 
-    return __lp_htable_find(ht,entry);
+    void *found = __lp_htable_find(ht,entry);
+    if(found && result)
+        memcpy(result,found,ht->__entry_size);
+
+    return found;
 }
 
 
 bool lp_htable_remove(lp_htable_t *ht, const void *entry)
 {
-    affirm_nullptr(ht,"htable");
-    affirm_nullptr(entry,"entry to be removed");
+    if(!ht || !entry)
+        return_set_errno(false,EINVAL);
     
     if(ht->__size == 0)
         return false;
@@ -244,16 +261,12 @@ inline size_t lp_htable_capacity(const lp_htable_t *ht)
 }
 
 
-void lp_htable_rehash(lp_htable_t *ht, size_t new_size)
+bool lp_htable_rehash(lp_htable_t *ht, size_t new_size)
 {
-    affirm_nullptr(ht,"htable");
+    if(!ht || new_size == 0)
+        return_set_errno(false,EINVAL);
 
-    new_size = MAX(1,new_size);
-    size_t new_capacity;
-    if(lp_is_pow_2(new_size))
-        new_capacity = new_size;
-    else
-        new_capacity = 1ULL << (lp_floor_log2(new_size)+2);
+    size_t new_capacity = 1ULL << (lp_ceil_log2(new_size)+__LP_HTABLE_CRSHT_LOADF_MAX);
 
-    __lp_htable_rehash(ht,new_capacity);
+    return __lp_htable_rehash(ht,new_capacity);
 }

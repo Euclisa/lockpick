@@ -12,7 +12,7 @@ lp_spinlock_bitset_t *lp_spinlock_bitset_create(size_t locks_num)
 {
     lp_spinlock_bitset_t *spins = (lp_spinlock_bitset_t*)emalloc(1,sizeof(lp_spinlock_bitset_t),NULL);
 
-    size_t bitset_words_num = lp_ceil_div_u(locks_num,(sizeof(uint32_t)*LP_BITS_PER_BYTE));
+    size_t bitset_words_num = lp_ceil_div_u64(locks_num,(sizeof(uint32_t)*LP_BITS_PER_BYTE));
     spins->__bitset = (uint32_t*)ecalloc(bitset_words_num,sizeof(uint32_t),NULL);
 
     spins->__locks_num = locks_num;

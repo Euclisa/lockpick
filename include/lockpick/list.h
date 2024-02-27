@@ -22,10 +22,15 @@ bool lp_list_push_front(lp_list_t **head, lp_list_t *entry);
 
 bool lp_list_remove(lp_list_t **head, lp_list_t *entry);
 
-#define lp_list_foreach(head,entry,entry_type,entry_node_memeber)                                                               \
-        for(entry_type *entry = (head ? container_of(head,entry_type,entry_node_memeber) : NULL);                               \
-        entry && (!((uintptr_t)entry & 1) || (&(entry = (entry_type*)((uintptr_t)entry & ~1))->entry_node_memeber != head));    \
-        entry = (entry_type*)container_of((lp_list_t*)((uintptr_t)entry->entry_node_memeber.next | 1),                          \
-                            entry_type,entry_node_memeber))
+// TODO: check if '| 1' can be carried out of container_of
+#define lp_list_foreach(head,entry,entry_type,entry_node_memeber)                                                                       \
+        for(entry_type *entry = ((head) ? container_of(head,entry_type,entry_node_memeber) : NULL);                                     \
+        entry && (!((uintptr_t)entry & 1) || (&(entry = (entry_type*)((uintptr_t)entry & ~1))->entry_node_memeber != (head)));          \
+        entry = (entry_type*)((uintptr_t)(container_of(entry->entry_node_memeber.next,entry_type,entry_node_memeber)) | 1))
+
+#define lp_list_foreach_rev(head,entry,entry_type,entry_node_memeber)                                                                   \
+        for(entry_type *entry = ((head) ? container_of(head,entry_type,entry_node_memeber) : NULL);                                     \
+        entry && (!((uintptr_t)entry & 1) || (&(entry = (entry_type*)((uintptr_t)entry & ~1))->entry_node_memeber != (head)));          \
+        entry = (entry_type*)((uintptr_t)(container_of(entry->entry_node_memeber.prev,entry_type,entry_node_memeber)) | 1))
 
 #endif // _LOCKPICK_LP_TEST_H

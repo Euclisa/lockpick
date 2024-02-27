@@ -25,9 +25,12 @@
     }                                                   \
 })
 
-#ifdef LOCKPICK_DEBUG
-#define check_fatal_debug(f_call,code,ret)                 \
+#define check_fatal(f_call,code,ret)                    \
     return_set_errno_on((f_call) == (code),ret,ENOTRECOVERABLE)
+
+#ifdef LOCKPICK_DEBUG
+#define check_fatal_debug(f_call,code,ret)              \
+    check_fatal(f_call,code,ret)
 #else
 #define check_fatal_debug(f_call,code,ret)                 \
     f_call;

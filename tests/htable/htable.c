@@ -28,7 +28,7 @@ void shuffle_##uint_t(uint_t *arr, size_t length)                               
 }                                                                                                       \
 void test_htable_##uint_t()                                                                             \
 {                                                                                                       \
-    lp_htable_t *ht = lp_htable_create(sizeof(uint_t),1,&uint_t##_hash,&uint_t##_eq);                   \
+    lp_htable_t *ht = lp_htable_create(1,sizeof(uint_t),&uint_t##_hash,&uint_t##_eq);                   \
     const size_t samples_num = MIN(1ULL << (sizeof(uint_t)*8-1),entries_num);                           \
     uint_t values[samples_num];                                                                         \
     for(size_t i = 0; i < samples_num; ++i)                                                             \
@@ -44,8 +44,9 @@ void test_htable_##uint_t()                                                     
             {                                                                                           \
                 bool inserted_equal = false;                                                            \
                 if(j <= i)                                                                              \
-                    inserted_equal = (bool)lp_htable_insert(ht,values+j);                               \
-                bool found = (bool)lp_htable_find(ht,values+j);                                         \
+                    inserted_equal = lp_htable_insert(ht,values+j);                                     \
+                uint_t _result;                                                                         \
+                bool found = lp_htable_find(ht,values+j,&_result);                                      \
                 size_t size = lp_htable_size(ht);                                                       \
                 valid &= !inserted_equal &&                                                             \
                         found == (j <= i) &&                                                            \
@@ -60,7 +61,8 @@ void test_htable_##uint_t()                                                     
             bool valid = true;                                                                          \
             for(size_t j = 0; j < samples_num; ++j)                                                     \
             {                                                                                           \
-                bool found = lp_htable_find(ht,values+j);                                               \
+                uint_t _result;                                                                         \
+                bool found = lp_htable_find(ht,values+j,&_result);                                      \
                 size_t size = lp_htable_size(ht);                                                       \
                 valid &= found == (j > i) &&                                                            \
                         size == samples_num-i-1;                                                        \
@@ -73,10 +75,10 @@ void test_htable_##uint_t()                                                     
 }
 
 
-LP_TEST_HTABLE_UINT_ENTRY(uint8_t,10,400)
-LP_TEST_HTABLE_UINT_ENTRY(uint16_t,10,400)
-LP_TEST_HTABLE_UINT_ENTRY(uint32_t,10,400)
-LP_TEST_HTABLE_UINT_ENTRY(uint64_t,10,400)
+LP_TEST_HTABLE_UINT_ENTRY(uint8_t,50,400)
+LP_TEST_HTABLE_UINT_ENTRY(uint16_t,50,400)
+LP_TEST_HTABLE_UINT_ENTRY(uint32_t,50,400)
+LP_TEST_HTABLE_UINT_ENTRY(uint64_t,50,400)
 
 
 void lp_test_htable()

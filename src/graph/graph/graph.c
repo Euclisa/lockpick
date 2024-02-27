@@ -135,6 +135,8 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
 
     for(size_t in_i = 0; in_i < inputs_size; ++in_i)
         graph->inputs[in_i] = lpg_node_const(graph,false);
+    
+    graph->__max_nodes = max_nodes;
 
     return graph;
 }

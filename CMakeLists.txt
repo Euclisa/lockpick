@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wall")
 
 set(LOCKPICK_PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-add_definitions(-DLOCKPICK_PROJECT_DIR="${LOCKPICK_PROJECT_DIR}")
+add_definitions(-DLOCKPICK_PROJECT_DIR="${LOCKPICK_PROJECT_DIR}" -D_GNU_SOURCE)
 
 include_directories(include)
 

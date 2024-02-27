@@ -1373,7 +1373,7 @@ void __lpg_uint_mul_karatsuba_left_wider(lpg_uint_t *a, lpg_uint_t *b, lpg_uint_
     /*
         Use ceil because lower halve must be wider than higher
     */
-    size_t halve_width = lp_ceil_div_u(work_width,2);
+    size_t halve_width = lp_ceil_div_u64(work_width,2);
 
     /*
         a = a1 * 2^halve_width + a0

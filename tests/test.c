@@ -17,9 +17,9 @@ int main()
     //LP_TEST_RUN(lp_test_list(),1);
     //LP_TEST_RUN(lp_test_math());
     //LP_TEST_RUN(lp_test_slab(),1);
-    //LP_TEST_RUN(lp_test_bitops(),1);
-    LP_TEST_RUN(lp_test_sync());
+    //LP_TEST_RUN(lp_test_bits(),1);
+    //LP_TEST_RUN(lp_test_sync());
     //LP_TEST_RUN(lp_test_htable(),1);
-    //LP_TEST_RUN(lp_test_graph_uint(),1);
+    LP_TEST_RUN(lp_test_graph_uint());
     LP_TEST_END();
 }

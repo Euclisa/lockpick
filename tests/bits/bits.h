@@ -1,6 +1,6 @@
-#ifndef _LOCKPICK_TESTS_BITOPS_H
-#define _LOCKPICK_TESTS_BITOPS_H
+#ifndef _LOCKPICK_TESTS_BITS_H
+#define _LOCKPICK_TESTS_BITS_H
 
-void lp_test_bitops();
+void lp_test_bits();
 
-#endif  // _LOCKPICK_TESTS_BITOPS_H
+#endif  // _LOCKPICK_TESTS_BITS_H

@@ -1,5 +1,5 @@
-#ifndef _LOCKPICK_BITOPS_H
-#define _LOCKPICK_BITOPS_H
+#ifndef _LOCKPICK_BITS_H
+#define _LOCKPICK_BITS_H
 
 #include <stdint.h>
 
@@ -13,4 +13,4 @@ uint8_t lp_bittestandset(uint32_t *bitmap, uint32_t bit_offset);
 
 #define lp_sizeof_bits(x) (sizeof(x)*LP_BITS_PER_BYTE)
 
-#endif // _LOCKPICK_BITOPS_H
+#endif // _LOCKPICK_BITS_H

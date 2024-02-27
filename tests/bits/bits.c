@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-void test_bitops_bittestandset()
+void test_bits_bittestandset()
 {
     const uint32_t tests_num = 100000;
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
@@ -21,7 +21,7 @@ void test_bitops_bittestandset()
 }
 
 
-void test_bitops_bittestandreset()
+void test_bits_bittestandreset()
 {
     const uint32_t tests_num = 100000;
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
@@ -38,7 +38,7 @@ void test_bitops_bittestandreset()
 }
 
 
-void test_bitops_atomic_bittestandset()
+void test_bits_atomic_bittestandset()
 {
     const uint32_t tests_num = 100000;
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
@@ -55,7 +55,7 @@ void test_bitops_atomic_bittestandset()
 }
 
 
-void test_bitops_atomic_bittestandreset()
+void test_bits_atomic_bittestandreset()
 {
     const uint32_t tests_num = 100000;
     for(uint32_t test_i = 0; test_i < tests_num; ++test_i)
@@ -73,11 +73,11 @@ void test_bitops_atomic_bittestandreset()
 
 
 
-void lp_test_bitops()
+void lp_test_bits()
 {
-    LP_TEST_RUN(test_bitops_bittestandset());
-    LP_TEST_RUN(test_bitops_atomic_bittestandset());
+    LP_TEST_RUN(test_bits_bittestandset());
+    LP_TEST_RUN(test_bits_atomic_bittestandset());
 
-    LP_TEST_RUN(test_bitops_bittestandreset());
-    LP_TEST_RUN(test_bitops_atomic_bittestandreset());
+    LP_TEST_RUN(test_bits_bittestandreset());
+    LP_TEST_RUN(test_bits_atomic_bittestandreset());
 }
