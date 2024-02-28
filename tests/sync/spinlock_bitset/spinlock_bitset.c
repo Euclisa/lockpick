@@ -10,7 +10,7 @@
 
 lp_spinlock_bitset_t *spins;
 size_t *counters;
-const size_t max_count = 1000;
+const size_t max_count = 10000;
 
 void *__count(void *args)
 {

@@ -8,9 +8,11 @@
 #include "htable/htable.h"
 #include "graph/types/uint/uint.h"
 #include <lockpick/test.h>
+#include <lockpick/lockpick.h>
 
 int main()
 {
+    lp_init();
     LP_TEST_BEGIN("Lockpick");
     //LP_TEST_RUN(lp_test_rb_tree(),1);
     //LP_TEST_RUN(lp_test_uint(),1);
@@ -18,7 +20,7 @@ int main()
     //LP_TEST_RUN(lp_test_math());
     //LP_TEST_RUN(lp_test_slab(),1);
     //LP_TEST_RUN(lp_test_bits(),1);
-    //LP_TEST_RUN(lp_test_sync());
+    LP_TEST_RUN(lp_test_sync());
     //LP_TEST_RUN(lp_test_htable(),1);
     LP_TEST_RUN(lp_test_graph_uint());
     LP_TEST_END();
