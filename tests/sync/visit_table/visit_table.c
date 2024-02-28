@@ -143,11 +143,6 @@ void __test_visit_table_random_ops(size_t threads_num)
         "Failed to perform operation in thread %ld of %d group. Concurrent find/insert.",
         failed_thr_i,failed_group_i);
 
-    uint32_t entry = (uint32_t)-1;
-    bool nocap_insertion_status = lp_visit_table_insert(vt,&entry);
-    LP_TEST_ASSERT(!nocap_insertion_status && errno == ENCAP,
-        "Expected error status with ENCAP errno");
-
     lp_test_cleanup:
     lp_visit_table_release(vt);
     free(threads1);

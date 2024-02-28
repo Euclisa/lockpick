@@ -10,9 +10,14 @@
 
 void __no_return __errorf(const char *format, const char *file_str, uint64_t line_num, const char *func_str, ...);
 
-void __affirmf(bool cond, const char *format, const char *cond_str, const char *file_str, uint64_t line_num, const char *func_str, ...);
+void __affirmf(const char *format, const char *cond_str, const char *file_str, uint64_t line_num, const char *func_str, ...);
 
-#define affirmf(cond,format,...) __affirmf(cond,format,#cond,__FILE__,__LINE__,__func__,##__VA_ARGS__)
+#define affirmf(cond,format,...)  ({                                                    \
+        if(!(cond))                                                                     \
+                __affirmf(format,#cond,__FILE__,__LINE__,__func__,##__VA_ARGS__);       \
+})
+
+void __lp_affirmf_init();
 
 #ifdef LOCKPICK_DEBUG
 #define affirmf_debug(cond,format,...) affirmf(cond,format,##__VA_ARGS__)

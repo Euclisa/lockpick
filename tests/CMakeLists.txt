@@ -24,11 +24,13 @@ target_compile_options(lockpick_unit_tests PRIVATE ${UNIT_TEST_FLAGS})
 target_compile_definitions(lockpick_unit_tests PUBLIC LOCKPICK_DEBUG)
 target_link_libraries(lockpick_unit_tests ${UNIT_TEST_FLAGS})
 target_link_libraries(lockpick_unit_tests m)
+target_link_libraries(lockpick_unit_tests ${UNWIND_LIB})
 
 add_executable(lockpick_stress_tests ${SOURCES} ${LIB_SOURCES} ${TEST_SOURCES} ${ARCH_SOURCES})
 target_include_directories(lockpick_stress_tests PRIVATE ${TEST_INCLUDE_DIR} ${LOCKPICK_INCLUDE_DIR})
 target_compile_options(lockpick_stress_tests PRIVATE ${STRESS_TEST_FLAGS})
 target_link_libraries(lockpick_stress_tests m)
+target_link_libraries(lockpick_stress_tests ${UNWIND_LIB})
 
 add_subdirectory(uint)
 add_subdirectory(list)

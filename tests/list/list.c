@@ -86,7 +86,7 @@ void test_list_push_back()
     {
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
-        affirmf(lp_list_push_back(&head,&entry->entry),"Failed to read push back value %d in case %d",value,case_i);
+        lp_list_push_back(&head,&entry->entry);
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
@@ -106,7 +106,7 @@ void test_list_push_front()
     {
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
-        affirmf(lp_list_push_front(&head,&entry->entry),"Failed to push front value %d in case %d",value,case_i);
+        lp_list_push_front(&head,&entry->entry);
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
@@ -127,9 +127,9 @@ void test_list_insert_before_head()
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
         if(head)
-            affirmf(lp_list_insert_before(&head,head,&entry->entry),"Failed to insert value %d before head in case %d",value,case_i);
+            lp_list_insert_before(&head,head,&entry->entry);
         else
-            affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+            lp_list_push_back(&head,&entry->entry);
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
@@ -150,9 +150,9 @@ void test_list_insert_after_head()
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
         if(head)
-            affirmf(lp_list_insert_after(&head,head,&entry->entry),"Failed to insert value %d after head in case %d",value,case_i);
+            lp_list_insert_after(&head,head,&entry->entry);
         else
-            affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+            lp_list_push_back(&head,&entry->entry);
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
@@ -173,9 +173,9 @@ void test_list_insert_before_tail()
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
         if(head)
-            affirmf(lp_list_insert_before(&head,head->prev,&entry->entry),"Failed to insert value %d before tail in case %d",value,case_i);
+            lp_list_insert_before(&head,head->prev,&entry->entry);
         else
-            affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+            lp_list_push_back(&head,&entry->entry);
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
@@ -196,9 +196,9 @@ void test_list_insert_after_tail()
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = value;
         if(head)
-            affirmf(lp_list_insert_after(&head,head->prev,&entry->entry),"Failed to insert value %d after tail in case %d",value,case_i);
+            lp_list_insert_after(&head,head->prev,&entry->entry);
         else
-            affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+            lp_list_push_back(&head,&entry->entry);
         LP_TEST_STEP_INTO(__validate_list_case(head,fp,case_i));
         ++case_i;
     }
@@ -244,23 +244,23 @@ void test_list_random()
             switch(mode)
             {
                 case LP_TEST_LIST_INSERT_AFTER_CODE:
-                    affirmf(lp_list_insert_after(&head,list_pos,&entry->entry),"Failed to insert value %d after tail in case %d",value,case_i);
+                    lp_list_insert_after(&head,list_pos,&entry->entry);
                     break;
     
                 case LP_TEST_LIST_INSERT_BEFORE_CODE:
-                    affirmf(lp_list_insert_before(&head,list_pos,&entry->entry),"Failed to insert value %d after tail in case %d",value,case_i);
+                    lp_list_insert_before(&head,list_pos,&entry->entry);
                     break;
     
                 case LP_TEST_LIST_PUSH_BACK_CODE:
-                    affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+                    lp_list_push_back(&head,&entry->entry);
                     break;
     
                 case LP_TEST_LIST_PUSH_FRONT_CODE:
-                    affirmf(lp_list_push_front(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+                    lp_list_push_front(&head,&entry->entry);
                     break;
                 
                 case LP_TEST_LIST_REMOVE_CODE:
-                    affirmf(lp_list_remove(&head,list_pos),"Failed to push back first value %d in case %d",value,case_i);
+                    lp_list_remove(&head,list_pos);
                     free(container_of(list_pos,uint8_list_t,entry));
                     break;
 
@@ -269,7 +269,7 @@ void test_list_random()
             }
         }
         else if(entry)
-            affirmf(lp_list_push_back(&head,&entry->entry),"Failed to push back first value %d in case %d",value,case_i);
+            lp_list_push_back(&head,&entry->entry);
         else
             errorf("Attempt to insert uninitialized entry to list");
 
@@ -277,7 +277,7 @@ void test_list_random()
         ++case_i;
     }
     lp_list_t *old_head = head;
-    affirmf(lp_list_remove(&head,head),"Failed to remove last element from list",value,case_i);
+    lp_list_remove(&head,head);
     LP_TEST_ASSERT(!head,"List is not empty after last element removal");
     free(container_of(old_head,uint8_list_t,entry));
 
@@ -295,7 +295,7 @@ void test_list_foreach()
     {
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = entries_values[entry_i] = rand() % 255;
-        affirmf(lp_list_push_back(&head,&entry->entry),"Failed to insert entry on init phase.");
+        lp_list_push_back(&head,&entry->entry);
     }
 
     uint32_t entry_i = 0;
@@ -323,7 +323,7 @@ void test_list_foreach_rev()
     {
         uint8_list_t *entry = (uint8_list_t*)malloc(sizeof(uint8_list_t));
         entry->value = entries_values[entry_i] = rand() % 255;
-        affirmf(lp_list_push_back(&head,&entry->entry),"Failed to insert entry on init phase.");
+        lp_list_push_back(&head,&entry->entry);
     }
 
     uint32_t entry_i = LP_TEST_LIST_FOREACH_ELEMENTS_NUM-1;

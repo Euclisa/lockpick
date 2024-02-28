@@ -17,7 +17,7 @@ typedef struct lp_spinlock_bitset
 lp_spinlock_bitset_t *lp_spinlock_bitset_create(size_t n);
 void lp_spinlock_bitset_release(lp_spinlock_bitset_t *spins);
 
-bool lp_spinlock_bitset_lock(lp_spinlock_bitset_t *spins, size_t lock_i);
-bool lp_spinlock_bitset_unlock(lp_spinlock_bitset_t *spins, size_t lock_i);
+void lp_spinlock_bitset_lock(lp_spinlock_bitset_t *spins, size_t lock_i);
+void lp_spinlock_bitset_unlock(lp_spinlock_bitset_t *spins, size_t lock_i);
 
 #endif // _LOCKPICK_SYNC_SPINLOCK_BITSET_H

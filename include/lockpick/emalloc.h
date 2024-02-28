@@ -2,6 +2,7 @@
 #define _LOCKPICK_EMALLOC_H
 
 #include <lockpick/define.h>
+#include <lockpick/affirmf.h>
 #include <stdlib.h>
 
 

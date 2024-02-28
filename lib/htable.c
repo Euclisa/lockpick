@@ -6,6 +6,12 @@
 #include <string.h>
 
 
+static inline size_t __lp_htable_opt_capacity(size_t elements_num)
+{
+    return 1ULL << (lp_ceil_log2(elements_num)+__LP_HTABLE_CRSHT_LOADF_MAX);;
+}
+
+
 static inline size_t __lp_htable_occupancy_bm_size(size_t capacity)
 {
     return MAX(1, capacity >> 3);
@@ -55,15 +61,21 @@ static inline bool __lp_htable_is_sparse(size_t size, size_t capacity)
 
 lp_htable_t *lp_htable_create(size_t capacity, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
 {
-    if(!hsh || !eq || !lp_is_pow_2(capacity))
-        return_set_errno(NULL,EINVAL);
+    affirm_nullptr(hsh,"entry hash function");
+    affirm_nullptr(eq,"entry equality predicate");
+    affirmf(lp_is_pow_2(capacity),"Capacity must be a power of 2, but got: %ld",capacity);
 
-    lp_htable_t *ht = (lp_htable_t*)emalloc(1,sizeof(lp_htable_t),NULL);
+    size_t ht_size = sizeof(lp_htable_t);
+    lp_htable_t *ht = (lp_htable_t*)malloc(ht_size);
+    affirm_bad_malloc(ht,"htable",ht_size);
 
-    ht->__buckets = emalloc(capacity,entry_size,NULL);
+    size_t buckets_size = capacity*entry_size;
+    ht->__buckets = malloc(capacity*entry_size);
+    affirm_bad_malloc(ht->__buckets,"buckets buffer",buckets_size);
 
     const size_t occupancy_bm_size = __lp_htable_occupancy_bm_size(capacity);
-    ht->__occupancy_bm = (uint32_t*)ecalloc(occupancy_bm_size,sizeof(uint32_t),NULL);
+    ht->__occupancy_bm = (uint32_t*)calloc(occupancy_bm_size,sizeof(uint32_t));
+    affirm_bad_malloc(ht->__occupancy_bm,"occupancy bitmap",occupancy_bm_size*sizeof(uint32_t));
 
     ht->__entry_size = entry_size;
     ht->__capacity = capacity;
@@ -77,24 +89,20 @@ lp_htable_t *lp_htable_create(size_t capacity, size_t entry_size, size_t (*hsh)(
 
 lp_htable_t *lp_htable_create_el_num(size_t elements_num, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *))
 {
-    if(elements_num == 0)
-        return_set_errno(NULL,EINVAL);
+    affirmf(elements_num > 0,"Number of elements in htable must be greater than 0");
 
-    size_t capacity = 1 << (lp_ceil_log2(elements_num)+__LP_HTABLE_CRSHT_LOADF_MAX);
+    size_t capacity = __lp_htable_opt_capacity(elements_num);
     return lp_htable_create(capacity,entry_size,hsh,eq);
 }
 
 
-bool lp_htable_release(lp_htable_t *ht)
+void lp_htable_release(lp_htable_t *ht)
 {
-    if(!ht)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(ht,"htable");
 
     free(ht->__buckets);
     free(ht->__occupancy_bm);
     free(ht);
-
-    return true;
 }
 
 
@@ -120,7 +128,9 @@ static inline bool __lp_htable_insert(lp_htable_t *ht, const void *entry)
 bool __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
 {
     void *old_buckets = ht->__buckets;
-    ht->__buckets = emalloc(new_capacity,ht->__entry_size,false);
+    size_t buckets_size = new_capacity*ht->__entry_size;
+    ht->__buckets = malloc(buckets_size);
+    affirm_bad_malloc(buckets_size,"buckets buffer",buckets_size);
 
     uint32_t *old_occupancy_bm = ht->__occupancy_bm;
     size_t new_occupancy_bm_size = __lp_htable_occupancy_bm_size(new_capacity);
@@ -148,8 +158,8 @@ bool __lp_htable_rehash(lp_htable_t *ht, size_t new_capacity)
 
 bool lp_htable_insert(lp_htable_t *ht, const void *entry)
 {
-    if(!ht || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(ht,"htable");
+    affirm_nullptr(entry,"entry");
 
     if(__lp_htable_is_overloaded(ht->__size+1,ht->__capacity))
         __lp_htable_rehash(ht,ht->__capacity << 1);
@@ -216,8 +226,8 @@ static inline void *__lp_htable_find(lp_htable_t *ht, const void *entry)
 
 bool lp_htable_find(lp_htable_t *ht, const void *entry, void *result)
 {
-    if(!ht || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(ht,"htable");
+    affirm_nullptr(entry,"entry");
 
     void *found = __lp_htable_find(ht,entry);
     if(found && result)
@@ -229,8 +239,8 @@ bool lp_htable_find(lp_htable_t *ht, const void *entry, void *result)
 
 bool lp_htable_remove(lp_htable_t *ht, const void *entry)
 {
-    if(!ht || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(ht,"htable");
+    affirm_nullptr(entry,"entry");
     
     if(ht->__size == 0)
         return false;
@@ -263,10 +273,10 @@ inline size_t lp_htable_capacity(const lp_htable_t *ht)
 
 bool lp_htable_rehash(lp_htable_t *ht, size_t new_size)
 {
-    if(!ht || new_size == 0)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(ht,"htable");
+    affirmf(new_size,"New size must be greater than 0");
 
-    size_t new_capacity = 1ULL << (lp_ceil_log2(new_size)+__LP_HTABLE_CRSHT_LOADF_MAX);
+    size_t new_capacity = __lp_htable_opt_capacity(new_size);
 
     return __lp_htable_rehash(ht,new_capacity);
 }

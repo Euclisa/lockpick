@@ -10,7 +10,7 @@
 
 void __lp_build_random_graph_and_masks(lp_lock_graph_t *lgraph, uint32_t *lmasks, uint32_t deps_num)
 {
-    uint32_t blocks_num = lp_lock_graph_blocks_num(lgraph);
+    uint32_t blocks_num = lgraph->blocks_num;
     uint32_t set_deps_remain = deps_num;
     uint32_t total_deps_remain = blocks_num*blocks_num-((blocks_num*(blocks_num-1))/2);
 
@@ -24,8 +24,7 @@ void __lp_build_random_graph_and_masks(lp_lock_graph_t *lgraph, uint32_t *lmasks
             if(set_lock)
             {
                 lmasks[lockee_i] |= 1 << block_i;
-                affirmf(lp_lock_graph_add_dep_mutual(lgraph,block_i,lockee_i),
-                    "Failed to add dependency: %d -> %d",block_i,lockee_i);
+                lp_lock_graph_add_dep_mutual(lgraph,block_i,lockee_i);
                 --set_deps_remain;
             }
             --total_deps_remain;
@@ -44,7 +43,7 @@ lp_lock_graph_t *lgraph;
 void *__block(void *args)
 {
     uint32_t block_i = *(uint32_t*)args;
-    return_on(!lp_lock_graph_lock(lgraph,block_i),NULL);
+    lp_lock_graph_lock(lgraph,block_i);
 
     uint32_t *curr_exec_mask = (uint32_t*)malloc(sizeof(uint32_t));
     *curr_exec_mask = exec_mask;
@@ -58,7 +57,7 @@ void *__block(void *args)
     exec_mask &= ~(1 << block_i);
     *curr_exec_mask |= exec_mask;
 
-    return_on(!lp_lock_graph_unlock(lgraph,block_i),NULL);
+    lp_lock_graph_unlock(lgraph,block_i);
 
     return curr_exec_mask;
 }

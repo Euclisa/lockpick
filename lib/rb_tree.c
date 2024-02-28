@@ -335,8 +335,7 @@ static inline lp_rb_node_t *__lp_rb_insert_rebalance_c4(lp_rb_node_t *root, lp_r
  */
 lp_rb_node_t *lp_rb_insert_rebalance(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    if(!node)
-        return_set_errno(NULL,EINVAL);
+    affirm_nullptr(node,"node");
 
     while(true)
     {
@@ -670,8 +669,8 @@ static inline lp_rb_node_t *__lp_rb_remove_rebalance(lp_rb_node_t *root, lp_rb_n
  */
 lp_rb_node_t *lp_rb_remove(lp_rb_node_t *root, lp_rb_node_t *node)
 {
-    if(!node || !root)
-        return_set_errno(NULL,EINVAL);
+    affirm_nullptr(root,"root");
+    affirm_nullptr(node,"node");
 
     if(node->left != NULL && node->right != NULL)
     {

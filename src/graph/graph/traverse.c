@@ -18,7 +18,7 @@ static inline bool __lpg_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *
     __lp_node_stack_t *entry = (__lp_node_stack_t*)malloc(sizeof(__lp_node_stack_t));
     entry->node = node;
     lp_list_t *old_head = *stack ? &(*stack)->__list : NULL;
-    affirmf(lp_list_push_front(&old_head,&entry->__list),"Failed to push to node computing stack");
+    lp_list_push_front(&old_head,&entry->__list);
     
     *stack = container_of(old_head,__lp_node_stack_t,__list);
 
@@ -29,7 +29,7 @@ static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 {
     lp_list_t *old_head = &(*stack)->__list;
     __lp_node_stack_t *top = (*stack);
-    affirmf(lp_list_remove(&old_head,&(*stack)->__list),"Failed to remove top from node computing stack");
+    lp_list_remove(&old_head,&(*stack)->__list);
 
     *stack = container_of(old_head,__lp_node_stack_t,__list);
     free(top);
@@ -146,14 +146,14 @@ void lpg_graph_traverse(lpg_graph_t *graph, __lpg_traverse_cb_t enter_cb, void *
         (size_t (*)(const void *))__lpg_graph_nodes_ht_hsh,
         (bool (*)(const void *,const void *))__lpg_graph_nodes_ht_eq);
     // Input nodes buffer size is a lower bound for final visited htable size
-    lp_htable_rehash(visited,graph->inputs_size);
+    lp_htable_rehash(visited,MAX(1,graph->inputs_size));
 
     lp_htable_t *inputs = lp_htable_create(
             1,
             sizeof(lpg_node_t*),
             (size_t (*)(const void *))__lpg_graph_nodes_ht_hsh,
             (bool (*)(const void *,const void *))__lpg_graph_nodes_ht_eq);
-    lp_htable_rehash(inputs,graph->inputs_size);
+    lp_htable_rehash(inputs,MAX(1,graph->inputs_size));
 
     for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
         lp_htable_insert(inputs,&graph->inputs[in_node_i]);

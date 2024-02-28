@@ -1,6 +1,7 @@
 #include <lockpick/test.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/define.h>
+#include <lockpick/string.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,8 +106,8 @@ void __lp_test_print_enter(uint8_t curr_level, const char *test_call_str)
 {
     char *space_padding = __create_padding(curr_level);
     char *time_str = __get_time_str("%X");
-    printf("%s|-+-> [%s] %sRUNNING%s Test: %s\n",
-        space_padding,time_str,__LP_TEST_RUNNING_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC,test_call_str);
+    printf("%s|-+-> [%s] %s Test: %s\n",
+        space_padding,time_str,lp_string_yellow("RUNNING"),test_call_str);
 }
 
 
@@ -166,16 +167,16 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
 
     if(cases_passed == 0 && tests_failed == 0)
     {
-        snprintf(status_str,status_str_len+1,"%sEMPTY%s",__LP_TEST_EMPTY_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
+        snprintf(status_str,status_str_len+1,"%s",lp_string_blue("EMPTY"));
         print_stats = false;
     }
     else if(tests_failed > 0)
     {
-        snprintf(status_str,status_str_len+1,"%sFAILED%s",__LP_TEST_FAILED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
+        snprintf(status_str,status_str_len+1,"%s",lp_string_red("FAILED"));
         print_details = last_failed_test_call_str[0] != '\0';
     }
     else
-        snprintf(status_str,status_str_len+1,"%sPASSED%s",__LP_TEST_PASSED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC);
+        snprintf(status_str,status_str_len+1,"%s",lp_string_green("PASSED"));
     
     printf("%s|-+-> [%s] %s Test: %s",space_padding,time_str,status_str,test_call_str);
 
@@ -205,11 +206,11 @@ void __lp_test_print_end(const char *project_name_str, uint64_t tests_total, uin
     uint64_t duration_total_ms = duration_total_ns/(__LP_TEST_NANO_DECIMALS/__LP_TEST_MILLI_DECIMALS);
 
     if(failure)
-        printf("*** Quality Assurance for '%s' %sFAILED%s (%ld ms) ***\n",
-            project_name_str,__LP_TEST_FAILED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC,duration_total_ms);
+        printf("*** Quality Assurance for '%s' %s (%ld ms) ***\n",
+            project_name_str,lp_string_red("FAILED"),duration_total_ms);
     else
-        printf("*** Quality Assurance for '%s' %sPASSED%s (%ld ms) ***\n",
-            project_name_str,__LP_TEST_PASSED_STYLE_MAGIC,__LP_TEST_RESET_STYLE_MAGIC,duration_total_ms);
+        printf("*** Quality Assurance for '%s' %s (%ld ms) ***\n",
+            project_name_str,lp_string_green("PASSED"),duration_total_ms);
 }
 
 

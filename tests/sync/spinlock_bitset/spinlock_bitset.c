@@ -19,11 +19,9 @@ void *__count(void *args)
     *status = false;
     for(size_t i = 0; i < max_count; ++i)
     {
-        if(!lp_spinlock_bitset_lock(spins,counter_i))
-            return status;
+        lp_spinlock_bitset_lock(spins,counter_i);
         ++counters[counter_i];
-        if(!lp_spinlock_bitset_unlock(spins,counter_i))
-            return status;
+        lp_spinlock_bitset_unlock(spins,counter_i);
     }
     *status = true;
     return status;

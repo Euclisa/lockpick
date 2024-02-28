@@ -78,8 +78,7 @@ void test_uint##N##_from_to_hex()                                               
         char converted_hex_str[hexes_num+1];                                                                                \
         __rand_hex_str(original_hex_str,hexes_num);                                                                         \
         lp_uint_from_hex(val,original_hex_str);                                                                             \
-        affirmf(lp_uint_to_hex(val,converted_hex_str,hexes_num) > 0,                                                        \
-            "Failed to convert value to hex string");                                                                       \
+        lp_uint_to_hex(val,converted_hex_str,hexes_num);                                                                    \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str),                                                        \
             "Expected: %s, got: %s",original_hex_str,converted_hex_str);                                                    \
     }                                                                                                                       \
@@ -100,8 +99,7 @@ void test_uint##N##_from_to_hex_overflow()                                      
         char converted_hex_str[max_hex_str_size];                                                                           \
         __rand_hex_str(original_hex_str,hexes_num_overflowed);                                                              \
         lp_uint_from_hex(val,original_hex_str);                                                                             \
-        affirmf(lp_uint_to_hex(val,converted_hex_str,hexes_num_overflowed) > 0,                                             \
-            "Failed to convert value to hex string");                                                                       \
+        lp_uint_to_hex(val,converted_hex_str,hexes_num_overflowed);                                                         \
         LP_TEST_ASSERT(__hexcmp(converted_hex_str,original_hex_str+(hexes_num_overflowed-hexes_num)),                       \
             "Expected: %s, got: %s",original_hex_str+(hexes_num_overflowed-hexes_num),converted_hex_str);                   \
     }                                                                                                                       \
@@ -115,8 +113,7 @@ TEST_UINT_FROM_TO_HEX(1024)
 
 
 #define CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
-    affirmf(lp_uint_from_hex(res_true,hex_str_result_true),                                                                 \
-        "Failed to parse res from hex string: %s",hex_str_result_true);                                                     \
+    lp_uint_from_hex(res_true,hex_str_result_true);                                                                         \
     affirmf(lp_uint_to_hex(res_obt,hex_str_result_obt,hex_str_result_len) > 0,                                              \
         "Failed to convert value to hex string");                                                                           \
     LP_TEST_ASSERT(lp_uint_eq(res_obt,res_true),"Expected: %s, got: %s",hex_str_result_true,hex_str_result_obt);
@@ -143,8 +140,8 @@ TEST_UINT_FROM_TO_HEX(1024)
     {                                                                                                                       \
         affirmf(fscanf(f_samp,"%s %s\n",hex_str_a,hex_str_b) != EOF,                                                        \
             "Failed to read sample");                                                                                       \
-        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a) && lp_uint_from_hex(b_samples[samp_i],hex_str_b),             \
-            "Failed to initialize sample from hex string");                                                                 \
+        lp_uint_from_hex(a_samples[samp_i],hex_str_a);                                                                      \
+        lp_uint_from_hex(b_samples[samp_i],hex_str_b);                                                                      \
     }
 
 
@@ -159,8 +156,7 @@ void test_uint_##N_a##_##N_b##_##N_result##_##op_type(lp_uint_t(N_a) *a_samples,
     while(fscanf(f,"%s\n",hex_str_result_true) != EOF)                                                                      \
     {                                                                                                                       \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_##op_type(a_samples[samp_i],b_samples[samp_i],res_obt),                                             \
-            "Failed to perfrom operation");                                                                                 \
+        lp_uint_##op_type(a_samples[samp_i],b_samples[samp_i],res_obt);                                                     \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -181,8 +177,7 @@ void test_uint_##N_a##_##N_b##_##op_type##_inplace(lp_uint_t(N_a) *a_samples, lp
     {                                                                                                                       \
         lp_uint_t(N_a) res_true, res_obt;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_##op_type##_ip(res_obt,b_samples[samp_i]),                                                          \
-            "Failed to perfrom operation");                                                                                 \
+        lp_uint_##op_type##_ip(res_obt,b_samples[samp_i]);                                                                  \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -291,8 +286,7 @@ void test_uint_##N_a##_##N_b##_ops_binary_inplace()                             
     {                                                                                                                       \
         affirmf(fscanf(f_samp,"%s\n",hex_str_a) != EOF,                                                                     \
             "Failed to read sample");                                                                                       \
-        affirmf(lp_uint_from_hex(a_samples[samp_i],hex_str_a),                                                              \
-            "Failed to initialize sample from hex string");                                                                 \
+        lp_uint_from_hex(a_samples[samp_i],hex_str_a);                                                                      \
     }
 
 
@@ -315,8 +309,7 @@ void test_uint_##N_a##_##N_result##_lshift(lp_uint_t(N_a) *a_samples)           
         affirmf(fscanf(f_shifts,"%ld\n",&shift) != EOF,                                                                     \
             "Failed to read shift from file.");                                                                             \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_lshift(a_samples[samp_i],shift,res_obt),                                                            \
-            "Failed to perfrom operation");                                                                                 \
+        lp_uint_lshift(a_samples[samp_i],shift,res_obt);                                                                    \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -342,8 +335,7 @@ void test_uint_##N_a##_##N_result##_rshift(lp_uint_t(N_a) *a_samples)           
         affirmf(fscanf(f_shifts,"%ld\n",&shift) != EOF,                                                                     \
             "Failed to read shift from file.");                                                                             \
         lp_uint_t(N_result) res_obt, res_true;                                                                              \
-        affirmf(lp_uint_rshift(a_samples[samp_i],shift,res_obt),                                                            \
-            "Failed to perfrom operation");                                                                                 \
+        lp_uint_rshift(a_samples[samp_i],shift,res_obt);                                                                    \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -380,8 +372,7 @@ void test_uint_##N_a##_lshift_inplace(lp_uint_t(N_a) *a_samples)                
             "Failed to read shift from file.");                                                                             \
         lp_uint_t(N_a) res_obt, res_true;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_lshift_ip(res_obt,shift),                                                                           \
-            "Failed to perfrom operation");                                                                                 \
+        lp_uint_lshift_ip(res_obt,shift);                                                                                   \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \
@@ -408,8 +399,7 @@ void test_uint_##N_a##_rshift_inplace(lp_uint_t(N_a) *a_samples)                
             "Failed to read shift from file.");                                                                             \
         lp_uint_t(N_a) res_obt, res_true;                                                                                   \
         lp_uint_copy(res_obt,a_samples[samp_i]);                                                                            \
-        affirmf(lp_uint_rshift_ip(res_obt,shift),                                                                           \
-            "Failed to perfrom operation");                                                                                 \
+        lp_uint_rshift_ip(res_obt,shift);                                                                                   \
         CHUNK_READ_TRUE_RES_AND_TEST(res_true,hex_str_result_true,res_obt,hex_str_result_obt)                               \
         ++samp_i;                                                                                                           \
     }                                                                                                                       \

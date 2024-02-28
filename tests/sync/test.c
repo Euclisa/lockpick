@@ -6,8 +6,8 @@
 
 void lp_test_sync()
 {
-    //LP_TEST_RUN(lp_test_lock_graph(),1);
+    LP_TEST_RUN(lp_test_lock_graph(),1);
     LP_TEST_RUN(lp_test_spinlock_bitset(),1);
-    //LP_TEST_RUN(lp_test_shtable());
+    LP_TEST_RUN(lp_test_visit_table());
     LP_TEST_RUN(lp_test_visit_table());
 }

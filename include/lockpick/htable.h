@@ -29,7 +29,7 @@ typedef struct lp_htable
 lp_htable_t *lp_htable_create(size_t capacity, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
 lp_htable_t *lp_htable_create_el_num(size_t elements_num, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
 
-bool lp_htable_release(lp_htable_t *ht);
+void lp_htable_release(lp_htable_t *ht);
 
 bool lp_htable_insert(lp_htable_t *ht, const void *entry);
 

@@ -1,4 +1,5 @@
 #include <lockpick/uint.h>
+#include <lockpick/affirmf.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -68,14 +69,14 @@ int8_t __lp_uint_parse_hex_word_reverse(const char *hex_str, uint32_t start, __l
  * @value:      pointer on uint buffer
  * @value_size: size of uint buffer
  * 
- * Returns status of initialization.
- * 
  * This is not supposed to be called by user. Use 'lp_uint_from_hex' macro instead.
+ * 
+ * Returns nothing.
  */
-bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size)
+void __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size)
 {
-    if(!hex_str || !value)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(hex_str,"hex string");
+    affirm_nullptr(value,"value");
 
     size_t hex_str_len = strlen(hex_str);
     int64_t curr_char_i = hex_str_len-1;
@@ -84,15 +85,12 @@ bool __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t val
     {
         // Parse up to one word and write right away
         int8_t read_hexes = __lp_uint_parse_hex_word_reverse(hex_str, curr_char_i, value+curr_word_i);
-        if(read_hexes < 0)
-            return_set_errno(false,EINVAL);
+        affirmf(read_hexes >= 0,"Failed to parse hex string: %s",hex_str);
         curr_char_i -= read_hexes;
         ++curr_word_i;
     }
 
     for(; curr_word_i < value_size; value[curr_word_i++] = 0);
-
-    return true;
 }
 
 
@@ -142,14 +140,12 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *a, size_t n, bool truncate_
  * @n:              maximum number of hexes to write into a
  * 
  * Returns number of hexes in hex string corresponding to 'value'.
- * Negative value is returned on error.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
 int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *a, size_t n)
 {
-    if(!value)
-        return_set_errno(-1,EINVAL);
+    affirm_nullptr(value,"value");
 
     // Find highest non-zero word
     int64_t significant_words_offset = value_size-1;
@@ -189,29 +185,27 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
 
 /**
  * __lp_uint_copy - copies value from 'src' to 'a'
- * @a:          pointer on left side uint buffer (destination)
- * @a_size:     size of destination uint buffer
+ * @dest:          pointer on left side uint buffer (destination)
+ * @dest_size:     size of destination uint buffer
  * @src:        pointer on source uint buffer
  * @src_size:   size of source uint buffer
  * 
- * Returns true on success, false on failure.
- * 
  * This is not supposed to be called by user. Use 'lp_uint_copy' macro instead.
+ * 
+ * Returns nothing.
  */
-inline bool __lp_uint_copy(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *src, size_t src_size)
+inline void __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *src, size_t src_size)
 {
-    if(a == NULL || src == NULL)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(dest,"destination value");
+    affirm_nullptr(src,"source value");
     
-    size_t src_upper_bound = MIN(a_size,src_size);
+    size_t src_upper_bound = MIN(dest_size,src_size);
     size_t word_i = 0;
     for(; word_i < src_upper_bound; ++word_i)
-        a[word_i] = src[word_i];
+        dest[word_i] = src[word_i];
     
-    for(; word_i < a_size; ++word_i)
-        a[word_i] = 0;
-    
-    return true;
+    for(; word_i < dest_size; ++word_i)
+        dest[word_i] = 0;
 }
 
 
@@ -299,25 +293,23 @@ static inline void __lp_uint_add_left_smaller(const __lp_uint_word_t *a, size_t 
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_add' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !b || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result || b == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
+    affirm_nullptr(result,"result");
+    affirmf(a != result && b != result,"Operands must not alias result");
 
     if(a_size < b_size)
         __lp_uint_add_left_smaller(a,a_size,b,b_size,result,result_size);
     else
         __lp_uint_add_left_smaller(b,b_size,a,a_size,result,result_size);
-    
-    return true;
 }
 
 
@@ -328,14 +320,14 @@ inline bool __lp_uint_add(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * @b:          pointer on another uint buffer to perform addition with
  * @b_size:     size of another uint buffer
  * 
- * Returns true on success, false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_add_ip' macro instead.
  */
-inline bool __lp_uint_add_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
+inline void __lp_uint_add_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
 
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -353,8 +345,6 @@ inline bool __lp_uint_add_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
         a[word_i] = curr_sum & __LP_UINT_MAX_WORD;
         carry = curr_sum >> __LP_UINT_BITS_PER_WORD;
     }
-
-    return true;
 }
 
 
@@ -367,18 +357,18 @@ inline bool __lp_uint_add_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_sub' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !b || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result || b == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
+    affirm_nullptr(result,"result");
+    affirmf(a != result && b != result,"Operands must not alias result");
 
     __uint128_t carry = 0;
     size_t common_upper_bound = MIN(MIN(a_size,b_size),result_size);
@@ -467,8 +457,6 @@ inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_u
     */
     for(; word_i < result_size; ++word_i)
         result[word_i] = __LP_UINT_BASE - carry;
-
-    return true;
 }
 
 
@@ -483,10 +471,10 @@ inline bool __lp_uint_sub(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * 
  * This is not supposed to be called by user. Use 'lp_uint_sub_ip' macro instead.
  */
-inline bool __lp_uint_sub_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
+inline void __lp_uint_sub_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
 
     __uint128_t carry = 0;
     size_t word_i = 0;
@@ -514,8 +502,6 @@ inline bool __lp_uint_sub_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
                 break;
         }
     }
-
-    return true;
 }
 
 
@@ -528,18 +514,18 @@ inline bool __lp_uint_sub_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_mul' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !b || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result || b == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
+    affirm_nullptr(result,"result");
+    affirmf(a != result && b != result,"Operands must not alias result");
 
     for(size_t res_i = 0; res_i < result_size; ++res_i)
         result[res_i] = 0;
@@ -563,8 +549,6 @@ inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_u
             __lp_uint_add_2w_inplace(result+res_i,result_size-res_i,curr_mul_words);
         }
     }
-
-    return true;
 }
 
 
@@ -575,7 +559,7 @@ inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * @b:          pointer on another uint buffer to perform addition with
  * @b_size:     size of another uint buffer
  * 
- * Returns true on success, false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_mul_ip' macro instead.
  * 
@@ -583,11 +567,11 @@ inline bool __lp_uint_mul(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * because this inplace version does the same amount of operations
  * plus copying from temporary buffer to 'a' (plus 'malloc' and 'free' calls).
  */
-inline bool __lp_uint_mul_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
+inline void __lp_uint_mul_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
     // Basically, rewritting procedure above taking into account that 'a_size' ('a_size') is now equal to 'result_size'
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
     
     __lp_uint_word_t *result = (__lp_uint_word_t*)malloc(sizeof(__lp_uint_word_t)*a_size);
     size_t result_size = a_size;
@@ -616,8 +600,6 @@ inline bool __lp_uint_mul_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
         a[dest_i] = result[dest_i];
     
     free(result);
-
-    return true;
 }
 
 
@@ -664,8 +646,8 @@ static inline bool __lp_uint_eq_left_smaller(const __lp_uint_word_t *a, size_t a
  */
 inline bool __lp_uint_eq(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
     
     if(a_size < b_size)
         return __lp_uint_eq_left_smaller(a,a_size,b,b_size);
@@ -690,8 +672,8 @@ inline bool __lp_uint_eq(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
  */
 inline lp_uint_3way_t __lp_uint_3way(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
     
     const __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
@@ -810,18 +792,18 @@ inline bool __lp_uint_geq(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_and' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !b || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result || b == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
+    affirm_nullptr(result,"result");
+    affirmf(a != result && b != result,"Operands must not alias result");
     
     size_t upper_bound = MIN(MIN(a_size,b_size),result_size);
     size_t res_i = 0;
@@ -830,8 +812,6 @@ inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_u
     
     for(; res_i < result_size; ++res_i)
         result[res_i] = 0;
-    
-    return true;
 }
 
 
@@ -842,14 +822,14 @@ inline bool __lp_uint_and(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * @b:          pointer on right side uint buffer
  * @b_size:     size of another uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_and_ip' macro instead.
  */
-inline bool __lp_uint_and_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
+inline void __lp_uint_and_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
     
     size_t upper_bound = MIN(a_size,b_size);
     size_t dest_i = 0;
@@ -858,8 +838,6 @@ inline bool __lp_uint_and_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
     
     for(; dest_i < a_size; ++dest_i)
         a[dest_i] = 0;
-    
-    return true;
 }
 
 
@@ -872,18 +850,18 @@ inline bool __lp_uint_and_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_or' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !b || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result || b == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
+    affirm_nullptr(result,"result");
+    affirmf(a != result && b != result,"Operands must not alias result");
     
     const __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
@@ -911,8 +889,6 @@ inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
     
     for(; res_i < result_size; ++res_i)
         result[res_i] = 0;
-    
-    return true;
 }
 
 
@@ -923,20 +899,18 @@ inline bool __lp_uint_or(const __lp_uint_word_t *a, size_t a_size, const __lp_ui
  * @b:          pointer on right side uint buffer
  * @b_size:     size of another uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_or_ip' macro instead.
  */
-inline bool __lp_uint_or_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
+inline void __lp_uint_or_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
     
     size_t upper_bound = MIN(a_size,b_size);
     for(size_t i = 0; i < upper_bound; ++i)
         a[i] |= b[i];
-    
-    return true;
 }
 
 
@@ -949,18 +923,18 @@ inline bool __lp_uint_or_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_xor' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a' or 'b'.
  */
-inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !b || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result || b == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
+    affirm_nullptr(result,"result");
+    affirmf(a != result && b != result,"Operands must not alias result");
     
     const __lp_uint_word_t *max_term;
     int64_t min_term_size, max_term_size;
@@ -988,8 +962,6 @@ inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_u
     
     for(; res_i < result_size; ++res_i)
         result[res_i] = 0;
-    
-    return true;
 }
 
 
@@ -1000,20 +972,18 @@ inline bool __lp_uint_xor(const __lp_uint_word_t *a, size_t a_size, const __lp_u
  * @b:          pointer on right side uint buffer
  * @b_size:     size of another uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_xor_ip' macro instead.
  */
-inline bool __lp_uint_xor_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
+inline void __lp_uint_xor_inplace(__lp_uint_word_t *a, size_t a_size, const __lp_uint_word_t *b, size_t b_size)
 {
-    if(!a || !b)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"left-side argument");
+    affirm_nullptr(b,"right-side argument");
     
     size_t upper_bound = MIN(a_size,b_size);
     for(size_t i = 0; i < upper_bound; ++i)
         a[i] ^= b[i];
-    
-    return true;
 }
 
 
@@ -1025,18 +995,17 @@ inline bool __lp_uint_xor_inplace(__lp_uint_word_t *a, size_t a_size, const __lp
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_lshift' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a'
  */
-inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"uint operand");
+    affirm_nullptr(result,"result");
+    affirmf(a != result,"Uint operand must not alias result");
 
     shift = MIN(result_size*__LP_UINT_BITS_PER_WORD,shift);
     size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
@@ -1047,7 +1016,7 @@ inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
         result[res_i] = 0;
 
     if(result_size == res_i)
-        return true;
+        return;
 
     result[res_i++] = a[0] << shift_bits;
 
@@ -1060,7 +1029,7 @@ inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
     }
 
     if(result_size == res_i)
-        return true;
+        return;
     
     uint16_t shift_rem = __LP_UINT_BITS_PER_WORD-shift_bits;
     __lp_uint_word_t remainder = shift_rem == __LP_UINT_BITS_PER_WORD ? 0 : (a[res_i-shift_words-1] >> shift_rem);
@@ -1068,8 +1037,6 @@ inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
     
     for(; res_i < result_size; ++res_i)
         result[res_i] = 0;
-    
-    return true;
 }
 
 
@@ -1079,14 +1046,13 @@ inline bool __lp_uint_lshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
  * @a_size:     size of destination uint buffer
  * @shift:      shift size
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_lshift_ip' macro instead.
  */
-inline bool __lp_uint_lshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift)
+inline void __lp_uint_lshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift)
 {
-    if(!a)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"uint operand");
 
     shift = MIN(a_size*__LP_UINT_BITS_PER_WORD,shift);
     size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
@@ -1105,9 +1071,6 @@ inline bool __lp_uint_lshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t 
 
     for(; word_i >= 0; --word_i)
         a[word_i] = 0;
-
-    
-    return true;
 }
 
 
@@ -1119,18 +1082,17 @@ inline bool __lp_uint_lshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t 
  * @result:         pointer on result uint buffer
  * @result_size:    size of result uint buffer
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_rshift' macro instead.
  * 
  * CAUTION: 'result' can't point on the same memory region as 'a'
  */
-inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *result, size_t result_size)
+inline void __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t shift, __lp_uint_word_t *result, size_t result_size)
 {
-    if(!a || !result)
-        return_set_errno(false,EINVAL);
-    if(a == result)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"uint operand");
+    affirm_nullptr(result,"result");
+    affirmf(a != result,"Uint operand must not alias result");
 
     shift = MIN(a_size*__LP_UINT_BITS_PER_WORD,shift);
     size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
@@ -1148,7 +1110,7 @@ inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
     }
 
     if(result_size == res_i)
-        return true;
+        return;
     
     if(res_i+shift_words < a_size)
     {
@@ -1158,8 +1120,6 @@ inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
     
     for(; res_i < result_size; ++res_i)
         result[res_i] = 0;
-    
-    return true;
 }
 
 
@@ -1169,14 +1129,13 @@ inline bool __lp_uint_rshift(const __lp_uint_word_t *a, size_t a_size, size_t sh
  * @a_size:     size of destination uint buffer
  * @shift:      shift size
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_rshift_ip' macro instead.
  */
-inline bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift)
+inline void __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t shift)
 {
-    if(!a)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"uint operand");
 
     shift = MIN(a_size*__LP_UINT_BITS_PER_WORD,shift);
     size_t shift_words = shift / __LP_UINT_BITS_PER_WORD;
@@ -1199,8 +1158,6 @@ inline bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t 
     
     for(; word_i < a_size; ++word_i)
         a[word_i] = 0;
-    
-    return true;
 }
 
 
@@ -1210,14 +1167,13 @@ inline bool __lp_uint_rshift_inplace(__lp_uint_word_t *a, size_t a_size, size_t 
  * @a_size:         size of target uint buffer
  * @width_high:     highest width generated random number may have
  * 
- * Returns true on success and false on failure.
+ * Returns nothing.
  * 
  * This is not supposed to be called by user. Use 'lp_uint_rand' macro instead.
 */
-inline bool __lp_uint_rand(__lp_uint_word_t *a, size_t a_size, size_t width_high)
+inline void __lp_uint_rand(__lp_uint_word_t *a, size_t a_size, size_t width_high)
 {
-    if(!a)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(a,"uint operand");
     
     width_high = MIN(width_high,a_size*__LP_UINT_BITS_PER_WORD);
 
@@ -1243,6 +1199,4 @@ inline bool __lp_uint_rand(__lp_uint_word_t *a, size_t a_size, size_t width_high
 
     for(size_t word_i = whole_words+1; word_i < a_size; ++word_i)
         a[word_i] = 0;
-
-    return true;
 }

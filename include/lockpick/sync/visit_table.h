@@ -31,7 +31,7 @@ typedef struct lp_visit_table
 lp_visit_table_t *lp_visit_table_create(size_t capacity, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
 lp_visit_table_t *lp_visit_table_create_max_el(size_t max_elements, size_t entry_size, size_t (*hsh)(const void *), bool (*eq)(const void *, const void *));
 
-bool lp_visit_table_release(lp_visit_table_t *vt);
+void lp_visit_table_release(lp_visit_table_t *vt);
 
 bool lp_visit_table_insert(lp_visit_table_t *vt, const void *entry);
 

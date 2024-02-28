@@ -30,127 +30,129 @@ static inline void __lp_list_insert_between(lp_list_t *first, lp_list_t *second,
 
 
 /**
- * lp_list_insert_before - inserts new entry 'entry' before 'position'
- * @head:       pointer on address where current list's head is located
- * @position:   pointer on an entry before which to perform insertion
- * @entry:       pointer on the entry to be inserted before 'position'
+ * lp_list_insert_before - inserts new node into linked list before specified node
+ * @head:       pointer to head node address 
+ * @position:   pointer to node before which to insert
+ * @entry:      pointer to new node to insert
+ *
+ * Inserts the node pointed to by @entry into the linked list before the 
+ * node pointed to by @position.
  * 
- * Returns true on success, false on failure.
- * 
- * 'head' can't point on NULL address (before operation list must contain at least one element).
- * List's head can be modified in case 'position' points on it.
+ * CAUTION: @head must not be NULL, hence, list must already contain at least one node.
+ *  
+ * Updates the head pointer if 'position' points to head node. Terminates 
+ * program on any error.
+ *
+ * Returns nothing.
 */
-inline bool lp_list_insert_before(lp_list_t **head, lp_list_t *position, lp_list_t *entry)
+inline void lp_list_insert_before(lp_list_t **head, lp_list_t *position, lp_list_t *entry)
 {
-    if(!head || !(*head) || !position || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(head,"list head");
+    affirmf(*head,"List must not be empty for this operation");
+    affirm_nullptr(position,"position");
+    affirm_nullptr(entry,"entry");
     
     __lp_list_insert_between(position->prev,position,entry);
 
     if(position == *head)
         (*head) = entry;
-
-    return true;
 }
 
 
 /**
- * lp_list_insert_after - inserts new entry 'entry' after 'position'
- * @head:       pointer on address where current list's head is located
- * @position:   pointer on an entry after which to perform insertion
- * @entry:       pointer on the entry to be inserted after 'position'
+ * lp_list_insert_after - inserts new node into linked list after specified node
+ * @head:       pointer to head node address 
+ * @position:   pointer to node after which to insert
+ * @entry:      pointer to new node to insert
+ *
+ * Inserts the node pointed to by @entry into the linked list before the 
+ * node pointed to by @position.
  * 
- * Returns true on success, false on failure.
- * 
- * 'head' can't point on NULL address (before operation list must contain at least one element).
- * List's head cannot be modified in any case.
+ * CAUTION: @head must not be NULL, hence, list must already contain at least one node.
+ *
+ * Returns nothing.
 */
-inline bool lp_list_insert_after(lp_list_t **head, lp_list_t *position, lp_list_t *entry)
+inline void lp_list_insert_after(lp_list_t **head, lp_list_t *position, lp_list_t *entry)
 {
-    if(!head || !(*head) || !position || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(head,"list head");
+    affirmf(*head,"List must not be empty for this operation");
+    affirm_nullptr(position,"position");
+    affirm_nullptr(entry,"entry");
 
     __lp_list_insert_between(position,position->next,entry);
-    
-    return true;
 }
 
 
 /**
- * lp_list_push_back - inserts new entry 'entry' at the end of the list
+ * lp_list_push_back - inserts new entry at the end of the list
  * @head:           pointer on address where current list's head is located
  * @entry:          pointer on the entry to be inserted at the end of the list
  * 
- * Returns true on success, false on failure.
+ * If @head points on NULL address then 'entry' becomes new head.
  * 
- * If 'head' points on NULL address then 'entry' becomes new head.
+ * Returns nothing.
 */
-inline bool lp_list_push_back(lp_list_t **head, lp_list_t *entry)
+inline void lp_list_push_back(lp_list_t **head, lp_list_t *entry)
 {
-    if(!head  || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(head,"list head");
+    affirm_nullptr(entry,"entry");
 
     if(!(*head))
     {
         entry->next = entry->prev = entry;
-        (*head) = entry;
+        *head = entry;
     }
     else
         __lp_list_insert_between((*head)->prev,*head,entry);
-
-    return true;
 }
 
 
 /**
- * lp_list_push_front - inserts new entry 'entry' at the beggining of the list
+ * lp_list_push_front - inserts new entry at the beggining of the list
  * @head:       pointer on address where current list's head is located
- * @entry:       pointer on the entry to be inserted at the beggining of the list
+ * @entry:      pointer on the entry to be inserted at the beggining of the list
  * 
- * Returns true on success, false on failure.
+ * @entry always become new head.
  * 
- * 'entry' always become new head.
+ * Returns nothing.
 */
-inline bool lp_list_push_front(lp_list_t **head, lp_list_t *entry)
+inline void lp_list_push_front(lp_list_t **head, lp_list_t *entry)
 {
-    if(!head  || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(head,"list head");
+    affirm_nullptr(entry,"entry");
     
     if(!(*head))
         entry->next = entry->prev = entry;
     else
         __lp_list_insert_between((*head)->prev,*head,entry);
-    (*head) = entry;
-
-    return true;
+    *head = entry;
 }
 
 
 /**
- * lp_list_remove - inserts entry 'entry' from the list
+ * lp_list_remove - removes entry from the list
  * @head:       pointer on address where current list's head is located
- * @entry:       pointer on the entry to be removed
+ * @entry:      pointer on the entry to be removed
  * 
- * Returns true on success, false on failure.
+ *  @head must point on non-NULL address.
  * 
- * 'head' must point on non-NULL address.
+ * Returns nothing.
 */
-inline bool lp_list_remove(lp_list_t **head, lp_list_t *entry)
+inline void lp_list_remove(lp_list_t **head, lp_list_t *entry)
 {
-    if(!head || !(*head) || !entry)
-        return_set_errno(false,EINVAL);
+    affirm_nullptr(head,"list head");
+    affirmf(*head,"List must not be empty for this operation");
+    affirm_nullptr(entry,"entry");
 
     if(entry == *head)
     {
         if((*head)->next == (*head))
         {
             *head = NULL;
-            return true;
+            return;
         }
         *head = entry->next;
     }
     entry->next->prev = entry->prev;
     entry->prev->next = entry->next;
-
-    return true;
 }

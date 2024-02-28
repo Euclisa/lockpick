@@ -9,19 +9,15 @@
  * @head:       pointer on address where current free blocks list's head is located
  * @entry:       pointer on the entry to be removed
  * 
- * Returns true on success, false on failure.
- * 
  * Wrapper function for general list api 'lp_list_remove'.
+ * 
+ * Returns nothing.
 */
-static inline bool __lp_slab_block_list_remove(__lp_slab_block_list_t **head, __lp_slab_block_list_t *entry)
+static inline void __lp_slab_block_list_remove(__lp_slab_block_list_t **head, __lp_slab_block_list_t *entry)
 {
     lp_list_t *old_head = &(*head)->__node;
-    if(!lp_list_remove(&old_head,&entry->__node))
-        return_set_errno(false,EINVAL);
-
+    lp_list_remove(&old_head,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
-
-    return true;
 }
 
 
@@ -31,19 +27,15 @@ static inline bool __lp_slab_block_list_remove(__lp_slab_block_list_t **head, __
  * @position:       pointer on an entry before which to perform insertion
  * @entry:          pointer on the entry to be inserted before 'position'
  * 
- * Returns true on success, false on failure.
- * 
  * Wrapper function for general list api 'lp_list_insert_before'.
+ * 
+ * Returns nothing.
 */
-static inline bool __lp_slab_block_list_insert_before(__lp_slab_block_list_t **head, __lp_slab_block_list_t *position, __lp_slab_block_list_t *entry)
+static inline void __lp_slab_block_list_insert_before(__lp_slab_block_list_t **head, __lp_slab_block_list_t *position, __lp_slab_block_list_t *entry)
 {
     lp_list_t *old_head = &(*head)->__node;
-    if(!lp_list_insert_before(&old_head,&position->__node,&entry->__node))
-        return_set_errno(false,EINVAL);
-    
+    lp_list_insert_before(&old_head,&position->__node,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
-
-    return true;
 }
 
 
@@ -53,19 +45,15 @@ static inline bool __lp_slab_block_list_insert_before(__lp_slab_block_list_t **h
  * @position:       pointer on an entry after which to perform insertion
  * @entry:          pointer on the entry to be inserted after 'position'
  * 
- * Returns true on success, false on failure.
- * 
  * Wrapper function for general list api 'lp_list_insert_after'.
+ * 
+ * Returns nothing.
 */
-static inline bool __lp_slab_block_list_insert_after(__lp_slab_block_list_t **head, __lp_slab_block_list_t *position, __lp_slab_block_list_t *entry)
+static inline void __lp_slab_block_list_insert_after(__lp_slab_block_list_t **head, __lp_slab_block_list_t *position, __lp_slab_block_list_t *entry)
 {
     lp_list_t *old_head = &(*head)->__node;
-    if(!lp_list_insert_after(&old_head,&position->__node,&entry->__node))
-        return_set_errno(false,EINVAL);
-    
+    lp_list_insert_after(&old_head,&position->__node,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
-
-    return true;
 }
 
 
@@ -74,19 +62,15 @@ static inline bool __lp_slab_block_list_insert_after(__lp_slab_block_list_t **he
  * @head:           pointer on address where current list's head is located
  * @entry:          pointer on the entry to be inserted at the end
  * 
- * Returns true on success, false on failure.
- * 
  * Wrapper function for general list api 'lp_list_push_back'.
+ * 
+ * Returns nothing.
 */
-static inline bool __lp_slab_block_list_push_back(__lp_slab_block_list_t **head, __lp_slab_block_list_t *entry)
+static inline void __lp_slab_block_list_push_back(__lp_slab_block_list_t **head, __lp_slab_block_list_t *entry)
 {
     lp_list_t *old_head = *head ? &(*head)->__node : NULL;
-    if(!lp_list_push_back(&old_head,&entry->__node))
-        return_set_errno(false,EINVAL);
-    
+    lp_list_push_back(&old_head,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
-
-    return true;
 }
 
 
@@ -169,7 +153,7 @@ void *lp_slab_alloc(lp_slab_t *slab)
     else
     {
         __lp_slab_block_list_t *old_head = slab->__fb_head;
-        affirmf(__lp_slab_block_list_remove(&slab->__fb_head,old_head),"Failed to remove empty free block");
+        __lp_slab_block_list_remove(&slab->__fb_head,old_head);
         free(old_head);
     }
     --slab->__total_free;
@@ -206,7 +190,7 @@ static inline void __lp_slab_block_list_insert_unit_before(__lp_slab_block_list_
     __lp_slab_block_list_t *unit_block = (__lp_slab_block_list_t*)malloc(sizeof(__lp_slab_block_list_t));
     unit_block->__block_size = 1;
     unit_block->__base = base;
-    affirmf(__lp_slab_block_list_insert_before(head,position,unit_block),"Failed to insert unit block before old");
+    __lp_slab_block_list_insert_before(head,position,unit_block);
 }
 
 
@@ -223,7 +207,7 @@ static inline void __lp_slab_block_list_insert_unit_after(__lp_slab_block_list_t
     __lp_slab_block_list_t *unit_block = (__lp_slab_block_list_t*)malloc(sizeof(__lp_slab_block_list_t));
     unit_block->__block_size = 1;
     unit_block->__base = base;
-    affirmf(__lp_slab_block_list_insert_after(head,position,unit_block),"Failed to insert unit block after old");
+    __lp_slab_block_list_insert_after(head,position,unit_block);
 }
 
 
@@ -251,9 +235,9 @@ static inline void __lp_slab_block_list_merge_unit_diff(__lp_slab_block_list_t *
     merge_block->__block_size = first->__block_size + second->__block_size + 1;
     merge_block->__base = first->__base;
 
-    affirmf(lp_list_insert_after(&old_head,&second->__node,&merge_block->__node),"Failed to insert new entry");
-    affirmf(lp_list_remove(&old_head,first_l),"Failed to remove first entry");
-    affirmf(lp_list_remove(&old_head,second_l),"Failed to remove second entry");
+    lp_list_insert_after(&old_head,&second->__node,&merge_block->__node);
+    lp_list_remove(&old_head,first_l);
+    lp_list_remove(&old_head,second_l);
 
     free(first);
     free(second);
@@ -291,7 +275,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
         __lp_slab_block_list_t *new_fb = (__lp_slab_block_list_t*)malloc(sizeof(__lp_slab_block_list_t));
         new_fb->__block_size = 1;
         new_fb->__base = ptr;
-        affirmf(__lp_slab_block_list_push_back(&slab->__fb_head,new_fb),"Failed to put free block to the empty list");
+        __lp_slab_block_list_push_back(&slab->__fb_head,new_fb);
         return;
     }
 
