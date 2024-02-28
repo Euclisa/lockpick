@@ -52,7 +52,7 @@ void test_htable_##uint_t()                                                     
                         found == (j <= i) &&                                                            \
                         size == i+1;                                                                    \
             }                                                                                           \
-            LP_TEST_ASSERT(valid,"Htable inconsitency after %ld insertions",i);                         \
+            LP_TEST_ASSERT(valid,"Htable inconsitency after %zd insertions",i);                         \
         }                                                                                               \
         shuffle_##uint_t(values,samples_num);                                                           \
         for(size_t i = 0; i < samples_num; ++i)                                                         \
@@ -67,7 +67,7 @@ void test_htable_##uint_t()                                                     
                 valid &= found == (j > i) &&                                                            \
                         size == samples_num-i-1;                                                        \
             }                                                                                           \
-            LP_TEST_ASSERT(valid,"Htable inconsitency after %ld removals",i);                           \
+            LP_TEST_ASSERT(valid,"Htable inconsitency after %zd removals",i);                           \
         }                                                                                               \
     }                                                                                                   \
     lp_test_cleanup:                                                                                    \

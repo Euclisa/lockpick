@@ -63,7 +63,7 @@ lp_htable_t *lp_htable_create(size_t capacity, size_t entry_size, size_t (*hsh)(
 {
     affirm_nullptr(hsh,"entry hash function");
     affirm_nullptr(eq,"entry equality predicate");
-    affirmf(lp_is_pow_2(capacity),"Capacity must be a power of 2, but got: %ld",capacity);
+    affirmf(lp_is_pow_2(capacity),"Capacity must be a power of 2, but got: %zd",capacity);
 
     size_t ht_size = sizeof(lp_htable_t);
     lp_htable_t *ht = (lp_htable_t*)malloc(ht_size);

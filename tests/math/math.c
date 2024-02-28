@@ -10,7 +10,7 @@ void test_math_is_pow_2()
         uint64_t pow = 1 << exp;
         LP_TEST_ASSERT(lp_is_pow_2(pow),"%ld is power of two, but got false",pow);
         for(uint64_t value = pow+1; value < (pow << 1); ++value)
-            LP_TEST_ASSERT(!lp_is_pow_2(value),"%ld is not power of 2, but got true");
+            LP_TEST_ASSERT(!lp_is_pow_2(value),"%ld is not power of 2, but got true",value);
     }
     lp_test_cleanup:
 }
@@ -115,7 +115,7 @@ void test_math_ceil_log2()
     {
         uint64_t value = 1ULL << exp;
         uint32_t res_obt = lp_ceil_log2(value);
-        LP_TEST_ASSERT(res_obt == exp,"For %d expected: %d, got: %d",value,exp,res_obt);
+        LP_TEST_ASSERT(res_obt == exp,"For %ld expected: %d, got: %d",value,exp,res_obt);
     }
 
     uint32_t exp = 32;

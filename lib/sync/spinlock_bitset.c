@@ -36,7 +36,7 @@ void lp_spinlock_bitset_release(lp_spinlock_bitset_t *spins)
 void lp_spinlock_bitset_lock(lp_spinlock_bitset_t *spins, size_t lock_i)
 {
     affirm_nullptr(__likely(spins),"spinlock bitset");
-    affirmf(__likely(lock_i < spins->__locks_num),"Spinlock index %ld is out of range (max: %ld)",lock_i,spins->__locks_num);
+    affirmf(__likely(lock_i < spins->__locks_num),"Spinlock index %zd is out of range (max: %zd)",lock_i,spins->__locks_num);
 
     size_t lock_word_i = lock_i / (sizeof(uint32_t)*LP_BITS_PER_BYTE);
     uint32_t lock_bit_i = (uint32_t)(lock_i % (sizeof(uint32_t)*LP_BITS_PER_BYTE));
@@ -53,21 +53,21 @@ void lp_spinlock_bitset_lock(lp_spinlock_bitset_t *spins, size_t lock_i)
 void lp_spinlock_bitset_unlock(lp_spinlock_bitset_t *spins, size_t lock_i)
 {
     affirm_nullptr(__likely(spins),"spinlock bitset");
-    affirmf(__likely(lock_i < spins->__locks_num),"Spinlock index %ld is out of range (max: %ld)",lock_i,spins->__locks_num);
+    affirmf(__likely(lock_i < spins->__locks_num),"Spinlock index %zd is out of range (max: %zd)",lock_i,spins->__locks_num);
 
     const size_t bits_in_spins_bm = lp_sizeof_bits(uint32_t);
     size_t lock_word_i = lp_div_pow_2(lock_i,bits_in_spins_bm);
     size_t lock_bit_i = (uint32_t)lp_mod_pow_2(lock_i,bits_in_spins_bm);
 
     uint32_t *lock_word = spins->__bitset+lock_word_i;
-    affirmf(lp_atomic_bittestandreset(lock_word,lock_bit_i),"Spinlock %ld is not locked",lock_i);
+    affirmf(lp_atomic_bittestandreset(lock_word,lock_bit_i),"Spinlock %zd is not locked",lock_i);
 }
 
 
 bool lp_spinlock_bitset_trylock(lp_spinlock_bitset_t *spins, size_t lock_i)
 {
     affirm_nullptr(__likely(spins),"spinlock bitset");
-    affirmf(__likely(lock_i < spins->__locks_num),"Spinlock index %ld is out of range (max: %ld)",lock_i,spins->__locks_num);
+    affirmf(__likely(lock_i < spins->__locks_num),"Spinlock index %zd is out of range (max: %zd)",lock_i,spins->__locks_num);
 
     const size_t bits_in_spins_bm = lp_sizeof_bits(uint32_t);
     size_t lock_word_i = lp_div_pow_2(lock_i,bits_in_spins_bm);

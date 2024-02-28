@@ -25,7 +25,7 @@ static inline void __print_backtrace(uint32_t offset)
         char proc_name[MAX_PROC_NAME_LEN];
         unw_word_t off;
         unw_get_proc_name(&cursor,proc_name,MAX_PROC_NAME_LEN,&off);
-        fprintf(stderr,"#%ld: %s\n",frame_i,proc_name);
+        fprintf(stderr,"#%zd: %s\n",frame_i,proc_name);
         ++frame_i;
     }
 }

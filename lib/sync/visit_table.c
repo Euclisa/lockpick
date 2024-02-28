@@ -104,7 +104,7 @@ bool lp_visit_table_insert(lp_visit_table_t *vt, const void *entry)
         return_on(!occupied,true);
 
         bucket_i = (bucket_i + 1) & vt->__capacity_mask;
-        affirmf(bucket_i != native_bucket_i,"Visit table capacity %ld exceeded",vt->__capacity);
+        affirmf(bucket_i != native_bucket_i,"Visit table capacity %zd exceeded",vt->__capacity);
     }
 }
 

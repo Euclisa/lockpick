@@ -103,7 +103,7 @@ void __test_visit_table_random_ops(size_t threads_num)
         free(status2);
     }
     LP_TEST_ASSERT(test_status,
-        "In thread %ld spotted equal insertion status: %d",failed_thr_i,(uint32_t)inserted);
+        "In thread %zd spotted equal insertion status: %d",failed_thr_i,(uint32_t)inserted);
 
     test_status = true;
     for(size_t thr_i = 0; thr_i < threads_num; ++thr_i)
@@ -140,7 +140,7 @@ void __test_visit_table_random_ops(size_t threads_num)
         free(status);
     }
     LP_TEST_ASSERT(test_status,
-        "Failed to perform operation in thread %ld of %d group. Concurrent find/insert.",
+        "Failed to perform operation in thread %zd of %d group. Concurrent find/insert.",
         failed_thr_i,failed_group_i);
 
     lp_test_cleanup:

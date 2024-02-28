@@ -160,7 +160,7 @@ void lpg_graph_traverse(lpg_graph_t *graph, __lpg_traverse_cb_t enter_cb, void *
     
     for(size_t node_i = 0; node_i < graph->outputs_size; ++node_i)
     {
-        affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %ld."
+        affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %zd."
                                     "Was graph assembled properly?",node_i);
         __lpg_graph_traverse_node(graph,graph->outputs[node_i],visited,inputs,enter_cb,enter_cb_args,leave_cb,leave_cb_args);
     }

@@ -32,7 +32,7 @@ char *__lp_test_allocator(size_t size)
         return buffer;
     }
 
-    affirmf((__LP_TEST_ALLOCATOR_BUFF_SIZE-offset) >= size, "Failed to allocate %ld bytes. Out of memory.",size);
+    affirmf((__LP_TEST_ALLOCATOR_BUFF_SIZE-offset) >= size, "Failed to allocate %zd bytes. Out of memory.",size);
 
     char *to_ret = buffer+offset;
     offset += size;
@@ -54,7 +54,7 @@ char *__get_time_str(const char *format)
     time_t now = time(NULL);
 
     char *time_str = __lp_test_allocator(MAX_TIME_STR_SIZE+1);
-    affirmf(time_str,"Failed to allocate string of length %ld",MAX_TIME_STR_SIZE);
+    affirmf(time_str,"Failed to allocate string of length %d",MAX_TIME_STR_SIZE);
 
     affirmf(strftime(time_str, MAX_TIME_STR_SIZE, format, localtime(&now)) > 0,"Failed to fetch local time"); 
     
@@ -85,7 +85,7 @@ char *__create_padding(uint8_t curr_level)
 {
     uint16_t pad_size = (curr_level)*2;
     char *str = __lp_test_allocator(pad_size+1);
-    affirmf(str,"Failed to allocate string of length %ld",pad_size);
+    affirmf(str,"Failed to allocate string of length %d",pad_size);
     
     for(size_t i = 0; i < pad_size; ++i)
         str[i] = i % 2 ? ' ' : '|';
@@ -130,7 +130,7 @@ char *__lp_test_get_stats_str(uint64_t tests_passed, uint64_t cases_passed, uint
         tests_passed,cases_passed,duration_total_ms,duration_per_case_ns)+1;
 
     char *stats_str = __lp_test_allocator(stats_str_len+1);
-    affirmf(stats_str,"Failed to allocate string of length %ld",stats_str_len);
+    affirmf(stats_str,"Failed to allocate string of length %zd",stats_str_len);
 
     uint64_t chars_written = snprintf(stats_str,stats_str_len+1,stats_format,
         tests_passed,cases_passed,duration_total_ms,duration_per_case_ns);

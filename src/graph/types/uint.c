@@ -218,7 +218,7 @@ void lpg_uint_update_from_nodes(lpg_uint_t *value, lpg_node_t **nodes)
     for(size_t node_i = 0; node_i < value->width; ++node_i)
     {
         affirmf(__lpg_graph_is_native_node(value->graph,nodes[node_i]),
-        "Node inside buffer at index '%ld' does not belong to the graph given value bounded with");
+        "Node inside buffer at index '%zd' does not belong to the graph given value bounded with",node_i);
         value_nodes[node_i] = nodes[node_i];
     }
 }

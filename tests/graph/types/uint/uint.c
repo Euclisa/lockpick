@@ -170,8 +170,8 @@ void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t b_width
     lpg_uint_##op_type(graph_a,graph_b,graph_res_obt);                                                                          \
     size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
     LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
-            "a_width: %ld; b_width: %ld; res_width: %ld; "                                                                      \
-            "Found %ld dangling nodes after full graph assembly",                                                               \
+            "a_width: %zd; b_width: %zd; res_width: %zd; "                                                                      \
+            "Found %zd dangling nodes after full graph assembly",                                                               \
             a_width,b_width,res_width,dangling_nodes);                                                                          \
     lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
@@ -226,8 +226,8 @@ void __test_graph_uint_##op_type##_inplace_dangling_nodes(size_t a_width, size_t
     lpg_uint_##op_type##_ip(graph_res_obt,graph_b);                                                                             \
     size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
     LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
-            "a_width: %ld; b_width: %ld; "                                                                                      \
-            "Found %ld dangling nodes after full graph assembly",                                                               \
+            "a_width: %zd; b_width: %zd; "                                                                                      \
+            "Found %zd dangling nodes after full graph assembly",                                                               \
             a_width,b_width,dangling_nodes);                                                                                    \
     lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_OP_DANGLING_CLEAN_UP_CHUNK                                                                                  \
@@ -311,7 +311,7 @@ static inline void __test_graph_uint_gen_and_test_##op_type##_##postfix(        
     lpg_uint_to_hex(graph_res_obt,converted_hex_str,MAX_HEXES_NUM);                                                             \
     lp_uint_from_hex(res_obt_prop,converted_hex_str);                                                                           \
     LP_TEST_ASSERT(lp_uint_eq(res_true_prop,res_obt_prop),                                                                      \
-            "a: %s; shift: %ld; Expected: %s, got: %s",hex_str_a,shift,original_hex_str,converted_hex_str);                     \
+            "a: %s; shift: %zd; Expected: %s, got: %s",hex_str_a,shift,original_hex_str,converted_hex_str);                     \
     lp_test_cleanup:                                                                                                            \
     free(hex_str_a);                                                                                                            \
 }
@@ -341,8 +341,8 @@ void __test_graph_uint_##op_type##_dangling_nodes(size_t a_width, size_t shift, 
     lpg_uint_##op_type(graph_a,shift,graph_res_obt);                                                                            \
     size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
     LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
-            "a_width: %ld; shift: %ld; res_width: %ld; "                                                                        \
-            "Found %ld dangling nodes after full graph assembly",                                                               \
+            "a_width: %zd; shift: %zd; res_width: %zd; "                                                                        \
+            "Found %zd dangling nodes after full graph assembly",                                                               \
             a_width,shift,res_width,dangling_nodes);                                                                            \
     lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_SHIFT_OP_DANGLING_CLEAN_UP_CHUNK                                                                            \
@@ -397,8 +397,8 @@ void __test_graph_uint_##op_type##_dangling_nodes_inplace(size_t a_width, size_t
     lpg_uint_##op_type##_ip(graph_res_obt,shift);                                                                               \
     size_t dangling_nodes = lpg_graph_count_dangling_nodes(graph);                                                              \
     LP_TEST_ASSERT(dangling_nodes == 0,                                                                                         \
-            "a_width: %ld; shift: %ld; "                                                                                        \
-            "Found %ld dangling nodes after full graph assembly",                                                               \
+            "a_width: %zd; shift: %zd; "                                                                                        \
+            "Found %zd dangling nodes after full graph assembly",                                                               \
             a_width,shift,dangling_nodes);                                                                                      \
     lp_test_cleanup:                                                                                                            \
     TEST_GRAPH_UINT_SHIFT_OP_DANGLING_CLEAN_UP_CHUNK                                                                            \

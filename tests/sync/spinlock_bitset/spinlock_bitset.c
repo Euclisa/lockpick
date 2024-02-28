@@ -49,7 +49,7 @@ void test_spinlock_bitset_multiple_counters(size_t counters_num, size_t threads_
     {
         bool *status;
         pthread_join(threads[thr_i],(void**)&status);
-        affirmf(*status,"Something went wrong inside thread %ld",thr_i);
+        affirmf(*status,"Something went wrong inside thread %zd",thr_i);
         free(status);
     }
 
@@ -57,7 +57,7 @@ void test_spinlock_bitset_multiple_counters(size_t counters_num, size_t threads_
     {
         size_t expected = max_count*threads_per_counter;
         LP_TEST_ASSERT(counters[counter_i] == expected,
-            "Expected: %ld, got: %ld for counter %ld",expected,counters[counter_i],counter_i);
+            "Expected: %zd, got: %zd for counter %zd",expected,counters[counter_i],counter_i);
     }
 
     lp_test_cleanup:

@@ -42,7 +42,7 @@ void test_slab_##entry_type##_random_alloc_free()                               
 {                                                                                                                                           \
     lp_slab_t *slab = lp_slab_create(__LP_TEST_SLAB_ENTRIES_PER_SLAB,sizeof(entry_type));                                                   \
     affirmf(slab,                                                                                                                           \
-        "Failed to allocate for slab with %d entries with %ld bytes per entry",                                                             \
+        "Failed to allocate for slab with %d entries with %zd bytes per entry",                                                             \
         __LP_TEST_SLAB_ENTRIES_PER_SLAB,sizeof(entry_type));                                                                                \
     entry_type *entries[__LP_TEST_SLAB_ENTRIES_PER_SLAB] = {NULL};                                                                          \
     entry_type preserved_entries[__LP_TEST_SLAB_ENTRIES_PER_SLAB] = {0};                                                                    \
@@ -58,7 +58,7 @@ void test_slab_##entry_type##_random_alloc_free()                               
         bool entries_valid = true;                                                                                                          \
         for(size_t entry_j = 0; entry_j <= entry_i; ++entry_j)                                                                              \
             entries_valid &= *entries[entry_j] == preserved_entries[entry_j];                                                               \
-        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency at initial population at entry %ld",entry_i);                  \
+        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency at initial population at entry %zd",entry_i);                  \
     }                                                                                                                                       \
     for(size_t i = 0; i < __LP_TEST_SLAB_ENTRIES_PER_SLAB/2; ++i)                                                                           \
     {                                                                                                                                       \
@@ -72,7 +72,7 @@ void test_slab_##entry_type##_random_alloc_free()                               
         bool entries_valid = true;                                                                                                          \
         for(size_t entry_j = 0; entry_j < __LP_TEST_SLAB_ENTRIES_PER_SLAB; ++entry_j)                                                       \
             entries_valid &= !entries[entry_j] || *entries[entry_j] == preserved_entries[entry_j];                                          \
-        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on purge phase at entry %ld, iteration %ld",entry_i,i);        \
+        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on purge phase at entry %zd, iteration %zd",entry_i,i);        \
     }                                                                                                                                       \
     for(size_t case_i = 0; case_i < __LP_TEST_SLAB_CASES_PER_TEST; ++case_i)                                                                \
     {                                                                                                                                       \
@@ -94,7 +94,7 @@ void test_slab_##entry_type##_random_alloc_free()                               
         bool entries_valid = true;                                                                                                          \
         for(size_t entry_j = 0; entry_j < __LP_TEST_SLAB_ENTRIES_PER_SLAB; ++entry_j)                                                       \
             entries_valid &= !entries[entry_j] || *entries[entry_j] == preserved_entries[entry_j];                                          \
-        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on random phase at entry %ld in case %ld",entry_i,case_i);     \
+        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on random phase at entry %zd in case %zd",entry_i,case_i);     \
     }                                                                                                                                       \
     for(size_t entry_i = 0; entry_i < __LP_TEST_SLAB_ENTRIES_PER_SLAB; ++entry_i)                                                           \
     {                                                                                                                                       \
@@ -107,7 +107,7 @@ void test_slab_##entry_type##_random_alloc_free()                               
         bool entries_valid = true;                                                                                                          \
         for(size_t entry_j = 0; entry_j < __LP_TEST_SLAB_ENTRIES_PER_SLAB; ++entry_j)                                                       \
             entries_valid &= !entries[entry_j] || *entries[entry_j] == preserved_entries[entry_j];                                          \
-        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on clean-up phase at entry %ld",entry_i);                      \
+        LP_TEST_ASSERT(slab_valid && entries_valid,"Slab memory inconsitency on clean-up phase at entry %zd",entry_i);                      \
     }                                                                                                                                       \
     lp_test_cleanup:                                                                                                                        \
     lp_slab_release(slab);                                                                                                                  \

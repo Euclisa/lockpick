@@ -121,16 +121,16 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
     strcpy(graph->name,name);
 
     lp_slab_t *slab = lp_slab_create(max_nodes,sizeof(lpg_node_t));
-    affirmf(slab,"Failed to create slab for %ld nodes",max_nodes);
+    affirmf(slab,"Failed to create slab for %zd nodes",max_nodes);
     __lpg_graph_set_slab(graph,slab);
     __lpg_graph_set_super(graph,true);
 
     graph->inputs = (lpg_node_t**)malloc(sizeof(lpg_node_t*)*inputs_size);
-    affirmf(graph->inputs,"Failed to allocate space for input %ld input nodes",inputs_size);
+    affirmf(graph->inputs,"Failed to allocate space for input %zd input nodes",inputs_size);
     graph->inputs_size = inputs_size;
 
     graph->outputs = (lpg_node_t**)calloc(outputs_size,sizeof(lpg_node_t*));
-    affirmf(graph->outputs,"Failed to allocate space for input %ld input nodes",outputs_size);
+    affirmf(graph->outputs,"Failed to allocate space for input %zd input nodes",outputs_size);
     graph->outputs_size = outputs_size;
 
     for(size_t in_i = 0; in_i < inputs_size; ++in_i)
