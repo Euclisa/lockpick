@@ -79,9 +79,9 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
 void lpg_graph_release(lpg_graph_t *graph);
 void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
-typedef void (*__lpg_traverse_cb_t)(lpg_graph_t *graph, lpg_node_t *node, void *args);
-void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args);
-void lpg_graph_traverse(lpg_graph_t *graph, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args);
+typedef void (*lpg_traverse_cb_t)(lpg_graph_t *graph, lpg_node_t *node, void *args);
+void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args);
+void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args);
 
 void lpg_graph_compute(lpg_graph_t *graph);
 

@@ -4,6 +4,7 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/bits/*.c"
         "${CMAKE_SOURCE_DIR}/tests/list/*.c"
         "${CMAKE_SOURCE_DIR}/tests/math/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/ndarray/*.c"
         "${CMAKE_SOURCE_DIR}/tests/rb_tree/*.c"
         "${CMAKE_SOURCE_DIR}/tests/slab/*.c"
         "${CMAKE_SOURCE_DIR}/tests/uint/*.c"

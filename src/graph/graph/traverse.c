@@ -48,19 +48,24 @@ bool __lpg_graph_nodes_ht_eq(const lpg_node_t **a, const lpg_node_t **b)
 
 
 /**
- * __lpg_graph_traverse_node - Internal graph DFS traversal 
- * @graph: Graph object  
- * @node: Starting node for traversal   
- * @enter_cb: Callback on first reaching node
- * @enter_args: Optional enter callback arguments
- * @leave_cb: Callback on second reach of node
- * @leave_args: Optional leave callback arguments
+ * __lpg_graph_traverse_node - internal graph DFS traversal 
+ * @graph:          graph object
+ * @node:           starting node for traversal
+ * @visited:        hash-table with visited nodes
+ * @inputs:         hash-table with input nodes
+ * @enter_cb:       callback on first reaching node
+ * @enter_args:     optional enter callback arguments
+ * @leave_cb:       callback on second reach of node
+ * @leave_args:     optional leave callback arguments
  *
  * Performs a Depth First Search (DFS) traversal of @graph starting  
- * at @node, invoking the given @enter_cb and @leave_cb along branches.
+ * at @node, invoking the given @enter_cb and @leave_cb along branches,
+ * and storing visited nodes inside @visited.
  * 
- * Traversal ends at constant nodes or graph input nodes. Input nodes
- * may have parents but they will not be visited via DFS.
+ * Nodes which reside in @visited will not be visited onward.
+ * 
+ * Traversal ends at constant nodes or graph input nodes, specified in @inputs.
+ * Input nodes may have parents but they will not be visited via DFS.
  *
  * On first reaching a node, @enter_cb is invoked, then node is scheduled
  * for traverse for the second time after all parent subtrees are traversed.
@@ -71,7 +76,7 @@ bool __lpg_graph_nodes_ht_eq(const lpg_node_t **a, const lpg_node_t **b)
  *
  * Return: None 
 */
-void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t *visited, lp_htable_t *inputs, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args)
+void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t *visited, lp_htable_t *inputs, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args)
 {
     __lp_node_stack_t *stack = NULL;
     __lpg_node_stack_push(&stack,node);
@@ -111,7 +116,28 @@ void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t
 }
 
 
-void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args)
+/**
+ * lpg_graph_traverse_node - DFS traversal of graph from specified node
+ * @graph:          graph object
+ * @node:           starting node for traversal
+ * @enter_cb:       callback on first reaching node
+ * @enter_args:     optional enter callback arguments
+ * @leave_cb:       callback on second reach of node
+ * @leave_args:     optional leave callback arguments
+ *
+ * Performs a Depth First Search (DFS) traversal of @graph starting  
+ * at @node, invoking the given @enter_cb and @leave_cb along branches.
+ * 
+ * Traversal ends at constant nodes or graph input nodes.
+ * Input nodes may have parents but they will not be visited via DFS.
+ *
+ * On first reaching a node, @enter_cb is invoked, then node is scheduled
+ * for traverse for the second time after all parent subtrees are traversed.
+ * On second reach, @leave_cb is invoked. Callbacks pass graph, node, args.
+ *
+ * Return: None 
+*/
+void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args)
 {
     lp_htable_t *visited = lp_htable_create(
         1,
@@ -138,7 +164,30 @@ void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, __lpg_travers
 }
 
 
-void lpg_graph_traverse(lpg_graph_t *graph, __lpg_traverse_cb_t enter_cb, void *enter_cb_args, __lpg_traverse_cb_t leave_cb, void *leave_cb_args)
+/**
+ * lpg_graph_traverse - DFS traversal of graph from its output nodes
+ * @graph:          graph object
+ * @enter_cb:       callback on first reaching node
+ * @enter_args:     optional enter callback arguments
+ * @leave_cb:       callback on second reach of node
+ * @leave_args:     optional leave callback arguments
+ *
+ * Performs a Depth First Search (DFS) traversal of @graph starting  
+ * at its output nodes, invoking the given @enter_cb and @leave_cb along branches.
+ * 
+ * Every node of @graph is accessed once regardless it reachability from multiple
+ * output nodes simultaneously.
+ * 
+ * Traversal ends at constant nodes or graph input nodes.
+ * Input nodes may have parents but they will not be visited via DFS.
+ *
+ * On first reaching a node, @enter_cb is invoked, then node is scheduled
+ * for traverse for the second time after all parent subtrees are traversed.
+ * On second reach, @leave_cb is invoked. Callbacks pass graph, node, args.
+ *
+ * Return: None 
+*/
+void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args)
 {
     lp_htable_t *visited = lp_htable_create(
         1,
