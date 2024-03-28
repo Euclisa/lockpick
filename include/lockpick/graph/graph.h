@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <lockpick/list.h>
+#include <lockpick/dlist.h>
 #include <lockpick/define.h>
 #include <lockpick/slab.h>
 

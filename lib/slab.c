@@ -9,14 +9,14 @@
  * @head:       pointer on address where current free blocks list's head is located
  * @entry:       pointer on the entry to be removed
  * 
- * Wrapper function for general list api 'lp_list_remove'.
+ * Wrapper function for general list api 'lp_dlist_remove'.
  * 
  * Returns nothing.
 */
 static inline void __lp_slab_block_list_remove(__lp_slab_block_list_t **head, __lp_slab_block_list_t *entry)
 {
-    lp_list_t *old_head = &(*head)->__node;
-    lp_list_remove(&old_head,&entry->__node);
+    lp_dlist_t *old_head = &(*head)->__node;
+    lp_dlist_remove(&old_head,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
 }
 
@@ -27,14 +27,14 @@ static inline void __lp_slab_block_list_remove(__lp_slab_block_list_t **head, __
  * @position:       pointer on an entry before which to perform insertion
  * @entry:          pointer on the entry to be inserted before 'position'
  * 
- * Wrapper function for general list api 'lp_list_insert_before'.
+ * Wrapper function for general list api 'lp_dlist_insert_before'.
  * 
  * Returns nothing.
 */
 static inline void __lp_slab_block_list_insert_before(__lp_slab_block_list_t **head, __lp_slab_block_list_t *position, __lp_slab_block_list_t *entry)
 {
-    lp_list_t *old_head = &(*head)->__node;
-    lp_list_insert_before(&old_head,&position->__node,&entry->__node);
+    lp_dlist_t *old_head = &(*head)->__node;
+    lp_dlist_insert_before(&old_head,&position->__node,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
 }
 
@@ -45,14 +45,14 @@ static inline void __lp_slab_block_list_insert_before(__lp_slab_block_list_t **h
  * @position:       pointer on an entry after which to perform insertion
  * @entry:          pointer on the entry to be inserted after 'position'
  * 
- * Wrapper function for general list api 'lp_list_insert_after'.
+ * Wrapper function for general list api 'lp_dlist_insert_after'.
  * 
  * Returns nothing.
 */
 static inline void __lp_slab_block_list_insert_after(__lp_slab_block_list_t **head, __lp_slab_block_list_t *position, __lp_slab_block_list_t *entry)
 {
-    lp_list_t *old_head = &(*head)->__node;
-    lp_list_insert_after(&old_head,&position->__node,&entry->__node);
+    lp_dlist_t *old_head = &(*head)->__node;
+    lp_dlist_insert_after(&old_head,&position->__node,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
 }
 
@@ -62,14 +62,14 @@ static inline void __lp_slab_block_list_insert_after(__lp_slab_block_list_t **he
  * @head:           pointer on address where current list's head is located
  * @entry:          pointer on the entry to be inserted at the end
  * 
- * Wrapper function for general list api 'lp_list_push_back'.
+ * Wrapper function for general list api 'lp_dlist_push_back'.
  * 
  * Returns nothing.
 */
 static inline void __lp_slab_block_list_push_back(__lp_slab_block_list_t **head, __lp_slab_block_list_t *entry)
 {
-    lp_list_t *old_head = *head ? &(*head)->__node : NULL;
-    lp_list_push_back(&old_head,&entry->__node);
+    lp_dlist_t *old_head = *head ? &(*head)->__node : NULL;
+    lp_dlist_push_back(&old_head,&entry->__node);
     *head = __lp_slab_block_list_container(old_head);
 }
 
@@ -169,7 +169,7 @@ void *lp_slab_alloc(lp_slab_t *slab)
  * 
  * Returns true if pointer is less or equal to the base of 'fb_list_entry'
 */
-static inline bool __lp_check_ptr_before_block(const void *ptr, const lp_list_t *block_list_entry)
+static inline bool __lp_check_ptr_before_block(const void *ptr, const lp_dlist_t *block_list_entry)
 {
     __lp_slab_block_list_t *current_block = container_of(block_list_entry,__lp_slab_block_list_t,__node);
 
@@ -227,17 +227,17 @@ static inline void __lp_slab_block_list_merge_unit_diff(__lp_slab_block_list_t *
     affirmf_debug(*head != second,"Attempt to change head during adjacent list entries merge");
     affirmf_debug(first->__node.next == &second->__node && second->__node.prev == &first->__node,"Attempt to merge non-adjacent list entries");
 
-    lp_list_t *first_l = &first->__node;
-    lp_list_t *second_l = &second->__node;
-    lp_list_t *old_head = &(*head)->__node;
+    lp_dlist_t *first_l = &first->__node;
+    lp_dlist_t *second_l = &second->__node;
+    lp_dlist_t *old_head = &(*head)->__node;
 
     __lp_slab_block_list_t *merge_block = (__lp_slab_block_list_t*)malloc(sizeof(__lp_slab_block_list_t));
     merge_block->__block_size = first->__block_size + second->__block_size + 1;
     merge_block->__base = first->__base;
 
-    lp_list_insert_after(&old_head,&second->__node,&merge_block->__node);
-    lp_list_remove(&old_head,first_l);
-    lp_list_remove(&old_head,second_l);
+    lp_dlist_insert_after(&old_head,&second->__node,&merge_block->__node);
+    lp_dlist_remove(&old_head,first_l);
+    lp_dlist_remove(&old_head,second_l);
 
     free(first);
     free(second);
@@ -279,7 +279,7 @@ void lp_slab_free(lp_slab_t *slab, void *ptr)
         return;
     }
 
-    lp_list_t *current_fb_l = &slab->__fb_head->__node;
+    lp_dlist_t *current_fb_l = &slab->__fb_head->__node;
 
     while(!__lp_check_ptr_before_block(ptr,current_fb_l) && current_fb_l->next != &slab->__fb_head->__node)
         current_fb_l = current_fb_l->next;

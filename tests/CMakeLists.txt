@@ -2,6 +2,7 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/*.c"
         "${CMAKE_SOURCE_DIR}/tests/htable/*.c"
         "${CMAKE_SOURCE_DIR}/tests/bits/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/dlist/*.c"
         "${CMAKE_SOURCE_DIR}/tests/list/*.c"
         "${CMAKE_SOURCE_DIR}/tests/math/*.c"
         "${CMAKE_SOURCE_DIR}/tests/ndarray/*.c"
@@ -16,7 +17,7 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/graph/types/uint/*.c")
 file(GLOB TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/tests/")
 
-set(UNIT_TEST_FLAGS -fsanitize=address -fsanitize=undefined)
+set(UNIT_TEST_FLAGS -fsanitize=address,undefined)
 set(STRESS_TEST_FLAGS -O3)
 
 add_executable(lockpick_unit_tests ${SOURCES} ${LIB_SOURCES} ${TEST_SOURCES} ${ARCH_SOURCES})
@@ -34,4 +35,4 @@ target_link_libraries(lockpick_stress_tests m)
 target_link_libraries(lockpick_stress_tests ${UNWIND_LIB})
 
 add_subdirectory(uint)
-add_subdirectory(list)
+add_subdirectory(dlist)

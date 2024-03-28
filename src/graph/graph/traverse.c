@@ -1,6 +1,6 @@
 #include <lockpick/graph/graph.h>
 #include <lockpick/affirmf.h>
-#include <lockpick/list.h>
+#include <lockpick/dlist.h>
 #include <lockpick/container_of.h>
 #include <lockpick/htable.h>
 #include <lockpick/utility.h>
@@ -8,7 +8,7 @@
 
 typedef struct __lp_node_stack
 {
-    lp_list_t __list;
+    lp_dlist_t __list;
     lpg_node_t *node;
 } __lp_node_stack_t;
 
@@ -17,8 +17,8 @@ static inline bool __lpg_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *
 {
     __lp_node_stack_t *entry = (__lp_node_stack_t*)malloc(sizeof(__lp_node_stack_t));
     entry->node = node;
-    lp_list_t *old_head = *stack ? &(*stack)->__list : NULL;
-    lp_list_push_front(&old_head,&entry->__list);
+    lp_dlist_t *old_head = *stack ? &(*stack)->__list : NULL;
+    lp_dlist_push_front(&old_head,&entry->__list);
     
     *stack = container_of(old_head,__lp_node_stack_t,__list);
 
@@ -27,9 +27,9 @@ static inline bool __lpg_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *
 
 static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 {
-    lp_list_t *old_head = &(*stack)->__list;
+    lp_dlist_t *old_head = &(*stack)->__list;
     __lp_node_stack_t *top = (*stack);
-    lp_list_remove(&old_head,&(*stack)->__list);
+    lp_dlist_remove(&old_head,&(*stack)->__list);
 
     *stack = container_of(old_head,__lp_node_stack_t,__list);
     free(top);
@@ -216,4 +216,11 @@ void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *en
 
     lp_htable_release(visited);
     lp_htable_release(inputs);
+}
+
+
+
+void lpg_graph_traverse_once(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
+{
+
 }

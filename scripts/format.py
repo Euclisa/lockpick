@@ -23,7 +23,7 @@ def add_escapes(lines_range: str, file_path: str):
     
     max_line_length = 0
     for i in range(start_line,end_line+1):
-        content[i] = content[i].rstrip("\n \t")
+        content[i] = content[i].rstrip("\n\t\\ ")
         length = len(content[i])
         if length > max_line_length:
             max_line_length = length

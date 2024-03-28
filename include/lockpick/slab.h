@@ -1,7 +1,7 @@
 #ifndef _LOCKPICK_SLAB_H
 #define _LOCKPICK_SLAB_H
 
-#include <lockpick/list.h>
+#include <lockpick/dlist.h>
 #include <stddef.h>
 
 /**
@@ -9,7 +9,7 @@
 */
 typedef struct __lp_slab_block_list
 {
-    lp_list_t __node;
+    lp_dlist_t __node;
     size_t __block_size;
     void *__base;
 } __lp_slab_block_list_t;
@@ -37,6 +37,6 @@ void lp_slab_free(lp_slab_t *slab, void *node_ptr);
 void lp_slab_exec(lp_slab_t *slab, void (*callback)(void *entry_ptr, void *args), void *args);
 
 #define lp_slab_foreach_fb(slab,fb)     \
-        lp_list_foreach(&(slab)->__fb_head->__node,fb,__lp_slab_block_list_t,__node);
+        lp_dlist_foreach(&(slab)->__fb_head->__node,fb,__lp_slab_block_list_t,__node);
 
 #endif // _LOCKPICK_GRAPH_NODE_H
