@@ -65,7 +65,7 @@ struct lpg_graph
     size_t inputs_size;
     lpg_node_t **outputs;
     size_t outputs_size;
-    size_t __max_nodes;
+    size_t max_nodes;
 };
 
 lp_slab_t *__lpg_graph_slab(const lpg_graph_t *graph);

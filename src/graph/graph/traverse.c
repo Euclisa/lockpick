@@ -1,33 +1,35 @@
 #include <lockpick/graph/graph.h>
 #include <lockpick/affirmf.h>
-#include <lockpick/dlist.h>
+#include <lockpick/list.h>
 #include <lockpick/container_of.h>
 #include <lockpick/htable.h>
 #include <lockpick/utility.h>
+#include <lockpick/affinity.h>
+#include <lockpick/sync/spinlock_bitset.h>
+#include <lockpick/sync/visit_table.h>
+#include <pthread.h>
 
 
 typedef struct __lp_node_stack
 {
-    lp_dlist_t __list;
+    lp_list_t __list;
     lpg_node_t *node;
 } __lp_node_stack_t;
 
 
-static inline bool __lpg_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *node)
+static inline void __lpg_node_stack_push(__lp_node_stack_t **stack, lpg_node_t *node)
 {
     __lp_node_stack_t *entry = (__lp_node_stack_t*)malloc(sizeof(__lp_node_stack_t));
     entry->node = node;
-    lp_dlist_t *old_head = *stack ? &(*stack)->__list : NULL;
-    lp_dlist_push_front(&old_head,&entry->__list);
+    lp_list_t *old_head = *stack ? &(*stack)->__list : NULL;
+    lp_list_push_head(&old_head,&entry->__list);
     
     *stack = container_of(old_head,__lp_node_stack_t,__list);
-
-    return true;
 }
 
 static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 {
-    lp_dlist_t *old_head = &(*stack)->__list;
+    lp_list_t *old_head = &(*stack)->__list;
     __lp_node_stack_t *top = (*stack);
     lp_dlist_remove(&old_head,&(*stack)->__list);
 
@@ -36,12 +38,12 @@ static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 }
 
 
-size_t __lpg_graph_nodes_ht_hsh(const lpg_node_t **node)
+size_t __lpg_graph_nodes_hsh(const lpg_node_t **node)
 {
     return lp_uni_hash((size_t)(*node));
 }
 
-bool __lpg_graph_nodes_ht_eq(const lpg_node_t **a, const lpg_node_t **b)
+bool __lpg_graph_nodes_eq(const lpg_node_t **a, const lpg_node_t **b)
 {
     return *a == *b;
 }
@@ -139,19 +141,22 @@ void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t
 */
 void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args)
 {
+    affirm_nullptr(graph,"graph");
+    affirm_nullptr(node,"node");
+
     lp_htable_t *visited = lp_htable_create(
         1,
         sizeof(lpg_node_t*),
-        (size_t (*)(const void *))__lpg_graph_nodes_ht_hsh,
-        (bool (*)(const void *,const void *))__lpg_graph_nodes_ht_eq);
+        (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+        (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
     // Input nodes buffer size is a lower bound for final visited htable size
     lp_htable_rehash(visited,graph->inputs_size);
 
     lp_htable_t *inputs = lp_htable_create(
             1,
             sizeof(lpg_node_t*),
-            (size_t (*)(const void *))__lpg_graph_nodes_ht_hsh,
-            (bool (*)(const void *,const void *))__lpg_graph_nodes_ht_eq);
+            (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+            (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
     lp_htable_rehash(inputs,graph->inputs_size);
 
     for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
@@ -189,19 +194,21 @@ void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_
 */
 void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args)
 {
+    affirm_nullptr(graph,"graph");
+
     lp_htable_t *visited = lp_htable_create(
         1,
         sizeof(lpg_node_t*),
-        (size_t (*)(const void *))__lpg_graph_nodes_ht_hsh,
-        (bool (*)(const void *,const void *))__lpg_graph_nodes_ht_eq);
+        (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+        (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
     // Input nodes buffer size is a lower bound for final visited htable size
     lp_htable_rehash(visited,MAX(1,graph->inputs_size));
 
     lp_htable_t *inputs = lp_htable_create(
             1,
             sizeof(lpg_node_t*),
-            (size_t (*)(const void *))__lpg_graph_nodes_ht_hsh,
-            (bool (*)(const void *,const void *))__lpg_graph_nodes_ht_eq);
+            (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+            (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
     lp_htable_rehash(inputs,MAX(1,graph->inputs_size));
 
     for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
@@ -216,11 +223,4 @@ void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *en
 
     lp_htable_release(visited);
     lp_htable_release(inputs);
-}
-
-
-
-void lpg_graph_traverse_once(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
-{
-
 }

@@ -2,6 +2,7 @@
 #define _LOCKPICK_LOCKPICK_H
 
 #include <lockpick/sync/exit.h>
+#include <lockpick/affinity.h>
 
 
 void lp_init();
