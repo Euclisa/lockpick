@@ -1,0 +1,59 @@
+#include <lockpick/test.h>
+#include <lockpick/graph/graph.h>
+#include <lockpick/graph/types/uint.h>
+#include <stdio.h>
+
+#define __LPG_TEST_COUNT_MAX_GRAPH_NODES 100000
+
+
+static void __lpg_graph_nodes_count_cb(lpg_graph_t *graph, lpg_node_t *node, void *args)
+{
+    _Atomic size_t *count = args;
+    ++(*count);
+}
+
+size_t __lpg_graph_nodes_count_true(lpg_graph_t *graph)
+{
+    size_t count = 0;
+    lpg_graph_traverse(graph,__lpg_graph_nodes_count_cb,&count,NULL,NULL);
+
+    return count;
+}
+
+
+void __test_graph_count_nodes(size_t in_width, size_t out_width)
+{
+    lpg_graph_t *graph = lpg_graph_create("test",in_width,out_width,__LPG_TEST_COUNT_MAX_GRAPH_NODES);
+    lpg_uint_t *uint_a = lpg_uint_allocate_as_buffer_view(graph,graph->inputs,in_width/2);
+    lpg_uint_t *uint_b = lpg_uint_allocate_as_buffer_view(graph,graph->inputs+in_width/2,in_width/2);
+    lpg_uint_t *uint_res = lpg_uint_allocate_as_buffer_view(graph,graph->outputs,out_width);
+    lpg_uint_mul(uint_a,uint_b,uint_res);
+
+    size_t nodes_num_true = __lpg_graph_nodes_count_true(graph);
+    size_t node_num_test = lpg_graph_nodes_count(graph);
+
+    LP_TEST_ASSERT(true,
+        "For in_width: %zd, out_width: %zd, expected: %zd, got: %zd",in_width,out_width,nodes_num_true,node_num_test);
+    
+    lp_test_cleanup:
+    lpg_graph_release(graph);
+    lpg_uint_release(uint_a);
+    lpg_uint_release(uint_b);
+    lpg_uint_release(uint_res);
+}
+
+void test_graph_count_nodes(size_t tests_num)
+{
+    for(size_t test_i = 0; test_i < tests_num; ++test_i)
+        for(size_t in_width = 2; in_width <= 18; in_width += 2)
+            for(size_t out_width = 1; out_width <= in_width; ++out_width)
+                LP_TEST_STEP_INTO(__test_graph_count_nodes(in_width,out_width));
+    
+    lp_test_cleanup:
+}
+
+
+void lp_test_graph_count()
+{
+    LP_TEST_RUN(test_graph_count_nodes(20));
+}

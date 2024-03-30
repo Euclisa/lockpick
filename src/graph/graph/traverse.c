@@ -31,19 +31,19 @@ static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 {
     lp_list_t *old_head = &(*stack)->__list;
     __lp_node_stack_t *top = (*stack);
-    lp_dlist_remove(&old_head,&(*stack)->__list);
+    lp_list_remove_head(&old_head);
 
     *stack = container_of(old_head,__lp_node_stack_t,__list);
     free(top);
 }
 
 
-size_t __lpg_graph_nodes_hsh(const lpg_node_t **node)
+static size_t __lpg_graph_nodes_hsh(const lpg_node_t **node)
 {
     return lp_uni_hash((size_t)(*node));
 }
 
-bool __lpg_graph_nodes_eq(const lpg_node_t **a, const lpg_node_t **b)
+static bool __lpg_graph_nodes_eq(const lpg_node_t **a, const lpg_node_t **b)
 {
     return *a == *b;
 }

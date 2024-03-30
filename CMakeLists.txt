@@ -14,6 +14,7 @@ include_directories(include)
 file(GLOB SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/src/graph/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/graph/*.c"
+        "${CMAKE_SOURCE_DIR}/src/graph/graph/properties/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/functions/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/types/*.c")
 file(GLOB LIB_SOURCES CMAKE_CONFIGURE_DEPENDS
@@ -23,7 +24,7 @@ file(GLOB ARCH_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/arch/x86_64/*.c"
         "${CMAKE_SOURCE_DIR}/arch/x86_64/sync/*.c")
 
-find_library(UNWIND_LIB REQUIRED unwind)
+find_library(UNWIND_LIB REQUIRED NAMES unwind)
 
 file(GLOB LOCKPICK_INCLUDE_DIR "${CMAKE_SOURCE_DIR/include}")
 

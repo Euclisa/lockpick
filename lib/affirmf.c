@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <libunwind.h>
+#include <errno.h>
+#include <string.h>
 
 
 pthread_mutex_t __err_lock;
@@ -38,7 +40,7 @@ static inline void __no_return __verrorf(const char *format, const char *base_ms
     if(format)
         vsnprintf(msg,sizeof(msg),format,args);
 
-    fprintf(stderr,"\n%s:%ld: %s in function: '%s'. Details: '%s'. Bailing out...\n\n",file_str,line_num,base_msg,func_str,msg);
+    fprintf(stderr,"\n%s:%ld: %s in function: '%s'. Details: '%s'. Errno: '%s' Bailing out...\n\n",file_str,line_num,base_msg,func_str,msg,strerror(errno));
     fprintf(stderr,"Backtrace:\n");
     __print_backtrace(2);
     lp_exit();

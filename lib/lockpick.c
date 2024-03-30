@@ -1,4 +1,5 @@
 #include <lockpick/lockpick.h>
+#include <lockpick/affirmf.h>
 
 
 void lp_init()

@@ -205,23 +205,6 @@ void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node)
 }
 
 
-inline size_t lpg_graph_nodes_count(lpg_graph_t *graph)
-{
-    affirm_nullptr(graph,"graph");
-
-    lp_slab_t *slab = __lpg_graph_slab(graph);
-    return slab->__total_entries - slab->__total_free;
-}
-
-
-inline size_t lpg_graph_operators_count(lpg_graph_t *graph)
-{
-    affirm_nullptr(graph,"graph");
-
-    return lpg_graph_nodes_count(graph) - graph->inputs_size;
-}
-
-
 inline bool __lpg_graph_is_native_node(const lpg_graph_t *graph, const lpg_node_t *node)
 {
     const lp_slab_t *slab = __lpg_graph_slab(graph);
