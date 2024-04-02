@@ -2,7 +2,7 @@
 #include <lockpick/affirmf.h>
 
 
-void __lpg_graph_compute_node_cb(lpg_graph_t *graph, lpg_node_t *node, void *args)
+void __lpg_graph_compute_node_cb(lpg_graph_t *graph, lpg_node_t *node, bool is_input, void *args)
 {
     lpg_node_t **parents = lpg_node_parents(node);
     bool node_value;

@@ -15,6 +15,7 @@ file(GLOB SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/src/graph/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/graph/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/graph/properties/*.c"
+        "${CMAKE_SOURCE_DIR}/src/graph/graph/traverse/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/functions/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/types/*.c")
 file(GLOB LIB_SOURCES CMAKE_CONFIGURE_DEPENDS

@@ -9,12 +9,14 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/rb_tree/*.c"
         "${CMAKE_SOURCE_DIR}/tests/slab/*.c"
         "${CMAKE_SOURCE_DIR}/tests/uint/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/vector/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/spinlock_bitset/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/lock_graph/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/shtable/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/visit_table/*.c"
         "${CMAKE_SOURCE_DIR}/tests/sync/*.c"
         "${CMAKE_SOURCE_DIR}/tests/graph/types/uint/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/graph/graph/tsort/*.c"
         "${CMAKE_SOURCE_DIR}/tests/graph/graph/properties/count/*.c")
 file(GLOB TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/tests/")
 

@@ -4,8 +4,8 @@
 
 static inline bool __lpg_node_is_child_of(const lpg_node_t *node, const lpg_node_t *parent)
 {
-    for(size_t child_i = 0; child_i < parent->children_size; ++child_i)
-        if(parent->children[child_i] == node)
+    for(size_t child_i = 0; child_i < lpg_node_get_children_num(parent); ++child_i)
+        if(lp_vector_at_type(parent->children,child_i,lpg_node_t*) == node)
             return true;
     return false;
 }
@@ -18,10 +18,7 @@ void __lpg_node_record_child(lpg_node_t *parent, lpg_node_t *child)
                     "Please verify all parent node pointers are populated prior to this operation.");
     affirmf_debug(!__lpg_node_is_child_of(child,parent),"Specified node is already a child of this parent node");
 
-    parent->children = (lpg_node_t**)realloc(parent->children,(parent->children_size+1)*sizeof(lpg_node_t*));
-    affirmf(parent->children,"Failed to allocate space for a new child");
-    parent->children[parent->children_size] = child;
-    ++parent->children_size;
+    lp_vector_push_back(parent->children,&child);
 }
 
 
@@ -36,8 +33,7 @@ void __lpg_node_init(lpg_node_t *node)
 
     __lpg_node_set_parents(node,parents_ptr);
 
-    node->children_size = 0;
-    node->children = NULL;
+    node->children = lp_vector_create(0,sizeof(lpg_node_t*));
 }
 
 

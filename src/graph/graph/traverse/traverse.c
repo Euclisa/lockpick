@@ -38,17 +38,6 @@ static inline void __lpg_node_stack_pop(__lp_node_stack_t **stack)
 }
 
 
-static size_t __lpg_graph_nodes_hsh(const lpg_node_t **node)
-{
-    return lp_uni_hash((size_t)(*node));
-}
-
-static bool __lpg_graph_nodes_eq(const lpg_node_t **a, const lpg_node_t **b)
-{
-    return *a == *b;
-}
-
-
 /**
  * __lpg_graph_traverse_node - internal graph DFS traversal 
  * @graph:          graph object
@@ -88,15 +77,17 @@ void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t
         lpg_node_t *curr_node = stack->node;
         __lpg_node_stack_pop(&stack);
 
+        bool is_input = lp_htable_find(inputs,&curr_node,NULL);
+
         if(!lp_htable_find(visited,&curr_node,NULL))
         {
             lp_htable_insert(visited,&curr_node);
             __lpg_node_stack_push(&stack,curr_node);
 
             if(enter_cb)
-                enter_cb(graph,curr_node,enter_cb_args);
+                enter_cb(graph,curr_node,is_input,enter_cb_args);
 
-            if(!lp_htable_find(inputs,&curr_node,NULL))
+            if(!is_input)
             {
                 uint16_t curr_node_parents_num = lpg_node_get_parents_num(curr_node);
                 lpg_node_t **curr_node_parents = lpg_node_parents(curr_node);
@@ -112,7 +103,7 @@ void __lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t
         else
         {
             if(leave_cb)
-                leave_cb(graph,curr_node,leave_cb_args);
+                leave_cb(graph,curr_node,is_input,leave_cb_args);
         }
     }
 }
@@ -195,6 +186,7 @@ void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_
 void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args)
 {
     affirm_nullptr(graph,"graph");
+    affirmf(enter_cb || leave_cb,"Either leave or enter callback must be specified");
 
     lp_htable_t *visited = lp_htable_create(
         1,

@@ -113,11 +113,40 @@ void test_slab_##entry_type##_random_alloc_free()                               
     lp_slab_release(slab);                                                                                                                  \
 }
 
+#define TEST_SLAB_EXEC(entry_type)                                                                                                          \
+void __slab_exec_cb_##entry_type(void *entry_ptr, void *args)                                                                               \
+{                                                                                                                                           \
+    uint32_t *counter = args;                                                                                                               \
+    entry_type *entry = entry_ptr;                                                                                                          \
+    *counter += *entry;                                                                                                                     \
+}                                                                                                                                           \
+void test_slab_exec_##entry_type()                                                                                                          \
+{                                                                                                                                           \
+    lp_slab_t *slab = lp_slab_create(__LP_TEST_SLAB_ENTRIES_PER_SLAB,sizeof(entry_type));                                                   \
+    entry_type *elements[__LP_TEST_SLAB_ENTRIES_PER_SLAB];                                                                                  \
+    for(uint32_t i = 0; i < __LP_TEST_SLAB_ENTRIES_PER_SLAB; ++i)                                                                           \
+    {                                                                                                                                       \
+        elements[i] = lp_slab_alloc(slab);                                                                                                  \
+        *elements[i] = 1;                                                                                                                   \
+    }                                                                                                                                       \
+    uint32_t counter = 0;                                                                                                                   \
+    lp_slab_exec(slab,__slab_exec_cb_##entry_type,&counter);                                                                                \
+    LP_TEST_ASSERT(counter == __LP_TEST_SLAB_ENTRIES_PER_SLAB,                                                                              \
+    "Expected counter: %ld, got: %ld",(long)__LP_TEST_SLAB_ENTRIES_PER_SLAB,(long)counter);                                                 \
+    lp_test_cleanup:                                                                                                                        \
+    lp_slab_release(slab);                                                                                                                  \
+}
+
 
 TEST_SLAB_RANDOM_ALLOC_FREE(uint64_t)
 TEST_SLAB_RANDOM_ALLOC_FREE(uint32_t)
 TEST_SLAB_RANDOM_ALLOC_FREE(uint16_t)
 TEST_SLAB_RANDOM_ALLOC_FREE(uint8_t)
+
+TEST_SLAB_EXEC(uint64_t)
+TEST_SLAB_EXEC(uint32_t)
+TEST_SLAB_EXEC(uint16_t)
+TEST_SLAB_EXEC(uint8_t)
 
 
 void lp_test_slab()
@@ -126,4 +155,9 @@ void lp_test_slab()
     LP_TEST_RUN(test_slab_uint32_t_random_alloc_free());
     LP_TEST_RUN(test_slab_uint16_t_random_alloc_free());
     LP_TEST_RUN(test_slab_uint8_t_random_alloc_free());
+    
+    LP_TEST_RUN(test_slab_exec_uint64_t());
+    LP_TEST_RUN(test_slab_exec_uint32_t());
+    LP_TEST_RUN(test_slab_exec_uint16_t());
+    LP_TEST_RUN(test_slab_exec_uint8_t());
 }

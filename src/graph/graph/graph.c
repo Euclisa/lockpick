@@ -1,6 +1,9 @@
 #include <lockpick/graph/graph.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/container_of.h>
+#include <lockpick/utility.h>
+#include <lockpick/htable.h>
+#include <lockpick/vector.h>
 #include <string.h>
 
 
@@ -153,7 +156,7 @@ static inline void __lpg_graph_release_slab_callback(void *entry_ptr, void *args
 {
     lpg_node_t *node = (lpg_node_t*)entry_ptr;
     
-    __lpg_node_release(node);
+    __lpg_node_release_internals(node);
 }
 
 /**
@@ -199,9 +202,67 @@ void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node)
     affirm_nullptr(node,"node");
     affirmf(__lpg_graph_is_native_node(graph,node),"Specified node does not belong to the given graph");
 
+    size_t children_num = lpg_node_get_children_num(node);
+    affirmf(children_num == 0,"Expected node with zero children, got: %d",children_num);
+
+    size_t black_list_size = graph->inputs_size+graph->outputs_size;
+    lp_htable_t *release_black_list = lp_htable_create_el_num(
+            MAX(1,black_list_size),
+            sizeof(lpg_node_t*),
+            lp_htable_cast_hsh(__lpg_graph_nodes_hsh),
+            lp_htable_cast_eq(__lpg_graph_nodes_eq));
+    
+    for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
+        lp_htable_insert(release_black_list,&graph->inputs[in_node_i]);
+
+    for(size_t out_node_i = 0; out_node_i < graph->outputs_size; ++out_node_i)
+        lp_htable_insert(release_black_list,&graph->outputs[out_node_i]);
+    
+    affirmf(!lp_htable_find(release_black_list,&node,NULL),
+        "Can't release node which is either input or output");
+    
+    lp_vector_t *release_stack = lp_vector_create(0,sizeof(lpg_node_t*));
+    lp_vector_push_back(release_stack,&node);
+
     lp_slab_t *slab = __lpg_graph_slab(graph);
-    lp_slab_free(slab,node);
-    __lpg_node_release(node);
+
+    while(!lp_vector_empty(release_stack))
+    {
+        lpg_node_t *curr_node = lp_vector_back_type(release_stack,lpg_node_t*);
+        lp_vector_pop_back(release_stack);
+
+        if(lp_htable_find(release_black_list,&curr_node,NULL))
+            continue;
+
+        lpg_node_t **parents = lpg_node_parents(curr_node);
+        size_t parents_num = lpg_node_get_parents_num(curr_node);
+
+        for(size_t parent_i = 0; parent_i < parents_num; ++parent_i)
+        {
+            lpg_node_t *parent = parents[parent_i];
+            size_t parent_children_num = lpg_node_get_children_num(parent);
+            size_t curr_node_parent_i = 0;
+            for(; curr_node_parent_i < parent_children_num; ++curr_node_parent_i)
+            {
+                if(lp_vector_at_type(parent->children,curr_node_parent_i,lpg_node_t*) == curr_node)
+                    break;
+            }
+
+            affirmf_debug(curr_node_parent_i < parent_children_num,
+                "Failed to find current node inside its parent children vector");
+            
+            lp_vector_remove_i(parent->children,curr_node_parent_i);
+
+            if(lp_vector_empty(parent->children))
+                lp_vector_push_back(release_stack,&parent);
+        }
+
+        __lpg_node_release_internals(curr_node);
+        lp_slab_free(slab,curr_node);
+    }
+
+    lp_htable_release(release_black_list);
+    lp_vector_release(release_stack);
 }
 
 
@@ -212,4 +273,16 @@ inline bool __lpg_graph_is_native_node(const lpg_graph_t *graph, const lpg_node_
     const lpg_node_t *graph_slab_end = graph_slab_base+slab->__total_entries*sizeof(lpg_node_t);
 
     return node >= graph_slab_base && node < graph_slab_end;
+}
+
+
+size_t __lpg_graph_nodes_hsh(const lpg_node_t **node)
+{
+    return lp_uni_hash((size_t)(*node));
+}
+
+
+bool __lpg_graph_nodes_eq(const lpg_node_t **a, const lpg_node_t **b)
+{
+    return *a == *b;
 }

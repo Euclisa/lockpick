@@ -6,20 +6,6 @@
 #define __LPG_TEST_COUNT_MAX_GRAPH_NODES 100000
 
 
-static void __lpg_graph_nodes_count_cb(lpg_graph_t *graph, lpg_node_t *node, void *args)
-{
-    _Atomic size_t *count = args;
-    ++(*count);
-}
-
-size_t __lpg_graph_nodes_count_true(lpg_graph_t *graph)
-{
-    size_t count = 0;
-    lpg_graph_traverse(graph,__lpg_graph_nodes_count_cb,&count,NULL,NULL);
-
-    return count;
-}
-
 
 void __test_graph_count_nodes(size_t in_width, size_t out_width)
 {
@@ -29,8 +15,8 @@ void __test_graph_count_nodes(size_t in_width, size_t out_width)
     lpg_uint_t *uint_res = lpg_uint_allocate_as_buffer_view(graph,graph->outputs,out_width);
     lpg_uint_mul(uint_a,uint_b,uint_res);
 
-    size_t nodes_num_true = __lpg_graph_nodes_count_true(graph);
-    size_t node_num_test = lpg_graph_nodes_count(graph);
+    size_t nodes_num_true = lpg_graph_nodes_count(graph);
+    size_t node_num_test = lpg_graph_nodes_count_mt(graph);
 
     LP_TEST_ASSERT(true,
         "For in_width: %zd, out_width: %zd, expected: %zd, got: %zd",in_width,out_width,nodes_num_true,node_num_test);

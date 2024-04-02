@@ -77,17 +77,6 @@ static inline __lp_node_stack_t *__lpg_node_stack_lock_pop_and_deplete(__lp_node
 }
 
 
-static size_t __lpg_graph_nodes_hsh(const lpg_node_t **node)
-{
-    return lp_uni_hash((size_t)(*node));
-}
-
-static bool __lpg_graph_nodes_eq(const lpg_node_t **a, const lpg_node_t **b)
-{
-    return *a == *b;
-}
-
-
 typedef struct __lpg_graph_traverse_thr_args_common
 {
     lpg_graph_t *graph;
@@ -169,9 +158,11 @@ void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
         if(!lp_visit_table_insert(visited,&curr_node))
             continue;
 
-        cb(graph,curr_node,cb_args);
+        bool is_input = lp_htable_find(inputs,&curr_node,NULL);
 
-        if(lp_htable_find(inputs,&curr_node,NULL))
+        cb(graph,curr_node,is_input,cb_args);
+
+        if(is_input)
             continue;
 
         uint16_t curr_node_parents_num = lpg_node_get_parents_num(curr_node);
@@ -188,7 +179,7 @@ void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
 }
 
 
-void lpg_graph_traverse_once(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
+void lpg_graph_traverse_once_mt(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
 {
     affirm_nullptr(graph,"graph");
 

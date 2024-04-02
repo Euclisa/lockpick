@@ -28,29 +28,30 @@ inline void __lpg_node_set_value(lpg_node_t *node, bool value)
 }
 
 
-inline void __lpg_add_child(lpg_node_t *node, lpg_node_t *child)
-{
-    ++node->children_size;
-    node->children = realloc(node->children,sizeof(lpg_node_t*)*node->children_size);
-    node->children[node->children_size-1] = child;
-}
-
-
-inline void __lpg_node_release(lpg_node_t *node)
+inline void __lpg_node_release_internals(lpg_node_t *node)
 {
     lpg_node_t **parents = lpg_node_parents(node);
 
     if(parents)
         free(parents);
     
-    if(node->children)
-        free(node->children);
+    lp_vector_release(node->children);
 }
 
 
 inline size_t lpg_node_get_parents_num(const lpg_node_t *node)
 {
-    static const uint16_t node_type_parents_num[] = {2, 2, 1, 2, 0, 0, 0};
+    affirm_nullptr(node,"node");
+
+    static const uint16_t node_type_parents_num[] = {2, 2, 1, 2, 0};
 
     return node_type_parents_num[node->type];
+}
+
+
+inline size_t lpg_node_get_children_num(const lpg_node_t *node)
+{
+    affirm_nullptr(node,"node");
+
+    return node->children->size;
 }

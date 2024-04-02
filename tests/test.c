@@ -8,7 +8,9 @@
 #include "bits/bits.h"
 #include "htable/htable.h"
 #include "ndarray/ndarray.h"
+#include "vector/vector.h"
 #include "graph/types/uint/uint.h"
+#include "graph/graph/tsort/tsort.h"
 #include "graph/graph/properties/count/count.h"
 #include <lockpick/test.h>
 #include <lockpick/lockpick.h>
@@ -25,9 +27,11 @@ int main()
     //LP_TEST_RUN(lp_test_math());
     //LP_TEST_RUN(lp_test_slab(),1);
     //LP_TEST_RUN(lp_test_bits(),1);
+    //LP_TEST_RUN(lp_test_vector());
     //LP_TEST_RUN(lp_test_sync());
     //LP_TEST_RUN(lp_test_htable(),1);
     //LP_TEST_RUN(lp_test_graph_uint());
-    LP_TEST_RUN(lp_test_graph_count());
+    LP_TEST_RUN(lp_test_graph_tsort());
+    //LP_TEST_RUN(lp_test_graph_count());
     LP_TEST_END();
 }
