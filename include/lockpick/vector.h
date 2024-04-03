@@ -7,7 +7,7 @@
 #define __LP_VECTOR_GROW_FACTOR 2
 #define __LP_VECTOR_REDUCE_FACTOR 2
 #define __LP_VECTOR_REDUCE_THR_LOAD 4
-#define __LP_VECTOR_MIN_CAPACITY 4
+#define __LP_VECTOR_MIN_CAPACITY 1
 
 
 typedef struct lp_vector

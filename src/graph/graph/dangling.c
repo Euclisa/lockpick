@@ -25,6 +25,22 @@ static inline void __lpg_graph_count_dangling_slab_callback(void *entry_ptr, voi
 }
 
 
+/**
+ * lpg_graph_count_dangling_nodes - counts dangling nodes in a graph
+ * @graph:      pointer to the graph object
+ * 
+ * Efficiently counts number of nodes that do not have children
+ * and are neither input nor output nodes. Such nodes can't be reached
+ * by traversal algorithms and may be considered lost.
+ * 
+ * Function intended to track ill-formation of graphs, which contain
+ * such redudant elements.
+ * 
+ * The counting process is performed efficiently by iterating over all nodes within the
+ * graph's slab allocator, rather than traversing the graph structure itself.
+ * 
+ * Returns: number of dangling nodes
+*/
 size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph)
 {
     affirmf(graph,"Expected valid graph pointer but null was given");

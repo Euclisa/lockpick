@@ -18,7 +18,7 @@ void __test_graph_count_nodes(size_t in_width, size_t out_width)
     size_t nodes_num_true = lpg_graph_nodes_count(graph);
     size_t node_num_test = lpg_graph_nodes_count_mt(graph);
 
-    LP_TEST_ASSERT(true,
+    LP_TEST_ASSERT(nodes_num_true == node_num_test,
         "For in_width: %zd, out_width: %zd, expected: %zd, got: %zd",in_width,out_width,nodes_num_true,node_num_test);
     
     lp_test_cleanup:
@@ -28,18 +28,12 @@ void __test_graph_count_nodes(size_t in_width, size_t out_width)
     lpg_uint_release(uint_res);
 }
 
-void test_graph_count_nodes(size_t tests_num)
-{
-    for(size_t test_i = 0; test_i < tests_num; ++test_i)
-        for(size_t in_width = 2; in_width <= 18; in_width += 2)
-            for(size_t out_width = 1; out_width <= in_width; ++out_width)
-                LP_TEST_STEP_INTO(__test_graph_count_nodes(in_width,out_width));
-    
-    lp_test_cleanup:
-}
-
 
 void lp_test_graph_count()
 {
-    LP_TEST_RUN(test_graph_count_nodes(20));
+    for(size_t in_width = 2; in_width <= 18; in_width += 2)
+        for(size_t out_width = 1; out_width <= in_width; ++out_width)
+            LP_TEST_STEP_INTO(__test_graph_count_nodes(in_width,out_width));
+    
+    lp_test_cleanup:
 }

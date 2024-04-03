@@ -216,3 +216,168 @@ void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *en
     lp_htable_release(visited);
     lp_htable_release(inputs);
 }
+
+
+/**
+ * __lpg_graph_traverse_node_once - internal graph DFS traversal without revisiting nodes
+ * @graph:          graph object
+ * @node:           starting node for traversal
+ * @visited:        hash-table with visited nodes
+ * @inputs:         hash-table with input nodes
+ * @cb:             node visit callback
+ * @cb_args:        optional node visit callback args
+ *
+ * Performs a Depth First Search (DFS) traversal of @graph starting  
+ * at @node, invoking the given @cb with arguments @cb_args along branches,
+ * and storing visited nodes inside @visited.
+ * 
+ * Nodes which reside in @visited will not be visited onward.
+ * 
+ * Traversal ends at constant nodes or graph input nodes, specified in @inputs.
+ * Input nodes may have parents but they will not be visited via DFS.
+ *
+ * Visits every node only once, unlike '__lpg_graph_traverse_node', which visits every node
+ * once again after all its children are processed. This enables slight optimizations,
+ * which might be important in resource-consuming tasks.
+ *
+ * WARNING: This is internal API only, intended for implementing  
+ * higher level graph algorithms. Users should not call directly.
+ *
+ * Return: None 
+*/
+void __lpg_graph_traverse_node_once(lpg_graph_t *graph, lpg_node_t *node, lp_htable_t *visited, lp_htable_t *inputs, lpg_traverse_cb_t enter_cb, void *enter_cb_args)
+{
+    __lp_node_stack_t *stack = NULL;
+    __lpg_node_stack_push(&stack,node);
+    
+    while(stack)
+    {
+        lpg_node_t *curr_node = stack->node;
+        __lpg_node_stack_pop(&stack);
+
+        bool is_input = lp_htable_find(inputs,&curr_node,NULL);
+
+        lp_htable_insert(visited,&curr_node);
+
+        if(enter_cb)
+            enter_cb(graph,curr_node,is_input,enter_cb_args);
+
+        if(!is_input)
+        {
+            uint16_t curr_node_parents_num = lpg_node_get_parents_num(curr_node);
+            lpg_node_t **curr_node_parents = lpg_node_parents(curr_node);
+            for(uint16_t parent_i = 0; parent_i < curr_node_parents_num; ++parent_i)
+            {
+                lpg_node_t *parent = curr_node_parents[parent_i];
+                bool is_parent_visited = lp_htable_find(visited,&parent,NULL);
+                if(!is_parent_visited)
+                    __lpg_node_stack_push(&stack,parent);
+            }
+        }
+    }
+}
+
+
+/**
+ * lpg_graph_traverse_node_once - DFS traversal of graph from specified node without revisiting nodes
+ * @graph:          graph object
+ * @node:           starting node for traversal
+ * @cb:             node visit callback
+ * @cb_args:        optional node visit callback args
+ *
+ * Performs a Depth First Search (DFS) traversal of @graph starting  
+ * at @node, invoking the given @cb with arguments @cb_args along branches.
+ * 
+ * Traversal ends at constant nodes or graph input nodes.
+ * Input nodes may have parents but they will not be visited via DFS.
+ *
+ * Visits every node only once, unlike 'lpg_graph_traverse_node', which visits every node
+ * once again after all its children are processed. This enables slight optimizations,
+ * which might be important in resource-consuming tasks.
+ *
+ * Return: None 
+*/
+void lpg_graph_traverse_node_once(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_cb_t cb, void *cb_args)
+{
+    affirm_nullptr(graph,"graph");
+    affirm_nullptr(node,"node");
+
+    lp_htable_t *visited = lp_htable_create(
+        1,
+        sizeof(lpg_node_t*),
+        (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+        (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
+    // Input nodes buffer size is a lower bound for final visited htable size
+    lp_htable_rehash(visited,graph->inputs_size);
+
+    lp_htable_t *inputs = lp_htable_create(
+            1,
+            sizeof(lpg_node_t*),
+            (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+            (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
+    lp_htable_rehash(inputs,graph->inputs_size);
+
+    for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
+        lp_htable_insert(inputs,&graph->inputs[in_node_i]);
+
+    __lpg_graph_traverse_node_once(graph,node,visited,inputs,cb,cb_args);
+
+    lp_htable_release(visited);
+    lp_htable_release(inputs);
+}
+
+
+/**
+ * lpg_graph_traverse_once - DFS traversal of graph from its output nodes without revisiting nodes
+ * @graph:          graph object
+ * @cb:             node visit callback
+ * @cb_args:        optional node visit callback args
+ * 
+ * Performs a Depth First Search (DFS) traversal of @graph starting  
+ * at its output nodes, invoking the given @cb with arguments @cb_args along branches.
+ * 
+ * Every node of @graph is accessed once regardless it reachability from multiple
+ * output nodes simultaneously.
+ * 
+ * Traversal ends at constant nodes or graph input nodes.
+ * Input nodes may have parents but they will not be visited via DFS.
+ * 
+ * Visits every node only once, unlike 'lpg_graph_traverse', which visits every node
+ * once again after all its children are processed. This enables slight optimizations,
+ * which might be important in resource-consuming tasks.
+ * 
+ * Returns: None
+*/
+void lpg_graph_traverse_once(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
+{
+    affirm_nullptr(graph,"graph");
+    affirmf(cb,"Either leave or enter callback must be specified");
+
+    lp_htable_t *visited = lp_htable_create(
+        1,
+        sizeof(lpg_node_t*),
+        (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+        (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
+    // Input nodes buffer size is a lower bound for final visited htable size
+    lp_htable_rehash(visited,MAX(1,graph->inputs_size));
+
+    lp_htable_t *inputs = lp_htable_create(
+            1,
+            sizeof(lpg_node_t*),
+            (size_t (*)(const void *))__lpg_graph_nodes_hsh,
+            (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
+    lp_htable_rehash(inputs,MAX(1,graph->inputs_size));
+
+    for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
+        lp_htable_insert(inputs,&graph->inputs[in_node_i]);
+    
+    for(size_t node_i = 0; node_i < graph->outputs_size; ++node_i)
+    {
+        affirmf(graph->outputs[node_i],"Attempt to compute null graph output a index %zd."
+                                    "Was graph assembled properly?",node_i);
+        __lpg_graph_traverse_node_once(graph,graph->outputs[node_i],visited,inputs,cb,cb_args);
+    }
+
+    lp_htable_release(visited);
+    lp_htable_release(inputs);
+}

@@ -32,17 +32,36 @@ void __lpg_tsort_init_state_cb(lpg_graph_t *graph, lpg_node_t *node, bool is_inp
             init_state->zero_layer_nodes = (lpg_node_t**)realloc(init_state->zero_layer_nodes,new_zero_layer_nodes_size);
             affirm_bad_malloc(init_state->zero_layer_nodes,"zero layer nodes array realloc",new_zero_layer_nodes_size);
         }
-        //printf("-%p\n",node);
         
         init_state->zero_layer_nodes[init_state->zero_layer_nodes_count] = node;
         ++init_state->zero_layer_nodes_count;
     }
-    //else
-    //    printf("%p\n",node);
-    //fflush(NULL);
 }
 
-#include <stdio.h>
+/**
+ * lpg_graph_tsort - sorts graph's nodes in topological order
+ * @graph:          pointer to graph object
+ * @sorted_nodes:   pointer on array of sorted nodes
+ * 
+ * This function performs topological sorting of the nodes in the provided @graph object.
+ * It allocates a buffer to store the sorted nodes, with the size of the buffer equal to
+ * the number of nodes in the graph.
+ * 
+ * At the end, @sorted_nodes is guaranteed to be pointing to an array of pointers to nodes
+ * That are ordered in a way that for every node all its parents are placed before.
+ * 
+ * This variant does the job sequentially without using parallelism.
+ * 
+ * The function adheres to the general graph paradigm and treats the input nodes of the
+ * graph as terminal nodes, even if they have parent nodes (operands). The traversal
+ * stops upon reaching these input nodes. Consequently, it is not possible to determine
+ * the nodes in the zero graph component or the total number of nodes in the @graph.
+ * Therefore, this routine first traverses the graph to gather this information.
+ * 
+ * WARNING: This procedure assumes that all nodes have at most two parents. If you
+ * decide to extend the set of operation (node) types by adding more sophisticated
+ * operations, you will need to modify this routine accordingly.
+*/
 void lpg_graph_tsort(lpg_graph_t *graph, lpg_node_t ***sorted_nodes)
 {
     affirm_nullptr(graph,"graph");
@@ -68,16 +87,11 @@ void lpg_graph_tsort(lpg_graph_t *graph, lpg_node_t ***sorted_nodes)
             (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
     
     size_t init_orphaned_capacity = init_state.zero_layer_nodes_count*2;
+    // Nodes that do not have unprocessed parents anymore
     lp_vector_t *orphaned = lp_vector_create(init_orphaned_capacity,sizeof(lpg_node_t*));
 
-    //printf("===\n");
-    //fflush(NULL);
     for(size_t node_i = 0; node_i < init_state.zero_layer_nodes_count; ++node_i)
-    {
-        //printf("%p\n",init_state.zero_layer_nodes[node_i]);
-        //fflush(NULL);
         lp_vector_push_back(orphaned,&init_state.zero_layer_nodes[node_i]);
-    }
     
     size_t curr_node_i = init_state.zero_layer_nodes_count;
     while(!lp_vector_empty(orphaned))
@@ -93,8 +107,6 @@ void lpg_graph_tsort(lpg_graph_t *graph, lpg_node_t ***sorted_nodes)
             
             if(child_parents_num == 1 || !lp_htable_insert(visited,&child_node))
             {
-                //printf("%p: %d %d %p\n",child_node,(uint32_t)child_node->type,lpg_node_get_children_num(child_node));
-                //fflush(NULL);
                 lp_vector_push_back(orphaned,&child_node);
                 init_state.zero_layer_nodes[curr_node_i] = child_node;
                 ++curr_node_i;

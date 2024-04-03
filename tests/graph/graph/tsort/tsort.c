@@ -53,20 +53,13 @@ bool __test_graph_tsort(size_t in_width, size_t out_width)
 }
 
 
-void test_graph_tsort(size_t tests_num)
-{
-    for(size_t test_i = 0; test_i < tests_num; ++test_i)
-        for(size_t in_width = 14; in_width <= 18; in_width += 2)
-            for(size_t out_width = 7; out_width <= in_width; ++out_width)
-                LP_TEST_ASSERT(!__test_graph_tsort(in_width,out_width),
-                    "Sorting error in test %zd, in_width: %zd, out_width: %zd",
-                    test_i,in_width,out_width);
-    
-    lp_test_cleanup:
-}
-
-
 void lp_test_graph_tsort()
 {
-    LP_TEST_RUN(test_graph_tsort(4));
+    for(size_t in_width = 2; in_width <= 18; in_width += 2)
+        for(size_t out_width = 1; out_width <= in_width; ++out_width)
+            LP_TEST_ASSERT(!__test_graph_tsort(in_width,out_width),
+                "Sorting error in test %zd, in_width: %zd, out_width: %zd",
+                in_width,out_width);
+    
+    lp_test_cleanup:
 }

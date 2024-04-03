@@ -252,6 +252,8 @@ void __lp_test_process_action(__lp_test_actions_t action, ...)
 
             level_max_print_depth[0] = __LP_TEST_MAX_LEVELS+1;
 
+            level_tests_total[0] = 1;
+
             __lp_test_print_init(project_name_str);
             break;
         }

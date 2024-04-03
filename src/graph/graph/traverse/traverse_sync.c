@@ -129,6 +129,41 @@ static inline __lp_node_stack_t *__borrow_node(__lp_node_stack_t **trav_stacks, 
 }
 
 
+/**
+ * __lpg_graph_traverse_node_once_thr - internall graph parallel DFS traversal pthread_create entry point
+ * @args:       unpacking below
+ * @current_thread_i:       index of calling thread
+ * @cb:                     node visit callback
+ * @cb_args:                optional node visit callback arguments
+ * @depleted_threads_cnt:   number of currently depleted threads
+ * @graph:                  pointer to the graph object
+ * @inputs:                 htable with input nodes
+ * @spins:                  spinlocks for each thread's traversal stacks
+ * @total_threads:          number of threads initialized for traversal
+ * @trav_stack:             thread's traversal stacks
+ * @visited:                visit table of visited nodes
+ * 
+ * This function serves as the entry point for pthread_create in the optimized parallel DFS algorithm.
+ * 
+ * Each thread maintains a dedicated traversal stack (@trav_stack), allowing independent traversal until
+ * the stack is depleted. Once depleted, the thread increments @depleted_threads_cnt and enters a searching
+ * state, where it attempts to borrow nodes from other threads' stacks, starting from the next stack
+ * according to the thread indices. If the thread finds that @depleted_threads_cnt is equal to @total_threads,
+ * it exits the traversal.
+ * 
+ * All stacks in @trav_stack are protected by spinlocks from @spins, allowing concurrent access.
+ * 
+ * Traversal ends at constant nodes or graph input nodes, specified in @inputs.
+ * Input nodes may have parents but they will not be visited via DFS.
+ * 
+ * Nodes residing in @visited will not be revisited. @visited is an efficient storage structure that
+ * supports fast concurrent insertion and lookup operations.
+ * 
+ * This function visits each node once without revisiting it after all its children have been processed.
+ * 
+ * Returns: None
+ * 
+*/
 void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
 {
     uint32_t current_thread_i = args->current_thread_i;
@@ -179,6 +214,30 @@ void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
 }
 
 
+/**
+ * lpg_graph_traverse_once_mt - perform a parallel depth-first search (DFS) traversal of the graph without revisiting nodes
+ * @graph:      pointer to the graph object
+ * @cb:         node visit callback
+ * @cb_args:    node visit callback arguments
+ * 
+ * This function performs a parallel depth-first search (DFS) traversal of the given @graph,
+ * without revisiting a node once its children have been visited. This simplification allows
+ * for an efficient parallel implementation of the algorithm.
+ * 
+ * The function creates one thread per CPU core on the user's machine and runs an optimized
+ * concurrent DFS traversal algorithm. Details of the implementation can be found in the
+ * 'docs/parallel_dfs.pdf' documentation.
+ * 
+ * Despite the optimizations to minimize concurrent access to critical sections, this parallel
+ * variant has proven to be slower than the sequential variant for the task of counting graph
+ * nodes, due to the overhead of atomic operations required to lock critical sections.
+ * 
+ * However, there is hope that this parallel implementation might be valuable for large, complex
+ * graphs or when the callback function (@cb) performs heavy computations. As of now, there is no
+ * practical use case that justifies the overhead of this parallel implementation.
+ * 
+ * Returns: None
+*/
 void lpg_graph_traverse_once_mt(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
 {
     affirm_nullptr(graph,"graph");

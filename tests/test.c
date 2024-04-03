@@ -27,11 +27,11 @@ int main()
     //LP_TEST_RUN(lp_test_math());
     //LP_TEST_RUN(lp_test_slab(),1);
     //LP_TEST_RUN(lp_test_bits(),1);
-    //LP_TEST_RUN(lp_test_vector());
+    LP_TEST_RUN(lp_test_vector());
     //LP_TEST_RUN(lp_test_sync());
     //LP_TEST_RUN(lp_test_htable(),1);
     //LP_TEST_RUN(lp_test_graph_uint());
-    LP_TEST_RUN(lp_test_graph_tsort());
-    //LP_TEST_RUN(lp_test_graph_count());
+    //LP_TEST_RUN(lp_test_graph_tsort());
+    LP_TEST_RUN(lp_test_graph_count());
     LP_TEST_END();
 }
