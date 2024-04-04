@@ -8,6 +8,7 @@
 
 #define __aligned(N) __attribute__((aligned(N)))
 #define __no_return __attribute__((noreturn))
+#define __packed __attribute__((packed))
 
 #define lp_assert(cond,msg)                             \
     assert((cond) && __func__ && msg)

@@ -1,42 +1,12 @@
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/tsort.h>
+#include <lockpick/graph/traverse.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/htable.h>
 #include <lockpick/math.h>
 #include <lockpick/vector.h>
 #include <malloc.h>
+#include <string.h>
 
-
-typedef struct __tsort_init_state
-{
-    lpg_node_t **zero_layer_nodes;
-    size_t nodes_count,zero_layer_nodes_count;
-} __tsort_init_state_t;
-
-
-#define INIT_ZERO_LAYER_NODES_LOG_ARR_SIZE 3
-
-
-void __lpg_tsort_init_state_cb(lpg_graph_t *graph, lpg_node_t *node, bool is_input, void *args)
-{
-    __tsort_init_state_t *init_state = args;
-
-    static const size_t zero_layer_nodes_init_size = (1 << INIT_ZERO_LAYER_NODES_LOG_ARR_SIZE);
-
-    ++init_state->nodes_count;
-    
-    if(is_input || lpg_node_get_parents_num(node) == 0)
-    {
-        if(init_state->zero_layer_nodes_count >= zero_layer_nodes_init_size && lp_is_pow_2(init_state->zero_layer_nodes_count))
-        {
-            size_t new_zero_layer_nodes_size = (init_state->zero_layer_nodes_count << 1)*sizeof(lpg_node_t*);
-            init_state->zero_layer_nodes = (lpg_node_t**)realloc(init_state->zero_layer_nodes,new_zero_layer_nodes_size);
-            affirm_bad_malloc(init_state->zero_layer_nodes,"zero layer nodes array realloc",new_zero_layer_nodes_size);
-        }
-        
-        init_state->zero_layer_nodes[init_state->zero_layer_nodes_count] = node;
-        ++init_state->zero_layer_nodes_count;
-    }
-}
 
 /**
  * lpg_graph_tsort - sorts graph's nodes in topological order
@@ -65,35 +35,46 @@ void __lpg_tsort_init_state_cb(lpg_graph_t *graph, lpg_node_t *node, bool is_inp
 void lpg_graph_tsort(lpg_graph_t *graph, lpg_node_t ***sorted_nodes)
 {
     affirm_nullptr(graph,"graph");
+    affirm_nullptr(sorted_nodes,"sorted nodes array pointer");
 
     __tsort_init_state_t init_state;
 
-    size_t zero_layer_nodes_init_size = (1 << INIT_ZERO_LAYER_NODES_LOG_ARR_SIZE)*sizeof(lpg_node_t*);
-    init_state.zero_layer_nodes = (lpg_node_t**)malloc(zero_layer_nodes_init_size);
-    affirm_bad_malloc(init_state.zero_layer_nodes,"zero layer nodes array",zero_layer_nodes_init_size);
+    size_t const_nodes_init_size = (1 << INIT_ZERO_LAYER_NODES_LOG_ARR_SIZE)*sizeof(lpg_node_t*);
+    init_state.const_nodes = (lpg_node_t**)malloc(const_nodes_init_size);
+    affirm_bad_malloc(init_state.const_nodes,"zero layer nodes array",const_nodes_init_size);
 
-    init_state.nodes_count = init_state.zero_layer_nodes_count = 0;
+    init_state.nodes_count = init_state.const_nodes_count = 0;
 
-    lpg_graph_traverse(graph,__lpg_tsort_init_state_cb,&init_state,NULL,NULL);
+    lpg_graph_traverse_once(graph,__lpg_tsort_init_state_cb,&init_state);
 
-    size_t sorted_nodes_size = (init_state.nodes_count)*sizeof(lpg_node_t*);
-    init_state.zero_layer_nodes = (lpg_node_t**)realloc(init_state.zero_layer_nodes,sorted_nodes_size);
-    affirm_bad_malloc(init_state.zero_layer_nodes,"topologicaly sorted nodes array realloc",sorted_nodes_size);
+    size_t result_size = init_state.nodes_count*sizeof(lpg_node_t*);
+    lpg_node_t **result = (lpg_node_t**)malloc(result_size);
+    affirm_bad_malloc(result,"result sorted nodes array",result_size);
+
+    for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
+        result[in_node_i] = graph->inputs[in_node_i];
+    
+    for(size_t const_node_i = 0; const_node_i < init_state.const_nodes_count; ++const_node_i)
+        result[graph->inputs_size+const_node_i] = init_state.const_nodes[const_node_i];
+    
+    free(init_state.const_nodes);
+
+    size_t zero_layer_size = init_state.const_nodes_count+graph->inputs_size;
 
     lp_htable_t *visited = lp_htable_create_el_num(
             init_state.nodes_count,
             sizeof(lpg_node_t*),
-            (size_t (*)(const void *))__lpg_graph_nodes_hsh,
-            (bool (*)(const void *,const void *))__lpg_graph_nodes_eq);
+            lp_htable_cast_hsh(__lpg_graph_nodes_hsh),
+            lp_htable_cast_eq(__lpg_graph_nodes_eq));
     
-    size_t init_orphaned_capacity = init_state.zero_layer_nodes_count*2;
+    size_t init_orphaned_capacity = zero_layer_size*2;
     // Nodes that do not have unprocessed parents anymore
     lp_vector_t *orphaned = lp_vector_create(init_orphaned_capacity,sizeof(lpg_node_t*));
 
-    for(size_t node_i = 0; node_i < init_state.zero_layer_nodes_count; ++node_i)
-        lp_vector_push_back(orphaned,&init_state.zero_layer_nodes[node_i]);
-    
-    size_t curr_node_i = init_state.zero_layer_nodes_count;
+    for(size_t node_i = 0; node_i < zero_layer_size; ++node_i)
+        lp_vector_push_back(orphaned,&result[node_i]);
+
+    size_t curr_node_i = zero_layer_size;
     while(!lp_vector_empty(orphaned))
     {
         lpg_node_t *curr_node = *(lpg_node_t**)lp_vector_back(orphaned);
@@ -108,13 +89,13 @@ void lpg_graph_tsort(lpg_graph_t *graph, lpg_node_t ***sorted_nodes)
             if(child_parents_num == 1 || !lp_htable_insert(visited,&child_node))
             {
                 lp_vector_push_back(orphaned,&child_node);
-                init_state.zero_layer_nodes[curr_node_i] = child_node;
+                result[curr_node_i] = child_node;
                 ++curr_node_i;
             }
         }
     }
 
-    *sorted_nodes = init_state.zero_layer_nodes;
+    *sorted_nodes = result;
 
     lp_htable_release(visited);
     lp_vector_release(orphaned);

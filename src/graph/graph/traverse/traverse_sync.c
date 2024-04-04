@@ -1,4 +1,5 @@
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/traverse.h>
+#include <lockpick/graph/count.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/list.h>
 #include <lockpick/container_of.h>
@@ -161,6 +162,8 @@ static inline __lp_node_stack_t *__borrow_node(__lp_node_stack_t **trav_stacks, 
  * 
  * This function visits each node once without revisiting it after all its children have been processed.
  * 
+ * See algorithm details in: docs/parallel_dfs.pdf
+ * 
  * Returns: None
  * 
 */
@@ -215,7 +218,7 @@ void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
 
 
 /**
- * lpg_graph_traverse_once_mt - perform a parallel depth-first search (DFS) traversal of the graph without revisiting nodes
+ * lpg_graph_traverse_once_sync - perform a parallel depth-first search (DFS) traversal of the graph without revisiting nodes
  * @graph:      pointer to the graph object
  * @cb:         node visit callback
  * @cb_args:    node visit callback arguments
@@ -238,7 +241,7 @@ void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
  * 
  * Returns: None
 */
-void lpg_graph_traverse_once_mt(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
+void lpg_graph_traverse_once_sync(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
 {
     affirm_nullptr(graph,"graph");
 

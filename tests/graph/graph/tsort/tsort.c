@@ -1,5 +1,6 @@
 #include <lockpick/test.h>
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/tsort.h>
+#include <lockpick/graph/count.h>
 #include <lockpick/graph/types/uint.h>
 #include <lockpick/htable.h>
 
@@ -13,6 +14,9 @@ bool __test_graph_tsort(size_t in_width, size_t out_width)
     lpg_uint_t *uint_b = lpg_uint_allocate_as_buffer_view(graph,graph->inputs+in_width/2,in_width/2);
     lpg_uint_t *uint_res = lpg_uint_allocate_as_buffer_view(graph,graph->outputs,out_width);
     lpg_uint_mul(uint_a,uint_b,uint_res);
+
+    size_t redundant_inputs = lpg_graph_count_redundant_inputs(graph);
+    affirmf(redundant_inputs == 0,"Graph with in_width: %zd, out_width: %zd has %zd redundant inputs and can't be sorted",in_width,out_width,redundant_inputs);
 
     size_t nodes_num = lpg_graph_nodes_count(graph);
 
@@ -56,7 +60,7 @@ bool __test_graph_tsort(size_t in_width, size_t out_width)
 void lp_test_graph_tsort()
 {
     for(size_t in_width = 2; in_width <= 18; in_width += 2)
-        for(size_t out_width = 1; out_width <= in_width; ++out_width)
+        for(size_t out_width = in_width/2; out_width <= in_width; ++out_width)
             LP_TEST_ASSERT(!__test_graph_tsort(in_width,out_width),
                 "Sorting error in test %zd, in_width: %zd, out_width: %zd",
                 in_width,out_width);

@@ -1,10 +1,9 @@
 #include <lockpick/test.h>
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/count.h>
 #include <lockpick/graph/types/uint.h>
 #include <stdio.h>
 
 #define __LPG_TEST_COUNT_MAX_GRAPH_NODES 100000
-
 
 
 void __test_graph_count_nodes(size_t in_width, size_t out_width)

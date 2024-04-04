@@ -1,4 +1,5 @@
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/compute.h>
+#include <lockpick/graph/traverse.h>
 #include <lockpick/affirmf.h>
 
 

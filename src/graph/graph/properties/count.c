@@ -1,4 +1,5 @@
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/count.h>
+#include <lockpick/graph/traverse.h>
 #include <lockpick/affirmf.h>
 
 
@@ -57,7 +58,7 @@ size_t lpg_graph_nodes_count_mt(lpg_graph_t *graph)
     affirm_nullptr(graph,"graph");
 
     _Atomic size_t count = 0;
-    lpg_graph_traverse_once_mt(graph,__lpg_graph_nodes_count_cb,&count);
+    lpg_graph_traverse_once_sync(graph,__lpg_graph_nodes_count_cb,&count);
 
     return count;
 }

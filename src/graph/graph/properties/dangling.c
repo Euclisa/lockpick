@@ -1,4 +1,4 @@
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/count.h>
 #include <lockpick/container_of.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/rb_tree.h>

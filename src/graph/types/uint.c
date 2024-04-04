@@ -430,6 +430,27 @@ void lpg_uint_assign_from_hex_str(lpg_uint_t *value, const char *hex_str)
 
 
 /**
+ * lpg_uint_assign_from_hex_str - assigns uint nodes values randomly
+ * @value:      uint object to change values of
+ * 
+ * This only sets values of all nodes in @value's nodes buffer generating
+ * bits with rand() call. Hence, user can apply seed using regular rand api
+ * in order to get determenistic result.
+ * 
+ * Return: None
+*/
+void lpg_uint_assign_from_rand(lpg_uint_t *value)
+{
+    affirm_nullptr(value,"uint value");
+
+    lpg_node_t **nodes = lpg_uint_nodes(value);
+
+    for(size_t node_i = 0; node_i < value->width; ++node_i)
+        __lpg_node_set_value(nodes[node_i],(bool)(rand()%2));
+}
+
+
+/**
  * __lpg_uint_i2ch - converts value to hex symbol
  * @value:      integer value to be converted
  * 

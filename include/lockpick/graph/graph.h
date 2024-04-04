@@ -80,22 +80,6 @@ lpg_graph_t *lpg_graph_create(const char *name, size_t inputs_size, size_t outpu
 void lpg_graph_release(lpg_graph_t *graph);
 void lpg_graph_release_node(lpg_graph_t *graph, lpg_node_t *node);
 
-typedef void (*lpg_traverse_cb_t)(lpg_graph_t *graph, lpg_node_t *node, bool is_input, void *args);
-void lpg_graph_traverse_node(lpg_graph_t *graph, lpg_node_t *node, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args);
-void lpg_graph_traverse(lpg_graph_t *graph, lpg_traverse_cb_t enter_cb, void *enter_cb_args, lpg_traverse_cb_t leave_cb, void *leave_cb_args);
-void lpg_graph_traverse_once(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args);
-void lpg_graph_traverse_once_mt(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args);
-
-void lpg_graph_compute(lpg_graph_t *graph);
-
-size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph);
-size_t lpg_graph_nodes_count_super(lpg_graph_t *graph);
-
-size_t lpg_graph_nodes_count_mt(lpg_graph_t *graph);
-size_t lpg_graph_nodes_count(lpg_graph_t *graph);
-
-void lpg_graph_tsort(lpg_graph_t *graph, lpg_node_t ***sorted_nodes);
-
 bool __lpg_graph_is_native_node(const lpg_graph_t *graph, const lpg_node_t *node);
 
 size_t __lpg_graph_nodes_hsh(const lpg_node_t **node);

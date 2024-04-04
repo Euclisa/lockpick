@@ -1,13 +1,9 @@
-#include <lockpick/graph/graph.h>
+#include <lockpick/graph/traverse.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/list.h>
 #include <lockpick/container_of.h>
 #include <lockpick/htable.h>
 #include <lockpick/utility.h>
-#include <lockpick/affinity.h>
-#include <lockpick/sync/spinlock_bitset.h>
-#include <lockpick/sync/visit_table.h>
-#include <pthread.h>
 
 
 typedef struct __lp_node_stack

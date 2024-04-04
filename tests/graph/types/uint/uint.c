@@ -4,6 +4,8 @@
 #include <string.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/graph/types/uint.h>
+#include <lockpick/graph/compute.h>
+#include <lockpick/graph/count.h>
 #include <lockpick/uint.h>
 #include <lockpick/test.h>
 

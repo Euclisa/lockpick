@@ -17,6 +17,7 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/sync/*.c"
         "${CMAKE_SOURCE_DIR}/tests/graph/types/uint/*.c"
         "${CMAKE_SOURCE_DIR}/tests/graph/graph/tsort/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/graph/ocl/ocl_graph/*.c"
         "${CMAKE_SOURCE_DIR}/tests/graph/graph/properties/count/*.c")
 file(GLOB TEST_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/tests/")
 
