@@ -1,11 +1,17 @@
 #include <lockpick/graph/ocl_graph.h>
+#include <lockpick/graph/count.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/utility.h>
+#include <lockpick/htable.h>
 
 
 lpg_ocl_graph_t *lpg_ocl_graph_create(lpg_graph_t *graph, bool gen_reverse_index)
 {
     affirm_nullptr(graph,"graph");
+
+    size_t redundant_inputs_num = lpg_graph_count_redundant_inputs(graph);
+    affirmf(redundant_inputs_num == 0,
+        "Given graph contains %zd redundant input nodes and cannot be converted to ocl graph",redundant_inputs_num);
 
     size_t ocl_graph_size = sizeof(lpg_ocl_graph_t);
     lpg_ocl_graph_t *ocl_graph = (lpg_ocl_graph_t*)malloc(ocl_graph_size);
@@ -15,7 +21,24 @@ lpg_ocl_graph_t *lpg_ocl_graph_create(lpg_graph_t *graph, bool gen_reverse_index
 
     __lpg_ocl_graph_tsort_packed(ocl_graph,gen_reverse_index);
 
+    affirmf(ocl_graph->nodes_num <= LPG_OCL_GRAPH_MAX_NODES_NUM,
+        "Number of nodes in the given graph exceeds max number of nodes supported (%zd > %d)",
+        ocl_graph->nodes_num,LPG_OCL_GRAPH_MAX_NODES_NUM);
+
     return ocl_graph;
+}
+
+
+void lpg_ocl_graph_release(lpg_ocl_graph_t *ocl_graph)
+{
+    affirm_nullptr(ocl_graph,"ocl graph");
+
+    lp_htable_release(ocl_graph->index_map);
+    if(ocl_graph->rev_index_map)
+        lp_htable_release(ocl_graph->rev_index_map);
+    
+    free(ocl_graph->sorted_nodes);
+    free(ocl_graph);
 }
 
 
@@ -48,10 +71,11 @@ inline lpg_node_packed_t __lpg_node_packed_from_node(lpg_ocl_graph_t *ocl_graph,
     lpg_node_packed_t packed_node;
 
     size_t parents_num = lpg_node_get_parents_num(node);
+    lpg_node_t **parents = lpg_node_parents(node);
     for(size_t parent_i = 0; parent_i < parents_num; ++parent_i)
     {
         uint16_t packed_parent_i;
-        lpg_ocl_graph_index_map_find(ocl_graph->index_map,node,&packed_parent_i);
+        lpg_ocl_graph_index_map_find(ocl_graph,parents[parent_i],&packed_parent_i);
         packed_node.parents[parent_i] = packed_parent_i;
     }
     packed_node.type = __lpg_node_packed_type_from_node(node);
@@ -60,7 +84,7 @@ inline lpg_node_packed_t __lpg_node_packed_from_node(lpg_ocl_graph_t *ocl_graph,
 }
 
 
-inline lpg_node_packed_t __lpg_node_packed_from_terminal_node(const lpg_node_t *node)
+inline lpg_node_packed_t __lpg_node_packed_from_const_node(const lpg_node_t *node)
 {
     lpg_node_packed_t packed_node;
     packed_node.type = __lpg_node_packed_type_from_node(node);
@@ -72,15 +96,23 @@ inline lpg_node_packed_t __lpg_node_packed_from_terminal_node(const lpg_node_t *
 }
 
 
+inline lpg_node_packed_t __lpg_node_packed_from_input_node(const lpg_node_t *node)
+{
+    lpg_node_packed_t packed_node;
+    packed_node.type = LPG_NODE_PACKED_TYPE_INPUT;
+
+    return packed_node;
+}
+
 
 size_t __lpg_ocl_graph_index_map_hsh(const __lpg_ocl_graph_index_map_entry_t *entry)
 {
-    return __lpg_graph_nodes_hsh((const lpg_node_t**)&entry->node);
+    return lp_uni_hash((size_t)entry->node);
 }
 
 bool __lpg_ocl_graph_index_map_eq(const __lpg_ocl_graph_index_map_entry_t *a, const __lpg_ocl_graph_index_map_entry_t *b)
 {
-    return __lpg_graph_nodes_eq((const lpg_node_t**)&a->node,(const lpg_node_t**)&b->node);
+    return a->node == b->node;
 }
 
 
@@ -97,7 +129,9 @@ inline void lpg_ocl_graph_index_map_find(lpg_ocl_graph_t *ocl_graph, lpg_node_t 
 {
     __lpg_ocl_graph_index_map_entry_t entry;
     entry.node = node;
-    lp_htable_find(ocl_graph->index_map,&entry,result);
+    __lpg_ocl_graph_index_map_entry_t found;
+    lp_htable_find(ocl_graph->index_map,&entry,&found);
+    *result = found.index;
 }
 
 
@@ -125,5 +159,7 @@ inline void lpg_ocl_graph_rev_index_map_find(lpg_ocl_graph_t *ocl_graph, uint16_
 {
     __lpg_ocl_graph_index_map_entry_t entry;
     entry.index = index;
-    lp_htable_find(ocl_graph->rev_index_map,&entry,result);
+    __lpg_ocl_graph_index_map_entry_t found;
+    lp_htable_find(ocl_graph->rev_index_map,&entry,&found);
+    *result = found.node;
 }

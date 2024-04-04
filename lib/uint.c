@@ -6,7 +6,7 @@
 #define __LP_UINT_BAD_CHAR 255
 
 const __uint128_t __LP_UINT_BASE = ((__uint128_t)1 << (__LP_UINT_BITS_PER_WORD));
-const __lp_uint_word_t __LP_UINT_MAX_WORD = (__lp_uint_word_t)-1;
+const __lp_uint_word_t __LP_UINT_MAX_WORD = (__lp_uint_word_t)-1ULL;
 const uint64_t __LP_UINT_HEXES_PER_WORD = __LP_UINT_BITS_PER_WORD / LP_BITS_PER_HEX;
 
 

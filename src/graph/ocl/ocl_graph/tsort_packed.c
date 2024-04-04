@@ -46,10 +46,16 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_i
             lp_htable_cast_eq(__lpg_ocl_graph_index_map_eq));
     else
         ocl_graph->rev_index_map = NULL;
+    
+    size_t zero_layer_size = init_state.const_nodes_count+graph->inputs_size;
+    size_t init_orphaned_capacity = zero_layer_size*2;
+    // Nodes that do not have unprocessed parents anymore
+    lp_vector_t *orphaned = lp_vector_create(init_orphaned_capacity,sizeof(lpg_node_t*));
 
     for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
     {
-        result[in_node_i] = __lpg_node_packed_from_terminal_node(graph->inputs[in_node_i]);
+        result[in_node_i] = __lpg_node_packed_from_input_node(graph->inputs[in_node_i]);
+        lp_vector_push_back(orphaned,&graph->inputs[in_node_i]);
         __lpg_ocl_graph_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
         if(gen_reverse_index)
             __lpg_ocl_graph_rev_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
@@ -57,27 +63,19 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_i
     
     for(size_t const_node_i = 0; const_node_i < init_state.const_nodes_count; ++const_node_i)
     {
-        result[graph->inputs_size+const_node_i] = __lpg_node_packed_from_terminal_node(init_state.const_nodes[const_node_i]);
-        __lpg_ocl_graph_index_map_insert(ocl_graph,graph->inputs[const_node_i],graph->inputs_size+const_node_i);
+        result[graph->inputs_size+const_node_i] = __lpg_node_packed_from_const_node(init_state.const_nodes[const_node_i]);
+        lp_vector_push_back(orphaned,&init_state.const_nodes[const_node_i]);
+        __lpg_ocl_graph_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
         if(gen_reverse_index)
-            __lpg_ocl_graph_rev_index_map_insert(ocl_graph,graph->inputs[const_node_i],graph->inputs_size+const_node_i);
+            __lpg_ocl_graph_rev_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
     }
     free(init_state.const_nodes);
-
-    size_t zero_layer_size = init_state.const_nodes_count+graph->inputs_size;
 
     lp_htable_t *visited = lp_htable_create_el_num(
             init_state.nodes_count,
             sizeof(lpg_node_t*),
             lp_htable_cast_hsh(__lpg_graph_nodes_hsh),
             lp_htable_cast_eq(__lpg_graph_nodes_eq));
-    
-    size_t init_orphaned_capacity = zero_layer_size*2;
-    // Nodes that do not have unprocessed parents anymore
-    lp_vector_t *orphaned = lp_vector_create(init_orphaned_capacity,sizeof(lpg_node_t*));
-
-    for(size_t node_i = 0; node_i < zero_layer_size; ++node_i)
-        lp_vector_push_back(orphaned,&result[node_i]);
 
     size_t curr_node_i = zero_layer_size;
     while(!lp_vector_empty(orphaned))

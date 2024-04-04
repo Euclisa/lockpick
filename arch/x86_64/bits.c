@@ -25,3 +25,15 @@ inline uint8_t lp_bittestandset(uint32_t *bitmap, uint32_t bit_offset)
     
     return result;
 }
+
+
+uint8_t lp_bittest(const uint32_t *bitmap, uint32_t bit_offset)
+{
+    uint8_t result;
+    __asm__ volatile (
+            "bt %[off],%[bm]\n\t"
+          : [res]"=@ccc"(result)
+          : [off]"r"(bit_offset), [bm]"m"(*bitmap));
+    
+    return result;
+}

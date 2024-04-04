@@ -6,12 +6,14 @@
 #include "math/math.h"
 #include "slab/slab.h"
 #include "bits/bits.h"
+#include "bitset/bitset.h"
 #include "htable/htable.h"
 #include "ndarray/ndarray.h"
 #include "vector/vector.h"
 #include "graph/types/uint/uint.h"
 #include "graph/graph/tsort/tsort.h"
 #include "graph/graph/properties/count/count.h"
+#include "graph/ocl/ocl_graph/ocl_graph.h"
 #include <lockpick/test.h>
 #include <lockpick/lockpick.h>
 
@@ -26,12 +28,14 @@ int main()
     //LP_TEST_RUN(lp_test_ndarray(),1);
     //LP_TEST_RUN(lp_test_math(),1);
     //LP_TEST_RUN(lp_test_slab(),1);
-    //LP_TEST_RUN(lp_test_bits(),1);
-    LP_TEST_RUN(lp_test_vector(),1);
+    //LP_TEST_RUN(lp_test_bits());
+    //LP_TEST_RUN(lp_test_bitset());
+    //LP_TEST_RUN(lp_test_vector(),1);
     //LP_TEST_RUN(lp_test_sync());
     //LP_TEST_RUN(lp_test_htable(),1);
     //LP_TEST_RUN(lp_test_graph_uint(),1);
-    LP_TEST_RUN(lp_test_graph_tsort(),1);
-    LP_TEST_RUN(lp_test_graph_count());
+    //LP_TEST_RUN(lp_test_graph_tsort(),1);
+    //LP_TEST_RUN(lp_test_graph_count());
+    LP_TEST_RUN(lp_test_ocl_graph());
     LP_TEST_END();
 }

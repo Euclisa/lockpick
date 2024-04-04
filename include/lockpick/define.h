@@ -33,7 +33,7 @@
 #define check_fatal_debug(f_call,code,ret)              \
     check_fatal(f_call,code,ret)
 #else
-#define check_fatal_debug(f_call,code,ret)                 \
+#define check_fatal_debug(f_call,code,ret)              \
     f_call;
 #endif // LOCKPICK_DEBUG
 
@@ -50,10 +50,12 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-#define LP_NPOS ((size_t)-1)
+#define LP_NPOS ((size_t)-1ULL)
 
 #define LP_BITS_PER_BYTE 8
 #define LP_BITS_PER_HEX 4
+
+#define lp_sizeof_bits(x) (sizeof(x)*LP_BITS_PER_BYTE)
 
 #define lp_same_type(t1,t2) __builtin_types_compatible_p(typeof(t1),typeof(t2))
 

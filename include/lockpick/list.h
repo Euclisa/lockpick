@@ -21,4 +21,4 @@ void lp_list_remove_head(lp_list_t **head);
         entry != NULL;                                                              \
         entry = container_of(entry->list.next,entry_type,entry_node_memeber))
 
-#endif
+#endif // _LOCKPICK_LIST_H
