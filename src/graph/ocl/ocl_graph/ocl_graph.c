@@ -5,7 +5,7 @@
 #include <lockpick/htable.h>
 
 
-lpg_ocl_graph_t *lpg_ocl_graph_create(lpg_graph_t *graph, bool gen_reverse_index)
+lpg_ocl_graph_t *lpg_ocl_graph_create(lpg_graph_t *graph, bool gen_inverse_index)
 {
     affirm_nullptr(graph,"graph");
 
@@ -19,7 +19,7 @@ lpg_ocl_graph_t *lpg_ocl_graph_create(lpg_graph_t *graph, bool gen_reverse_index
 
     ocl_graph->graph = graph;
 
-    __lpg_ocl_graph_tsort_packed(ocl_graph,gen_reverse_index);
+    __lpg_ocl_graph_tsort_packed(ocl_graph,gen_inverse_index);
 
     affirmf(ocl_graph->nodes_num <= LPG_OCL_GRAPH_MAX_NODES_NUM,
         "Number of nodes in the given graph exceeds max number of nodes supported (%zd > %d)",
@@ -34,8 +34,8 @@ void lpg_ocl_graph_release(lpg_ocl_graph_t *ocl_graph)
     affirm_nullptr(ocl_graph,"ocl graph");
 
     lp_htable_release(ocl_graph->index_map);
-    if(ocl_graph->rev_index_map)
-        lp_htable_release(ocl_graph->rev_index_map);
+    if(ocl_graph->inv_index_map)
+        lp_htable_release(ocl_graph->inv_index_map);
     
     free(ocl_graph->sorted_nodes);
     free(ocl_graph);
@@ -135,31 +135,31 @@ inline void lpg_ocl_graph_index_map_find(lpg_ocl_graph_t *ocl_graph, lpg_node_t 
 }
 
 
-size_t __lpg_ocl_graph_rev_index_map_hsh(const __lpg_ocl_graph_index_map_entry_t *entry)
+size_t __lpg_ocl_graph_inv_index_map_hsh(const __lpg_ocl_graph_index_map_entry_t *entry)
 {
     return lp_uni_hash(entry->index);
 }
 
-bool __lpg_ocl_graph_rev_index_map_eq(const __lpg_ocl_graph_index_map_entry_t *a, const __lpg_ocl_graph_index_map_entry_t *b)
+bool __lpg_ocl_graph_inv_index_map_eq(const __lpg_ocl_graph_index_map_entry_t *a, const __lpg_ocl_graph_index_map_entry_t *b)
 {
     return a->index == b->index;
 }
 
 
-inline void __lpg_ocl_graph_rev_index_map_insert(lpg_ocl_graph_t *ocl_graph, lpg_node_t *node, uint16_t index)
+inline void __lpg_ocl_graph_inv_index_map_insert(lpg_ocl_graph_t *ocl_graph, lpg_node_t *node, uint16_t index)
 {
     __lpg_ocl_graph_index_map_entry_t entry;
     entry.node = node;
     entry.index = index;
-    lp_htable_insert(ocl_graph->rev_index_map,&entry);
+    lp_htable_insert(ocl_graph->inv_index_map,&entry);
 }
 
 
-inline void lpg_ocl_graph_rev_index_map_find(lpg_ocl_graph_t *ocl_graph, uint16_t index, lpg_node_t **result)
+inline void lpg_ocl_graph_inv_index_map_find(lpg_ocl_graph_t *ocl_graph, uint16_t index, lpg_node_t **result)
 {
     __lpg_ocl_graph_index_map_entry_t entry;
     entry.index = index;
     __lpg_ocl_graph_index_map_entry_t found;
-    lp_htable_find(ocl_graph->rev_index_map,&entry,&found);
+    lp_htable_find(ocl_graph->inv_index_map,&entry,&found);
     *result = found.node;
 }

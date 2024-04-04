@@ -9,7 +9,7 @@
 #include <string.h>
 
 
-void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_index)
+void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_inverse_index)
 {
     affirm_nullptr(ocl_graph,"graph");
     affirmf_debug(ocl_graph->graph,"Graph field of ocl graph instance must be set to this point");
@@ -38,14 +38,14 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_i
             lp_htable_cast_hsh(__lpg_ocl_graph_index_map_hsh),
             lp_htable_cast_eq(__lpg_ocl_graph_index_map_eq));
     
-    if(gen_reverse_index)
-        ocl_graph->rev_index_map = lp_htable_create_el_num(
+    if(gen_inverse_index)
+        ocl_graph->inv_index_map = lp_htable_create_el_num(
             init_state.nodes_count,
             sizeof(__lpg_ocl_graph_index_map_entry_t),
-            lp_htable_cast_hsh(__lpg_ocl_graph_rev_index_map_hsh),
+            lp_htable_cast_hsh(__lpg_ocl_graph_inv_index_map_hsh),
             lp_htable_cast_eq(__lpg_ocl_graph_index_map_eq));
     else
-        ocl_graph->rev_index_map = NULL;
+        ocl_graph->inv_index_map = NULL;
     
     size_t zero_layer_size = init_state.const_nodes_count+graph->inputs_size;
     size_t init_orphaned_capacity = zero_layer_size*2;
@@ -57,8 +57,8 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_i
         result[in_node_i] = __lpg_node_packed_from_input_node(graph->inputs[in_node_i]);
         lp_vector_push_back(orphaned,&graph->inputs[in_node_i]);
         __lpg_ocl_graph_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
-        if(gen_reverse_index)
-            __lpg_ocl_graph_rev_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
+        if(gen_inverse_index)
+            __lpg_ocl_graph_inv_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
     }
     
     for(size_t const_node_i = 0; const_node_i < init_state.const_nodes_count; ++const_node_i)
@@ -66,8 +66,8 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_i
         result[graph->inputs_size+const_node_i] = __lpg_node_packed_from_const_node(init_state.const_nodes[const_node_i]);
         lp_vector_push_back(orphaned,&init_state.const_nodes[const_node_i]);
         __lpg_ocl_graph_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
-        if(gen_reverse_index)
-            __lpg_ocl_graph_rev_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
+        if(gen_inverse_index)
+            __lpg_ocl_graph_inv_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
     }
     free(init_state.const_nodes);
 
@@ -91,12 +91,11 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_reverse_i
             
             if(child_parents_num == 1 || !lp_htable_insert(visited,&child_node))
             {
-                lp_vector_push_back(orphaned,&child_node);
                 result[curr_node_i] = __lpg_node_packed_from_node(ocl_graph,child_node);
-
+                lp_vector_push_back(orphaned,&child_node);
                 __lpg_ocl_graph_index_map_insert(ocl_graph,child_node,curr_node_i);
-                if(gen_reverse_index)
-                    __lpg_ocl_graph_rev_index_map_insert(ocl_graph,child_node,curr_node_i);
+                if(gen_inverse_index)
+                    __lpg_ocl_graph_inv_index_map_insert(ocl_graph,child_node,curr_node_i);
 
                 ++curr_node_i;
             }
