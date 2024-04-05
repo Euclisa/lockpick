@@ -1,5 +1,5 @@
 #include <lockpick/test.h>
-#include <lockpick/graph/ocl_graph.h>
+#include <lockpick/graph/inference/host/infer.h>
 #include <lockpick/graph/compute.h>
 #include <lockpick/graph/types/uint.h>
 #include <lockpick/bitset.h>
@@ -9,7 +9,7 @@
 #define __LPG_TEST_OCL_GRAPH_MAX_GRAPH_NODES 100000
 
 
-void __test_ocl_graph_compute(size_t in_width, size_t out_width)
+void __test_inference_graph_infer_host(size_t in_width, size_t out_width)
 {
     lpg_graph_t *graph = lpg_graph_create("test",in_width,out_width,__LPG_TEST_OCL_GRAPH_MAX_GRAPH_NODES);
     size_t operand_width = in_width/2;
@@ -22,7 +22,7 @@ void __test_ocl_graph_compute(size_t in_width, size_t out_width)
     lpg_uint_assign_from_rand(uint_b);
     lpg_graph_compute(graph);
 
-    lpg_ocl_graph_t *ocl_graph = lpg_ocl_graph_create(graph,true);
+    lpg_inference_graph_t *inference_graph = lpg_inference_graph_create(graph,true);
     lp_bitset_t *input_values = lp_bitset_create(graph->inputs_size);
     for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
     {
@@ -30,7 +30,7 @@ void __test_ocl_graph_compute(size_t in_width, size_t out_width)
         lp_bitset_update(input_values,in_node_i,in_value);
     }
 
-    lp_bitset_t *ocl_computed_output = lpg_ocl_graph_compute_host(ocl_graph,input_values);
+    lp_bitset_t *ocl_computed_output = lpg_inference_graph_infer_host(inference_graph,input_values);
 
     for(size_t out_node_i = 0; out_node_i < graph->outputs_size; ++out_node_i)
     {
@@ -49,21 +49,21 @@ void __test_ocl_graph_compute(size_t in_width, size_t out_width)
     lpg_uint_release(uint_res);
     lp_bitset_release(input_values);
     lp_bitset_release(ocl_computed_output);
-    lpg_ocl_graph_release(ocl_graph);
+    lpg_inference_graph_release(inference_graph);
 }
 
 
-void test_ocl_graph_compute()
+void test_inference_graph_infer_host()
 {
     for(size_t in_width = 2; in_width <= 18; in_width += 2)
         for(size_t out_width = in_width/2; out_width <= in_width; ++out_width)
-            LP_TEST_STEP_INTO(__test_ocl_graph_compute(in_width,out_width));
+            LP_TEST_STEP_INTO(__test_inference_graph_infer_host(in_width,out_width));
     
     lp_test_cleanup:
 }
 
 
-void lp_test_ocl_graph()
+void lp_test_inference_graph_infer_host()
 {
-    LP_TEST_RUN(test_ocl_graph_compute());
+    LP_TEST_RUN(test_inference_graph_infer_host());
 }

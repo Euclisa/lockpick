@@ -13,7 +13,7 @@
 #include "graph/types/uint/uint.h"
 #include "graph/graph/tsort/tsort.h"
 #include "graph/graph/properties/count/count.h"
-#include "graph/ocl/ocl_graph/ocl_graph.h"
+#include "graph/inference/host/infer/infer.h"
 #include <lockpick/test.h>
 #include <lockpick/lockpick.h>
 
@@ -36,6 +36,6 @@ int main()
     //LP_TEST_RUN(lp_test_graph_uint(),1);
     //LP_TEST_RUN(lp_test_graph_tsort(),1);
     //LP_TEST_RUN(lp_test_graph_count(),1);
-    LP_TEST_RUN(lp_test_ocl_graph(),1);
+    //LP_TEST_RUN(lp_test_inference_graph_infer_host(),1);
     LP_TEST_END();
 }

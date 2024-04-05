@@ -1,6 +1,6 @@
 #include <lockpick/graph/tsort.h>
 #include <lockpick/graph/traverse.h>
-#include <lockpick/graph/ocl_graph.h>
+#include <lockpick/graph/inference/inference_graph.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/htable.h>
 #include <lockpick/math.h>
@@ -9,12 +9,12 @@
 #include <string.h>
 
 
-void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_inverse_index)
+void __lpg_inference_graph_tsort_packed(lpg_inference_graph_t *inference_graph, bool gen_inverse_index)
 {
-    affirm_nullptr(ocl_graph,"graph");
-    affirmf_debug(ocl_graph->graph,"Graph field of ocl graph instance must be set to this point");
+    affirm_nullptr(inference_graph,"graph");
+    affirmf_debug(inference_graph->graph,"Graph field of ocl graph instance must be set to this point");
 
-    lpg_graph_t *graph = ocl_graph->graph;
+    lpg_graph_t *graph = inference_graph->graph;
 
     __tsort_init_state_t init_state;
 
@@ -26,26 +26,26 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_inverse_i
 
     lpg_graph_traverse_once(graph,__lpg_tsort_init_state_cb,&init_state);
 
-    ocl_graph->nodes_num = init_state.nodes_count;
+    inference_graph->nodes_num = init_state.nodes_count;
 
     size_t result_size = init_state.nodes_count*sizeof(lpg_node_packed_t);
     lpg_node_packed_t *result = (lpg_node_packed_t*)malloc(result_size);
     affirm_bad_malloc(result,"result sorted nodes array",result_size);
 
-    ocl_graph->index_map = lp_htable_create_el_num(
+    inference_graph->index_map = lp_htable_create_el_num(
             init_state.nodes_count,
-            sizeof(__lpg_ocl_graph_index_map_entry_t),
-            lp_htable_cast_hsh(__lpg_ocl_graph_index_map_hsh),
-            lp_htable_cast_eq(__lpg_ocl_graph_index_map_eq));
+            sizeof(__lpg_inference_graph_index_map_entry_t),
+            lp_htable_cast_hsh(__lpg_inference_graph_index_map_hsh),
+            lp_htable_cast_eq(__lpg_inference_graph_index_map_eq));
     
     if(gen_inverse_index)
-        ocl_graph->inv_index_map = lp_htable_create_el_num(
+        inference_graph->inv_index_map = lp_htable_create_el_num(
             init_state.nodes_count,
-            sizeof(__lpg_ocl_graph_index_map_entry_t),
-            lp_htable_cast_hsh(__lpg_ocl_graph_inv_index_map_hsh),
-            lp_htable_cast_eq(__lpg_ocl_graph_index_map_eq));
+            sizeof(__lpg_inference_graph_index_map_entry_t),
+            lp_htable_cast_hsh(__lpg_inference_graph_inv_index_map_hsh),
+            lp_htable_cast_eq(__lpg_inference_graph_index_map_eq));
     else
-        ocl_graph->inv_index_map = NULL;
+        inference_graph->inv_index_map = NULL;
     
     size_t zero_layer_size = init_state.const_nodes_count+graph->inputs_size;
     size_t init_orphaned_capacity = zero_layer_size*2;
@@ -54,20 +54,20 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_inverse_i
 
     for(size_t in_node_i = 0; in_node_i < graph->inputs_size; ++in_node_i)
     {
-        result[in_node_i] = __lpg_node_packed_from_input_node(graph->inputs[in_node_i]);
+        result[in_node_i] = __lpg_node_packed_from_input_node(graph->inputs[in_node_i],LPG_NODE_PACKED_NOT_OUTPUT);
         lp_vector_push_back(orphaned,&graph->inputs[in_node_i]);
-        __lpg_ocl_graph_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
+        __lpg_inference_graph_index_map_insert(inference_graph,graph->inputs[in_node_i],in_node_i);
         if(gen_inverse_index)
-            __lpg_ocl_graph_inv_index_map_insert(ocl_graph,graph->inputs[in_node_i],in_node_i);
+            __lpg_inference_graph_inv_index_map_insert(inference_graph,graph->inputs[in_node_i],in_node_i);
     }
     
     for(size_t const_node_i = 0; const_node_i < init_state.const_nodes_count; ++const_node_i)
     {
-        result[graph->inputs_size+const_node_i] = __lpg_node_packed_from_const_node(init_state.const_nodes[const_node_i]);
+        result[graph->inputs_size+const_node_i] = __lpg_node_packed_from_const_node(init_state.const_nodes[const_node_i],LPG_NODE_PACKED_NOT_OUTPUT);
         lp_vector_push_back(orphaned,&init_state.const_nodes[const_node_i]);
-        __lpg_ocl_graph_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
+        __lpg_inference_graph_index_map_insert(inference_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
         if(gen_inverse_index)
-            __lpg_ocl_graph_inv_index_map_insert(ocl_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
+            __lpg_inference_graph_inv_index_map_insert(inference_graph,init_state.const_nodes[const_node_i],graph->inputs_size+const_node_i);
     }
     free(init_state.const_nodes);
 
@@ -91,18 +91,27 @@ void __lpg_ocl_graph_tsort_packed(lpg_ocl_graph_t *ocl_graph, bool gen_inverse_i
             
             if(child_parents_num == 1 || !lp_htable_insert(visited,&child_node))
             {
-                result[curr_node_i] = __lpg_node_packed_from_node(ocl_graph,child_node);
+                result[curr_node_i] = __lpg_node_packed_from_node(inference_graph,child_node,LPG_NODE_PACKED_NOT_OUTPUT);
                 lp_vector_push_back(orphaned,&child_node);
-                __lpg_ocl_graph_index_map_insert(ocl_graph,child_node,curr_node_i);
+                __lpg_inference_graph_index_map_insert(inference_graph,child_node,curr_node_i);
                 if(gen_inverse_index)
-                    __lpg_ocl_graph_inv_index_map_insert(ocl_graph,child_node,curr_node_i);
+                    __lpg_inference_graph_inv_index_map_insert(inference_graph,child_node,curr_node_i);
 
                 ++curr_node_i;
             }
         }
     }
 
-    ocl_graph->sorted_nodes = result;
+    lpg_inference_graph_index_t outputs_size = inference_graph->graph->outputs_size;
+    lpg_node_t **outputs = inference_graph->graph->outputs;
+    for(lpg_inference_graph_index_t out_node_i = 0; out_node_i < outputs_size; ++out_node_i)
+    {
+        lpg_inference_graph_index_t out_index;
+        lpg_inference_graph_index_map_find(inference_graph,outputs[out_node_i],&out_index);
+        __lpg_node_packed_set_output(&result[out_index],out_node_i);
+    }
+
+    inference_graph->sorted_nodes = result;
 
     lp_htable_release(visited);
     lp_vector_release(orphaned);

@@ -2,7 +2,7 @@
 #define _LOCKPICK_GRAPH_TSORT_H
 
 #include <lockpick/graph/graph.h>
-#include <lockpick/graph/ocl_graph.h>
+#include <lockpick/graph/inference/inference_graph.h>
 
 
 #define INIT_ZERO_LAYER_NODES_LOG_ARR_SIZE 3
