@@ -3,7 +3,12 @@
 
 #include <lockpick/sync/exit.h>
 #include <lockpick/affinity.h>
+#include <lockpick/logger.h>
 
+
+extern bool lp_initialized;
+
+extern lp_logger_t *lp_log;
 
 void lp_init();
 

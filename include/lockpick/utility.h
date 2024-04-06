@@ -24,6 +24,8 @@
 })
 
 
+char lp_digit_to_char(uint16_t digit);
+
 size_t lp_uni_hash(size_t x);
 
 #endif // _LOCKPICK_UTILITY_H

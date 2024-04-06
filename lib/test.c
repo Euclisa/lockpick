@@ -7,11 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define __LP_TEST_PASSED_STYLE_MAGIC "\033[1;32;1m"
-#define __LP_TEST_RUNNING_STYLE_MAGIC "\033[1;33;1m"
-#define __LP_TEST_FAILED_STYLE_MAGIC "\033[1;31;1m"
-#define __LP_TEST_EMPTY_STYLE_MAGIC "\033[1;34;1m"
-#define __LP_TEST_RESET_STYLE_MAGIC "\033[0m"
+#define __LP_TEST_PASSED_STATUS_STR lp_string_styled_lit("PASSED",green,bold)
+#define __LP_TEST_RUNNING_STATUS_STR lp_string_styled_lit("RUNNING",yellow,bold)
+#define __LP_TEST_FAILED_STATUS_STR lp_string_styled_lit("FAILED",red,bold)
+#define __LP_TEST_EMPTY_STATUS_STR lp_string_styled_lit("EMPTY",blue,bold)
 
 #define __LP_TEST_NANO_DECIMALS 1000000000
 #define __LP_TEST_MICRO_DECIMALS 1000000
@@ -107,7 +106,7 @@ void __lp_test_print_enter(uint8_t curr_level, const char *test_call_str)
     char *space_padding = __create_padding(curr_level);
     char *time_str = __get_time_str("%X");
     printf("%s|-+-> [%s] %s Test: %s\n",
-        space_padding,time_str,lp_string_yellow("RUNNING"),test_call_str);
+        space_padding,time_str,__LP_TEST_RUNNING_STATUS_STR,test_call_str);
 }
 
 
@@ -167,16 +166,16 @@ void __lp_test_print_leave_status(uint8_t curr_level, const char *test_call_str,
 
     if(cases_passed == 0 && tests_failed == 0)
     {
-        snprintf(status_str,status_str_len+1,"%s",lp_string_blue("EMPTY"));
+        snprintf(status_str,status_str_len+1,"%s",__LP_TEST_EMPTY_STATUS_STR);
         print_stats = false;
     }
     else if(tests_failed > 0)
     {
-        snprintf(status_str,status_str_len+1,"%s",lp_string_red("FAILED"));
+        snprintf(status_str,status_str_len+1,"%s",__LP_TEST_FAILED_STATUS_STR);
         print_details = last_failed_test_call_str[0] != '\0';
     }
     else
-        snprintf(status_str,status_str_len+1,"%s",lp_string_green("PASSED"));
+        snprintf(status_str,status_str_len+1,"%s",__LP_TEST_PASSED_STATUS_STR);
     
     printf("%s|-+-> [%s] %s Test: %s",space_padding,time_str,status_str,test_call_str);
 
@@ -207,10 +206,10 @@ void __lp_test_print_end(const char *project_name_str, uint64_t tests_total, uin
 
     if(failure)
         printf("*** Quality Assurance for '%s' %s (%ld ms) ***\n",
-            project_name_str,lp_string_red("FAILED"),duration_total_ms);
+            project_name_str,__LP_TEST_FAILED_STATUS_STR,duration_total_ms);
     else
         printf("*** Quality Assurance for '%s' %s (%ld ms) ***\n",
-            project_name_str,lp_string_green("PASSED"),duration_total_ms);
+            project_name_str,__LP_TEST_PASSED_STATUS_STR,duration_total_ms);
 }
 
 

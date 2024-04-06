@@ -16,6 +16,9 @@
 #include "graph/inference/host/infer/infer.h"
 #include <lockpick/test.h>
 #include <lockpick/lockpick.h>
+#include <lockpick/logger.h>
+#include <lockpick/string.h>
+
 
 int main()
 {
@@ -36,6 +39,6 @@ int main()
     //LP_TEST_RUN(lp_test_graph_uint(),1);
     //LP_TEST_RUN(lp_test_graph_tsort(),1);
     //LP_TEST_RUN(lp_test_graph_count(),1);
-    //LP_TEST_RUN(lp_test_inference_graph_infer_host(),1);
+    LP_TEST_RUN(lp_test_inference_graph_infer_host(),1);
     LP_TEST_END();
 }
