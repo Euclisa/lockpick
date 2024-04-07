@@ -11,7 +11,8 @@ typedef enum lp_logger_levels
     LP_LOGGER_LEVEL_INFO,
     LP_LOGGER_LEVEL_WARNING,
     LP_LOGGER_LEVEL_ERROR,
-    LP_LOGGER_LEVEL_CRITICAL
+    LP_LOGGER_LEVEL_CRITICAL,
+    LP_LOGGER_LEVEL_OFF
 } lp_logger_levels_t;
 
 

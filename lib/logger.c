@@ -212,7 +212,7 @@ lp_logger_t *lp_logger_create(const char *format)
 void lp_logger_set_log_level(lp_logger_t *log, lp_logger_levels_t level)
 {
     affirm_nullptr(log,"logger");
-    affirmf(level >= LP_LOGGER_LEVEL_DEBUG && level <= LP_LOGGER_LEVEL_CRITICAL,
+    affirmf(level >= LP_LOGGER_LEVEL_DEBUG && level <= LP_LOGGER_LEVEL_OFF,
         "Invalid level %d",(uint32_t)level);
     
     log->log_level = level;

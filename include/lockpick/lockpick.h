@@ -10,6 +10,6 @@ extern bool lp_initialized;
 
 extern lp_logger_t *lp_log;
 
-void lp_init();
+void lp_init(lp_logger_levels_t log_level);
 
 #endif // _LOCKPICK_LOCKPICK_H

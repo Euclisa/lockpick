@@ -8,7 +8,7 @@ bool lp_initialized = false;
 lp_logger_t *lp_log;
 
 
-void lp_init()
+void lp_init(lp_logger_levels_t log_level)
 {
     // Can't call affirmf because it might be uninitialized
     if(lp_initialized)
@@ -19,6 +19,7 @@ void lp_init()
     __lp_affinity_init();
 
     lp_log = lp_logger_create("[%H:%M:%s] %L: %u");
+    lp_logger_set_log_level(lp_log,log_level);
 
     lp_initialized = true;
 

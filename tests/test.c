@@ -22,7 +22,7 @@
 
 int main()
 {
-    lp_init();
+    lp_init(LP_LOGGER_LEVEL_OFF);
     LP_TEST_BEGIN("Lockpick");
     //LP_TEST_RUN(lp_test_rb_tree(),1);
     //LP_TEST_RUN(lp_test_uint(),1);
