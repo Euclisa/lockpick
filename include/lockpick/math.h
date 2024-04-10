@@ -15,6 +15,9 @@
 #define lp_ceil_log2(x)         \
         (lp_floor_log2(x) + !lp_is_pow_2(x))
 
+#define lp_ceil_pow2(x)         \
+        (1ULL << lp_ceil_log2(x))
+
 #define lp_div_pow_2(a,b)       \
         ((a) >> lp_floor_log2(b))
 

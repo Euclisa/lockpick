@@ -44,8 +44,8 @@ lp_uint_typedef(2048);
 void __lp_uint_from_hex(const char *hex_str, __lp_uint_word_t *value, size_t value_size);
 #define lp_uint_from_hex(value,hex_str) __lp_uint_from_hex(hex_str, (value).__buffer, __array_size((value).__buffer))
 
-int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *a, size_t n_chars);
-#define lp_uint_to_hex(value,a,n) __lp_uint_to_hex((value).__buffer, __array_size((value).__buffer), a, n)
+int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *dest, size_t n_chars);
+#define lp_uint_to_hex(value,dest,n) __lp_uint_to_hex((value).__buffer, __array_size((value).__buffer), dest, n)
 
 void __lp_uint_copy(__lp_uint_word_t *dest, size_t dest_size, const __lp_uint_word_t *src, size_t src_size);
 #define lp_uint_copy(dest,src) __lp_uint_copy((dest).__buffer, __array_size((dest).__buffer), (src).__buffer, __array_size((src).__buffer))

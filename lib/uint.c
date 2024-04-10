@@ -143,7 +143,7 @@ uint8_t __lp_uint_i2ch(__lp_uint_word_t value, char *a, size_t n, bool truncate_
  * 
  * This is not supposed to be called by user. Use 'lp_uint_to_hex' macro instead.
  */
-int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *a, size_t n)
+int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char *dest, size_t n)
 {
     affirm_nullptr(value,"value");
 
@@ -154,10 +154,10 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
     // If all words == 0
     if(significant_words_offset < 0)
     {
-        if(n > 0 && a)
+        if(n > 0 && dest)
         {
-            a[0] = '0';
-            a[1] = '\0';
+            dest[0] = '0';
+            dest[1] = '\0';
         }
 
         return 2;
@@ -168,15 +168,15 @@ int64_t __lp_uint_to_hex(const __lp_uint_word_t *value, size_t value_size, char 
     for(uint8_t shift = 0; shift < __LP_UINT_BITS_PER_WORD && (value[significant_words_offset] >> shift); shift += LP_BITS_PER_HEX)
         ++hex_str_len;
     
-    if(a != NULL)
+    if(dest != NULL)
     {
         size_t hex_str_len_truncated = MIN(n,hex_str_len);
-        a[hex_str_len_truncated] = '\0';
+        dest[hex_str_len_truncated] = '\0';
 
         size_t wrote_hexes = 0;
-        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],a+wrote_hexes,hex_str_len_truncated-wrote_hexes,true);
+        wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,true);
         while(significant_words_offset >= 0)
-            wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],a+wrote_hexes,hex_str_len_truncated-wrote_hexes,false);
+            wrote_hexes += __lp_uint_i2ch(value[significant_words_offset--],dest+wrote_hexes,hex_str_len_truncated-wrote_hexes,false);
     }
     
     return hex_str_len;

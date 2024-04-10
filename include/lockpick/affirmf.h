@@ -13,7 +13,7 @@ void __no_return __errorf(const char *format, const char *file_str, uint64_t lin
 void __affirmf(const char *format, const char *cond_str, const char *file_str, uint64_t line_num, const char *func_str, ...);
 
 #define affirmf(cond,format,...)  ({                                                    \
-        if(!(cond))                                                                     \
+        if(__unlikely(!(cond)))                                                         \
                 __affirmf(format,#cond,__FILE__,__LINE__,__func__,##__VA_ARGS__);       \
 })
 

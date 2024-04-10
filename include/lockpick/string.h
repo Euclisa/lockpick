@@ -44,4 +44,7 @@
 
 #define lp_string_styled_lit(str,color,format) "\033[" __lp_string_f##format##_code ";" __lp_string_c##color##_code ";" __lp_string_f##format##_code "m" str __LP_STRING_RESET_STYLE_MAGIC
 
+
+size_t lp_string_hash(const char *str);
+
 #endif // _LOCKPICK_STRING_H
