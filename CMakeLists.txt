@@ -19,6 +19,7 @@ file(GLOB SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/src/graph/graph/tsort/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/inference/inference_graph/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/inference/host/*.c"
+        "${CMAKE_SOURCE_DIR}/src/graph/inference/ocl/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/functions/*.c"
         "${CMAKE_SOURCE_DIR}/src/graph/types/*.c")
 file(GLOB LIB_SOURCES CMAKE_CONFIGURE_DEPENDS

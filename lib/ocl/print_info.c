@@ -29,32 +29,6 @@ bool __lp_ocl_device_properties_cli_fetch_eq(const __lp_ocl_device_properties_cl
 }
 
 
-void __lp_ocl_device_uuid_to_hex_str(const cl_uchar *uuid, char *hex_str, size_t hex_str_size)
-{
-    lp_uint256_t device_uuid_uint;
-    const size_t device_uuid_uint_size = sizeof(device_uuid_uint);
-    affirmf(CL_UUID_SIZE_KHR <= device_uuid_uint_size,
-        "Uint type of size %zd bytes is too small for OpenCL device UUID of size %zd",device_uuid_uint_size,CL_UUID_SIZE_KHR);
-    
-    lp_uint_from_hex(device_uuid_uint,"0");
-    memcpy(&device_uuid_uint,uuid,CL_UUID_SIZE_KHR);
-
-    lp_uint_to_hex(device_uuid_uint,hex_str,hex_str_size);
-}
-
-void __lp_ocl_device_hex_str_to_device_uuid(const char *hex_str, cl_uchar *uuid)
-{
-    lp_uint256_t device_uuid_uint;
-    const size_t device_uuid_uint_size = sizeof(device_uuid_uint);
-    affirmf(CL_UUID_SIZE_KHR <= device_uuid_uint_size,
-        "Uint type of size %zd bytes is too small for OpenCL device UUID of size %zd",device_uuid_uint_size,CL_UUID_SIZE_KHR);
-    
-    lp_uint_from_hex(device_uuid_uint,hex_str);
-    
-    memcpy(uuid,&device_uuid_uint,CL_UUID_SIZE_KHR);
-}
-
-
 cl_device_info __lp_ocl_device_info_from_name(char *name)
 {
     __lp_ocl_device_properties_cli_fetch_entry_t entry;
@@ -124,7 +98,7 @@ void __lp_ocl_print_info_platform_cb(cl_platform_id platform, cl_uint plat_i, vo
     printf(lp_string_styled_lit("%s, %s ( %s ):\n",common,bold),platform_name,platform_vendor,platform_version);
 }
 
-void __lp_ocl_print_info_device_cb(cl_device_id device, cl_uint dev_i, void *args)
+void __lp_ocl_print_info_device_cb(cl_platform_id platform, cl_device_id device, cl_uint dev_i, void *args)
 {
     printf(lp_string_styled_lit("#%d:\n",white,bold),(uint32_t)dev_i);
     char **device_params = args;
@@ -174,9 +148,9 @@ void __lp_ocl_print_info_device_cb(cl_device_id device, cl_uint dev_i, void *arg
             
             case CL_DEVICE_AVAILABLE:
                 if(*(cl_bool*)property_value)
-                    printf(lp_string_styled_lit("true\n",green,bold));
+                    printf(lp_string_styled_lit("Available\n",green,bold));
                 else
-                    printf(lp_string_styled_lit("false\n",red,bold));
+                    printf(lp_string_styled_lit("Not available\n",red,bold));
                 break;
             
             case CL_DEVICE_MAX_WORK_ITEM_SIZES:

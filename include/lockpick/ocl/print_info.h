@@ -37,4 +37,4 @@ void lp_ocl_print_info(char **properties);
 
 void __lp_ocl_print_info_init();
 
-#endif
+#endif // _LOCKPICK_OCL_PRINT_INFO_H

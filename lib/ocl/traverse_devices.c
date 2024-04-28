@@ -4,7 +4,7 @@
 #include <malloc.h>
 
 
-void lp_ocl_traverse_devices(void (*platform_cb)(cl_platform_id, cl_uint, void *), void *platform_cb_args, void (*device_cb)(cl_device_id, cl_uint, void *), void *device_cb_args)
+void lp_ocl_traverse_devices(platform_cb_t platform_cb, void *platform_cb_args, device_cb_t device_cb, void *device_cb_args)
 {
     cl_uint status;
 
@@ -40,7 +40,7 @@ void lp_ocl_traverse_devices(void (*platform_cb)(cl_platform_id, cl_uint, void *
         for(cl_uint dev_i = 0; dev_i < num_devices; ++dev_i)
         {
             if(device_cb)
-                device_cb(devices[dev_i],dev_i,device_cb_args);
+                device_cb(platforms[plat_i],devices[dev_i],dev_i,device_cb_args);
         }
 
         free(devices);
