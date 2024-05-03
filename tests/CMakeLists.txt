@@ -8,6 +8,7 @@ file(GLOB TEST_SOURCES CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/tests/math/*.c"
         "${CMAKE_SOURCE_DIR}/tests/ndarray/*.c"
         "${CMAKE_SOURCE_DIR}/tests/rb_tree/*.c"
+        "${CMAKE_SOURCE_DIR}/tests/set/*.c"
         "${CMAKE_SOURCE_DIR}/tests/slab/*.c"
         "${CMAKE_SOURCE_DIR}/tests/uint/*.c"
         "${CMAKE_SOURCE_DIR}/tests/vector/*.c"

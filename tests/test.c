@@ -1,4 +1,5 @@
 #include "rb_tree/rb_tree.h"
+#include "set/set.h"
 #include "sync/test.h"
 #include "uint/uint.h"
 #include "list/list.h"
@@ -25,6 +26,7 @@ int main()
     lp_init(LP_LOGGER_LEVEL_OFF);
     LP_TEST_BEGIN("Lockpick");
     //LP_TEST_RUN(lp_test_rb_tree(),1);
+    LP_TEST_RUN(lp_test_set());
     //LP_TEST_RUN(lp_test_uint(),1);
     //LP_TEST_RUN(lp_test_dlist(),1);
     //LP_TEST_RUN(lp_test_list(),1);
@@ -39,6 +41,6 @@ int main()
     //LP_TEST_RUN(lp_test_graph_uint(),1);
     //LP_TEST_RUN(lp_test_graph_tsort(),1);
     //LP_TEST_RUN(lp_test_graph_count(),1);
-    LP_TEST_RUN(lp_test_inference_graph_infer_host(),1);
+    //LP_TEST_RUN(lp_test_inference_graph_infer_host(),1);
     LP_TEST_END();
 }

@@ -331,6 +331,9 @@ static inline lp_rb_node_t *__lp_rb_insert_rebalance_c4(lp_rb_node_t *root, lp_r
  * @root:   root of the tree; needed just for swift return in cases when original root is unaltered.
  * @node:	pointer to the current node.
  * 
+ * @node must be placed to the right spot inside the tree, meaning that it must be either left or right child of its parent
+ * and its parent field should point to its parent.
+ * 
  * Returns root of the resulting tree.
  */
 lp_rb_node_t *lp_rb_insert_rebalance(lp_rb_node_t *root, lp_rb_node_t *node)
