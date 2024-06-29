@@ -164,7 +164,7 @@ static inline __lp_node_stack_t *__borrow_node(__lp_node_stack_t **trav_stacks, 
  * 
  * See algorithm details in: docs/parallel_dfs.pdf
  * 
- * Returns: None
+ * Return: None
  * 
 */
 void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
@@ -239,7 +239,7 @@ void *__lpg_graph_traverse_node_once_thr(__lpg_graph_traverse_thr_args_t *args)
  * graphs or when the callback function (@cb) performs heavy computations. As of now, there is no
  * practical use case that justifies the overhead of this parallel implementation.
  * 
- * Returns: None
+ * Return: None
 */
 void lpg_graph_traverse_once_sync(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
 {

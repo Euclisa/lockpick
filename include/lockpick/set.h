@@ -8,7 +8,7 @@
 typedef struct lp_set_entry
 {
     lp_rb_node_t __rb_node;
-    void *__data;
+    void *data;
 } lp_set_entry_t;
 
 
@@ -24,8 +24,9 @@ typedef struct lp_set
 lp_set_t *lp_set_create(size_t entry_size, bool (*ls)(const void *, const void *));
 void lp_set_release(lp_set_t *set);
 
-bool lp_set_insert(lp_set_t *set, void *data);
+const lp_set_entry_t *lp_set_insert(lp_set_t *set, void *data, bool *status);
 bool lp_set_find(lp_set_t *set, const void *data, void *result);
+const lp_set_entry_t *lp_set_find_entry(lp_set_t *set, const void *data);
 bool lp_set_remove(lp_set_t *set, const void *data);
 
 const lp_set_entry_t *lp_set_begin(const lp_set_t *set);

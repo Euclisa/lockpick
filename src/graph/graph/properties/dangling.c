@@ -39,7 +39,7 @@ static inline void __lpg_graph_count_dangling_slab_callback(void *entry_ptr, voi
  * The counting process is performed efficiently by iterating over all nodes within the
  * graph's slab allocator, rather than traversing the graph structure itself.
  * 
- * Returns: number of dangling nodes
+ * Return: number of dangling nodes
 */
 size_t lpg_graph_count_dangling_nodes(lpg_graph_t *graph)
 {

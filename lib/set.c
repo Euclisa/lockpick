@@ -16,7 +16,7 @@
  * 
  * Set does not store pointers to objects but copies.
  * 
- * Returns: pointer to set object
+ * Return: pointer to set object
 */
 lp_set_t *lp_set_create(size_t entry_size, bool (*ls)(const void *, const void *))
 {
@@ -38,7 +38,7 @@ lp_set_t *lp_set_create(size_t entry_size, bool (*ls)(const void *, const void *
 static inline void __lp_set_release_entry(lp_rb_node_t *node)
 {
     lp_set_entry_t *entry = container_of(node,lp_set_entry_t,__rb_node);
-    free(entry->__data);
+    free(entry->data);
     free(entry);
 }
 
@@ -61,7 +61,7 @@ static void __lp_set_release_rb_tree(lp_rb_node_t *root)
  * Releases underlying red-black tree, data elements
  * and set structure itself.
  * 
- * Returns: nothing
+ * Return: None
 */
 void lp_set_release(lp_set_t *set)
 {
@@ -89,7 +89,7 @@ void lp_set_release(lp_set_t *set)
  * was not found and one can use this location to put there newly created node and bind it with
  * @res_node_parent using standard rb-tree API.
  * 
- * Returns: nothing
+ * Return: None
 */
 static inline void __lp_set_rb_find_node(lp_set_t *set, const void *data, lp_rb_node_t ***res_node, lp_rb_node_t **res_node_parent)
 {
@@ -99,9 +99,9 @@ static inline void __lp_set_rb_find_node(lp_set_t *set, const void *data, lp_rb_
     {
         lp_set_entry_t *curr_entry_node = container_of(*curr_node,lp_set_entry_t,__rb_node);
         prev_node = *curr_node;
-        if(set->__ls(curr_entry_node->__data,data))
+        if(set->__ls(curr_entry_node->data,data))
             curr_node = &(*curr_node)->right;
-        else if(set->__ls(data,curr_entry_node->__data))
+        else if(set->__ls(data,curr_entry_node->data))
             curr_node = &(*curr_node)->left;
         else
             break;
@@ -116,12 +116,20 @@ static inline void __lp_set_rb_find_node(lp_set_t *set, const void *data, lp_rb_
  * lp_set_insert - inserts data element to set
  * @set:        set object
  * @data:       data to be inserted
+ * @status:     insertion status
  * 
  * Inserts @data to @set, rebalancing underlying rb-tree afterwards.
  * 
- * Returns: 'true' if element was inserted, 'false' if such element is already present
+ * If @status is not NULL, then on insertion status would be placed there:
+ * 'true' if element was inserted, 'false' if such element is already present.
+ * 
+ * Function always return non-null pointer on entry corresponding to either inserted
+ * data or, if element which is equal to @data is already present in @set, pointer on
+ * this element. In the latter case insertion would not succeed and @set would remain unchanged.
+ * 
+ * Return: set entry containing element equal to @data
 */
-bool lp_set_insert(lp_set_t *set, void *data)
+const lp_set_entry_t *lp_set_insert(lp_set_t *set, void *data, bool *status)
 {
     affirm_nullptr(set,"set");
     affirm_nullptr(data,"data");
@@ -131,7 +139,11 @@ bool lp_set_insert(lp_set_t *set, void *data)
     __lp_set_rb_find_node(set,data,&curr_node,&prev_node);
 
     if(*curr_node)
-        return false;
+    {
+        if(status)
+            *status = false;
+        return container_of(*curr_node,lp_set_entry_t,__rb_node);
+    }
 
     size_t entry_node_size = sizeof(lp_set_entry_t);
     lp_set_entry_t *entry_node = (lp_set_entry_t*)malloc(entry_node_size);
@@ -141,16 +153,19 @@ bool lp_set_insert(lp_set_t *set, void *data)
     entry_node->__rb_node.right = NULL;
     lp_rb_set_parent(&entry_node->__rb_node,prev_node);
 
-    entry_node->__data = malloc(set->__entry_size);
-    affirm_bad_malloc(entry_node->__data,"entry node data",set->__entry_size);
-    memcpy(entry_node->__data,data,set->__entry_size);
+    entry_node->data = malloc(set->__entry_size);
+    affirm_bad_malloc(entry_node->data,"entry node data",set->__entry_size);
+    memcpy(entry_node->data,data,set->__entry_size);
     
     *curr_node = &entry_node->__rb_node;
 
     set->__rb_root = lp_rb_insert_rebalance(set->__rb_root,*curr_node);
     ++set->__size;
 
-    return true;
+    if(status)
+        *status = true;
+
+    return entry_node;
 }
 
 
@@ -163,7 +178,7 @@ bool lp_set_insert(lp_set_t *set, void *data)
  * Tries to find @data inside @set. If found and @result is not NULL then
  * copies found element inside @result.
  * 
- * Returns: 'true' if element was found, 'false' otherwise
+ * Return: 'true' if element was found, 'false' otherwise
 */
 bool lp_set_find(lp_set_t *set, const void *data, void *result)
 {
@@ -180,10 +195,32 @@ bool lp_set_find(lp_set_t *set, const void *data, void *result)
     if(result)
     {
         lp_set_entry_t *curr_node_entry = container_of(*curr_node,lp_set_entry_t,__rb_node);
-        memcpy(result,curr_node_entry->__data,set->__entry_size);
+        memcpy(result,curr_node_entry->data,set->__entry_size);
     }
 
     return true;
+}
+
+
+/**
+ * lp_set_find_entry - finds entry with given element in a set
+ * @set:        set object
+ * @data:       data to be found
+ * 
+ * Tries to find @data inside @set.
+ * 
+ * Return: set entry with element equal to @data, NULL otherwise
+*/
+const lp_set_entry_t *lp_set_find_entry(lp_set_t *set, const void *data)
+{
+    affirm_nullptr(set,"set");
+    affirm_nullptr(data,"data");
+
+    lp_rb_node_t **curr_node;
+    lp_rb_node_t *prev_node;
+    __lp_set_rb_find_node(set,data,&curr_node,&prev_node);
+
+    return *curr_node ? container_of(*curr_node,lp_set_entry_t,__rb_node) : NULL;
 }
 
 
@@ -194,7 +231,7 @@ bool lp_set_find(lp_set_t *set, const void *data, void *result)
  * 
  * Tries to remove element equal to @data from @set.
  * 
- * Returns: 'true' if element was removed, 'false' if no such element found
+ * Return: 'true' if element was removed, 'false' if no such element found
 */
 bool lp_set_remove(lp_set_t *set, const void *data)
 {
@@ -233,7 +270,7 @@ bool lp_set_remove(lp_set_t *set, const void *data)
 * If the entry is removed after being returned, any further operations on it
 * will result in undefined behavior.
 *
-* Returns: A constant pointer to the first entry in the set, or NULL if the
+* Return: A constant pointer to the first entry in the set, or NULL if the
 *         set is empty.
 */
 const lp_set_entry_t *lp_set_begin(const lp_set_t *set)
@@ -265,7 +302,7 @@ const lp_set_entry_t *lp_set_begin(const lp_set_t *set)
 * If the entry is removed after being returned, any further operations on it
 * will result in undefined behavior.
 *
-* Returns: A constant pointer to the last entry in the set, or NULL if the
+* Return: A constant pointer to the last entry in the set, or NULL if the
 *         set is empty.
 */
 const lp_set_entry_t *lp_set_end(const lp_set_t *set)
@@ -290,7 +327,7 @@ const lp_set_entry_t *lp_set_end(const lp_set_t *set)
 * Returns the entry after @entry in the set. If @entry is the last entry
 * in the set, returns NULL.
 *
-* Returns: a constant pointer to the next entry, or NULL if @entry is the
+* Return: a constant pointer to the next entry, or NULL if @entry is the
 *         last entry.
 */
 const lp_set_entry_t *lp_set_next(const lp_set_entry_t *entry)
@@ -325,7 +362,7 @@ const lp_set_entry_t *lp_set_next(const lp_set_entry_t *entry)
 * Returns the entry before @entry in the set. If @entry is the first entry
 * in the set, returns NULL.
 *
-* Returns: a constant pointer to the previous entry, or NULL if @entry is the
+* Return: a constant pointer to the previous entry, or NULL if @entry is the
 *         first entry.
 */
 const lp_set_entry_t *lp_set_prev(const lp_set_entry_t *entry)
@@ -357,7 +394,7 @@ const lp_set_entry_t *lp_set_prev(const lp_set_entry_t *entry)
  * lp_set_size - get size of set
  * @set:        set object
  * 
- * Returns: number of elements in @set
+ * Return: number of elements in @set
 */
 inline size_t lp_set_size(const lp_set_t *set)
 {
@@ -371,7 +408,7 @@ inline size_t lp_set_size(const lp_set_t *set)
  * lp_set_is_empty - checks if set is empty
  * @set:        set object
  * 
- * Returns: 'true' if @set is empty, 'false' otherwise
+ * Return: 'true' if @set is empty, 'false' otherwise
 */
 inline bool lp_set_is_empty(const lp_set_t *set)
 {

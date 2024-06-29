@@ -342,7 +342,7 @@ void lpg_graph_traverse_node_once(lpg_graph_t *graph, lpg_node_t *node, lpg_trav
  * once again after all its children are processed. This enables slight optimizations,
  * which might be important in resource-consuming tasks.
  * 
- * Returns: None
+ * Return: None
 */
 void lpg_graph_traverse_once(lpg_graph_t *graph, lpg_traverse_cb_t cb, void *cb_args)
 {

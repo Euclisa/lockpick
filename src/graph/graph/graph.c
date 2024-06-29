@@ -11,7 +11,7 @@
  * __lpg_graph_slab - returns pointer on graph slab
  * @graph:      graph for which slab should be returned
  * 
- * Returns: pointer to slab associated with provided graph
+ * Return: pointer to slab associated with provided graph
 */
 lp_slab_t *__lpg_graph_slab(const lpg_graph_t *graph)
 {
