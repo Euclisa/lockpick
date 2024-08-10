@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <lockpick/slab.h>
+#include <lockpick/slab/slab.h>
 #include <lockpick/affirmf.h>
 #include <lockpick/container_of.h>
 

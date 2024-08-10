@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <lockpick/dlist.h>
 #include <lockpick/define.h>
-#include <lockpick/slab.h>
+#include <lockpick/slab/slab.h>
 #include <lockpick/vector.h>
 
 

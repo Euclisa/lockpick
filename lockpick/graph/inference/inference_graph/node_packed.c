@@ -71,7 +71,7 @@ inline lpg_node_packed_t __lpg_node_packed_from_node(lpg_inference_graph_t *infe
     lpg_node_t **parents = lpg_node_parents(node);
     for(size_t parent_i = 0; parent_i < parents_num; ++parent_i)
     {
-        uint16_t packed_parent_i;
+        lpg_inference_graph_index_t packed_parent_i;
         lpg_inference_graph_index_map_find(inference_graph,parents[parent_i],&packed_parent_i);
         packed_node.parents[parent_i] = packed_parent_i;
     }

@@ -3,7 +3,7 @@
 #include <lockpick/rb_tree.h>
 #include <lockpick/container_of.h>
 #include <lockpick/test.h>
-#include <lockpick/slab.h>
+#include <lockpick/slab/slab.h>
 
 
 #define RBTEST_MAX_ELEMENTS_IN_TREE 1000

@@ -1,6 +1,6 @@
 #include <lockpick/list.h>
 #include <lockpick/test.h>
-#include <lockpick/slab.h>
+#include <lockpick/slab/slab.h>
 #include <lockpick/container_of.h>
 #include <stdlib.h>
 #include <stdio.h>
